@@ -1,0 +1,10 @@
+assets/
+node_modules/
+.next/
+out/
+coverage/
+package-lock.json
+public/brand/fonts/
+*.woff2
+*.png
+next-env.d.ts
