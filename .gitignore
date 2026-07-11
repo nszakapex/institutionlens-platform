@@ -1,0 +1,47 @@
+# Git ignore — InstitutionLens Platform
+
+# Dependencies
+node_modules/
+
+# Environment (never commit secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Next.js
+.next/
+out/
+
+# Build / cache
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Logs and temp
+logs/
+*.log
+npm-debug.log*
+tmp/
+temp/
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Local verification outputs
+.verification/
+
+# Vercel (do not configure production deploy while demo auth is active)
+.vercel/

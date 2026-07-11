@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">InstitutionLens financial field</title>
+  <desc id="desc">A quiet animated field of institutional signals converging on a selected account.</desc>
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#111310" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="fade" cx="66%" cy="48%" r="58%">
+      <stop offset="0" stop-color="#0A52D6" stop-opacity=".09"/>
+      <stop offset=".62" stop-color="#0A52D6" stop-opacity=".015"/>
+      <stop offset="1" stop-color="#0A52D6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+  <style>
+    .trace{fill:none;stroke:#0A52D6;stroke-width:1.5;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.8s cubic-bezier(.22,1,.36,1) forwards}
+    .trace.secondary{stroke:#111310;stroke-opacity:.28;animation-delay:.35s}
+    .node{fill:#111310;opacity:.34}
+    .node.signal{fill:#0A52D6;opacity:1;animation:pulse 3.4s ease-in-out infinite}
+    .halo{fill:#0A52D6;opacity:.1;filter:url(#soft);animation:halo 4.5s ease-in-out infinite}
+    .label{font:500 11px Manrope,Arial,sans-serif;letter-spacing:1.5px;fill:#111310;opacity:.55}
+    .value{font:500 18px Newsreader,Georgia,serif;fill:#0A52D6}
+    @keyframes draw{to{stroke-dashoffset:0}}
+    @keyframes pulse{0%,100%{r:4}50%{r:7}}
+    @keyframes halo{0%,100%{opacity:.06;transform:scale(.95);transform-origin:956px 360px}50%{opacity:.15;transform:scale(1.06);transform-origin:956px 360px}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important}.trace{stroke-dashoffset:0}}
+  </style>
+  <rect width="1440" height="760" fill="#F5F1E9"/>
+  <rect width="1440" height="760" fill="url(#grid)"/>
+  <rect width="1440" height="760" fill="url(#fade)"/>
+  <circle class="halo" cx="956" cy="360" r="126"/>
+  <path class="trace secondary" pathLength="1" d="M128 534C299 430 381 476 520 377S774 230 956 360s230 77 368-16"/>
+  <path class="trace" pathLength="1" d="M128 582C309 594 403 504 522 482s228 50 331-43 96-100 103-79 150 44 368-93"/>
+  <path class="trace secondary" pathLength="1" d="M128 397c186-10 238-101 378-58s181 137 326 79 223-188 492-154"/>
+  <g>
+    <circle class="node" cx="128" cy="534" r="4"/><circle class="node" cx="264" cy="468" r="4"/>
+    <circle class="node" cx="405" cy="455" r="4"/><circle class="node" cx="522" cy="377" r="4"/>
+    <circle class="node" cx="672" cy="290" r="4"/><circle class="node" cx="832" cy="418" r="4"/>
+    <circle class="node signal" cx="956" cy="360" r="5"/><circle class="node" cx="1115" cy="412" r="4"/>
+    <circle class="node" cx="1324" cy="344" r="4"/>
+  </g>
+  <g transform="translate(917 308)">
+    <path d="M39 0 0 18v5h78v-5L39 0Zm-27 30h8v31h-8V30Zm23 0h8v31h-8V30Zm23 0h8v31h-8V30ZM4 67h70v8H4v-8Z" fill="#111310"/>
+    <path d="M39 0 0 18v5h78v-5L39 0Z" fill="#0A52D6"/>
+  </g>
+  <text class="label" x="996" y="331">SELECTED INSTITUTION</text>
+  <text class="value" x="996" y="357">Fit 92 / High confidence</text>
+  <text class="label" x="128" y="622">PEER MOVEMENT</text>
+  <text class="label" x="522" y="522">NEED SIGNAL</text>
+  <text class="label" x="1150" y="226">STRATEGIC ALIGNMENT</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Explainable fit signal</title>
+  <desc id="desc">Four financial factors contributing to a high-confidence institutional fit score.</desc>
+  <style>
+    .axis{stroke:#111310;stroke-opacity:.15}.ring{fill:none;stroke:#111310;stroke-opacity:.12}.shape{fill:#0A52D6;fill-opacity:.08;stroke:#0A52D6;stroke-width:2;stroke-dasharray:900;stroke-dashoffset:900;animation:draw 2.2s cubic-bezier(.22,1,.36,1) forwards}.dot{fill:#0A52D6}.label{font:500 11px Manrope,Arial,sans-serif;letter-spacing:1.2px;fill:#111310;opacity:.58}.score{font:400 82px Newsreader,Georgia,serif;fill:#111310}.meta{font:600 10px Manrope,Arial,sans-serif;letter-spacing:1.4px;fill:#0A52D6}.sweep{fill:none;stroke:#0A52D6;stroke-width:1;stroke-opacity:.35;stroke-dasharray:4 8;animation:rotate 14s linear infinite;transform-origin:290px 210px}@keyframes draw{to{stroke-dashoffset:0}}@keyframes rotate{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}.shape{stroke-dashoffset:0}}
+  </style>
+  <rect width="640" height="420" fill="#FBFAF7"/>
+  <g transform="translate(40)">
+    <circle class="ring" cx="250" cy="210" r="154"/><circle class="ring" cx="250" cy="210" r="112"/><circle class="ring" cx="250" cy="210" r="70"/>
+    <path class="axis" d="M250 38v344M78 210h344M128 88l244 244M128 332 372 88"/>
+    <circle class="sweep" cx="250" cy="210" r="168"/>
+    <path class="shape" d="M250 65 382 210 250 345 135 210 250 65Z"/>
+    <circle class="dot" cx="250" cy="65" r="5"/><circle class="dot" cx="382" cy="210" r="5"/><circle class="dot" cx="250" cy="345" r="5"/><circle class="dot" cx="135" cy="210" r="5"/>
+    <text class="label" x="216" y="25">NEED SIGNAL</text><text class="label" x="400" y="214">TIMING</text>
+    <text class="label" x="213" y="405">ACCESS</text><text class="label" x="18" y="214">PORTFOLIO FIT</text>
+  </g>
+  <text class="meta" x="500" y="161">STRATEGIC FIT</text><text class="score" x="500" y="238">92</text><text class="meta" x="500" y="270">HIGH CONFIDENCE</text>
+</svg>
