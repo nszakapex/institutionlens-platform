@@ -1,22 +1,118 @@
 :root {
-  /* InstitutionLens brand tokens — canonical application layer */
-  --paper: #f5f1e9;
-  --paper-bright: #fbfaf7;
-  --ink: #111310;
-  --muted: #64655f;
-  --hairline: rgba(17, 19, 16, 0.16);
-  --blue: #0a52d6;
-  --blue-dark: #073c9f;
-  --night: #111719;
-  --focus-ring: #0a52d6;
-  --serif: "IL Newsreader", "Iowan Old Style", "Baskerville", Georgia, serif;
-  --sans: "IL Manrope", "Avenir Next", "Segoe UI", sans-serif;
-  --content: min(1120px, calc(100vw - 2rem));
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2.5rem;
-  --space-6: 4rem;
-  --space-7: 6rem;
+  /* ——— Brand colors ——— */
+  --il-ledger-ivory: #f5f1e9;
+  --il-optic-white: #fbfaf7;
+  --il-lens-black: #111310;
+  --il-signal-blue: #0a52d6;
+  --il-signal-blue-dark: #073c9f;
+  --il-ledger-steel: #64655f;
+  --il-private-night: #111719;
+
+  /* ——— Semantic surfaces & text ——— */
+  --il-surface-env: var(--il-ledger-ivory);
+  --il-surface-raised: var(--il-optic-white);
+  --il-surface-inverse: var(--il-private-night);
+  --il-surface-selected: rgba(10, 82, 214, 0.06);
+  --il-text-primary: var(--il-lens-black);
+  --il-text-secondary: var(--il-ledger-steel);
+  --il-text-inverse: rgba(251, 250, 247, 0.92);
+  --il-text-link: var(--il-signal-blue);
+  --il-border-hairline: rgba(17, 19, 16, 0.16);
+  --il-border-strong: rgba(17, 19, 16, 0.28);
+  --il-border-inverse: rgba(255, 255, 255, 0.18);
+  --il-focus: var(--il-signal-blue);
+  --il-focus-offset: 3px;
+
+  /* Epistemic / status (hue + pattern via component, never color alone) */
+  --il-status-verified: var(--il-lens-black);
+  --il-status-calculated: var(--il-signal-blue);
+  --il-status-rule: var(--il-ledger-steel);
+  --il-status-inference: #7a5a1a;
+  --il-status-missing: var(--il-ledger-steel);
+  --il-status-stale: #8a4b2a;
+  --il-status-error: #8b1e1e;
+  --il-status-restricted: var(--il-private-night);
+
+  /* ——— Typography ——— */
+  --il-font-serif: "IL Newsreader", "Iowan Old Style", "Baskerville", Georgia, serif;
+  --il-font-sans: "IL Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  --il-fs-display-1: clamp(2.75rem, 7vw, 4.75rem);
+  --il-fs-display-2: clamp(2rem, 4.5vw, 3.25rem);
+  --il-fs-editorial: clamp(1.35rem, 2.4vw, 1.85rem);
+  --il-fs-title: 1.35rem;
+  --il-fs-body: 1rem;
+  --il-fs-body-sm: 0.925rem;
+  --il-fs-label: 0.6875rem;
+  --il-fs-meta: 0.625rem;
+  --il-lh-display: 0.9;
+  --il-lh-editorial: 1.12;
+  --il-lh-body: 1.55;
+  --il-lh-label: 1.3;
+  --il-tracking-display: -0.045em;
+  --il-tracking-label: 0.12em;
+  --il-tracking-meta: 0.14em;
+
+  /* ——— Spacing ——— */
+  --il-space-1: 0.25rem;
+  --il-space-2: 0.5rem;
+  --il-space-3: 0.75rem;
+  --il-space-4: 1rem;
+  --il-space-5: 1.5rem;
+  --il-space-6: 2rem;
+  --il-space-7: 2.5rem;
+  --il-space-8: 4rem;
+  --il-space-9: 6rem;
+
+  /* ——— Layout ——— */
+  --il-content: min(1180px, calc(100vw - 2rem));
+  --il-content-wide: min(1400px, calc(100vw - 2rem));
+  --il-rail: 15rem;
+  --il-header-h: 4rem;
+  --il-radius-none: 0;
+  --il-radius-sm: 2px;
+  --il-control-h: 2.5rem;
+  --il-control-h-sm: 2rem;
+  --il-table-row-h: 3.25rem;
+  --il-target-min: 44px;
+
+  /* ——— Breakpoints (reference; media queries use literals) ——— */
+  --il-bp-sm: 480px;
+  --il-bp-md: 768px;
+  --il-bp-lg: 1024px;
+  --il-bp-xl: 1440px;
+
+  /* ——— Motion ——— */
+  --il-ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+  --il-ease-scan: ease-in-out;
+  --il-dur-fast: 160ms;
+  --il-dur-reveal: 700ms;
+  --il-dur-scan: 2800ms;
+
+  /* ——— Layering ——— */
+  --il-z-base: 0;
+  --il-z-sticky: 20;
+  --il-z-header: 40;
+  --il-z-nav-overlay: 50;
+  --il-z-skip: 60;
+
+  /* ——— Legacy aliases (Phase 1 compatibility) ——— */
+  --paper: var(--il-surface-env);
+  --paper-bright: var(--il-surface-raised);
+  --ink: var(--il-text-primary);
+  --muted: var(--il-text-secondary);
+  --hairline: var(--il-border-hairline);
+  --blue: var(--il-signal-blue);
+  --blue-dark: var(--il-signal-blue-dark);
+  --night: var(--il-private-night);
+  --focus-ring: var(--il-focus);
+  --serif: var(--il-font-serif);
+  --sans: var(--il-font-sans);
+  --content: var(--il-content);
+  --space-1: var(--il-space-1);
+  --space-2: var(--il-space-2);
+  --space-3: var(--il-space-4);
+  --space-4: var(--il-space-5);
+  --space-5: var(--il-space-7);
+  --space-6: var(--il-space-8);
+  --space-7: var(--il-space-9);
 }

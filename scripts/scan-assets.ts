@@ -23,7 +23,17 @@ if (missing.length > 0) {
 }
 
 const tokens = fs.readFileSync(path.join(root, "src/styles/tokens.css"), "utf8");
-for (const token of ["--paper", "--ink", "--blue", "--serif", "--sans"]) {
+for (const token of [
+  "--paper",
+  "--ink",
+  "--blue",
+  "--serif",
+  "--sans",
+  "--il-ledger-ivory",
+  "--il-signal-blue",
+  "--il-font-serif",
+  "--il-font-sans",
+]) {
   if (!tokens.includes(token)) {
     console.error(`Asset/font scan failed: tokens.css missing ${token}`);
     process.exit(1);

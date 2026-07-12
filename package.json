@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:security": "vitest run src/lib/security src/lib/env.test.ts src/lib/demo-tenant.test.ts src/lib/health.test.ts",
+    "test:security": "vitest run src/lib/security src/lib/env.test.ts src/lib/demo-tenant.test.ts src/lib/health.test.ts src/components/design-system.contract.test.ts src/components/status/evidence-label.test.ts",
     "scan:secrets": "tsx scripts/scan-secrets.ts",
     "scan:clean-room": "tsx scripts/scan-clean-room.ts",
     "scan:assets": "tsx scripts/scan-assets.ts",

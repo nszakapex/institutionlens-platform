@@ -3,9 +3,12 @@ import { headers } from "next/headers";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "InstitutionLens — Synthetic demo foundation",
+  title: {
+    default: "InstitutionLens",
+    template: "%s · InstitutionLens",
+  },
   description:
-    "Institutional fit, made explainable. Synthetic demo foundation with no real organization data.",
+    "Institutional fit, made explainable. Synthetic demo application shell — no real organization data.",
   robots: {
     index: false,
     follow: false,
