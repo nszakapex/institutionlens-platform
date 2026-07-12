@@ -136,9 +136,9 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 
 ## Phase boundary
 
-**Completed:** Phase 0 and Phase 1.  
-**In progress:** Phase 2 — design system and application shell (visual/structural only).  
-**Do not proceed to Phase 3** until explicitly approved.
+**Completed:** Phase 0, Phase 1, and Phase 2.  
+**In progress:** Phase 3 — domain foundation, tenant-safe repository, vertical adapter, synthetic dataset.  
+**Do not proceed to Phase 4** until explicitly approved.
 
 ## D-014 — Phase 2 design system
 
@@ -150,3 +150,15 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 - Epistemic labels and separate product-status primitives (fit / confidence / freshness / completeness / publication eligibility)
 - Synthetic design-system preview only — no domain features, database, or real auth
 - No new UI framework dependencies; Node 22 for any lockfile work
+
+## D-015 — Phase 3 domain foundation
+
+**Status:** Approved for implementation
+
+- Generic domain schemas under `src/domain/` with schema version `1.0.0`
+- AuthorizationContext derived from server-only demo gate; never from client/URL tenant IDs
+- Explicit allowlisted vertical-adapter registry; no latest-version fallback for stored records
+- Tenant-scoped synthetic `OrganizationRepository` with bounded query/pagination
+- Exactly 24 deterministic synthetic financial institutions; fit remains unassessed
+- Evidence/provenance invariants fail closed; no scoring, ranking, DB, or real auth
+- No dependency or lockfile changes in this phase
