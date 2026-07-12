@@ -136,5 +136,17 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 
 ## Phase boundary
 
-**Approved to implement now:** Phase 0 and Phase 1 only.  
-**Do not proceed to Phase 2** until explicitly approved.
+**Completed:** Phase 0 and Phase 1.  
+**In progress:** Phase 2 — design system and application shell (visual/structural only).  
+**Do not proceed to Phase 3** until explicitly approved.
+
+## D-014 — Phase 2 design system
+
+**Status:** Approved for implementation
+
+- CSS custom properties as canonical tokens (`src/styles/tokens.css`)
+- Code-native SVG visual language; mark geometry preserved; no logo animation
+- App shell with skip link, header, nav, mobile nav, footer, synthetic notice
+- Epistemic labels and separate product-status primitives (fit / confidence / freshness / completeness / publication eligibility)
+- Synthetic design-system preview only — no domain features, database, or real auth
+- No new UI framework dependencies; Node 22 for any lockfile work
