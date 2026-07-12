@@ -13,16 +13,28 @@ const FORBIDDEN = [
 ];
 
 /**
- * Paths allowed to mention Coverage / clean-room separation explicitly.
+ * Exact documentation files allowed to mention clean-room boundary terms
+ * (Coverage / AD&Co / vendor-exhaust / Call Report / UBPR) when describing the prohibition.
+ * No directory wildcards — each path is a single file with a documented reason.
  */
 const POLICY_PATHS = new Set([
+  // Primary clean-room policy statement
   path.join("docs", "CLEAN_ROOM_POLICY.md"),
+  // Product plan that restates the boundary and forbidden transfers
   path.join("docs", "FOUNDATION_PLAN.md"),
+  // Binding decisions that reference the clean-room constraint
   path.join("docs", "DECISIONS.md"),
+  // Architecture summary that restates no Coverage material
   path.join("docs", "ARCHITECTURE.md"),
+  // Phase 3 plan non-goals explicitly exclude Coverage / AD&Co material
+  path.join("docs", "PHASE_3_PLAN.md"),
+  // Synthetic data guarantees that restate independent design vs Coverage-derived material
+  path.join("docs", "SYNTHETIC_DATA.md"),
+  // Top-level contributor/security docs that describe the boundary
   path.join("README.md"),
   path.join("SECURITY.md"),
   path.join("CONTRIBUTING.md"),
+  // The scanner itself contains the forbidden patterns as detection rules
   path.join("scripts", "scan-clean-room.ts"),
 ]);
 

@@ -64,8 +64,8 @@
   --il-space-9: 6rem;
 
   /* ——— Layout ——— */
-  --il-content: min(1180px, calc(100vw - 2rem));
-  --il-content-wide: min(1400px, calc(100vw - 2rem));
+  --il-content: min(1180px, 100%);
+  --il-content-wide: min(1400px, 100%);
   --il-rail: 15rem;
   --il-header-h: 4rem;
   --il-radius-none: 0;

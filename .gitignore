@@ -45,3 +45,5 @@ blob-report/
 
 # Vercel (do not configure production deploy while demo auth is active)
 .vercel/
+
+.tmp-qa/

@@ -52,8 +52,9 @@ select:focus-visible,
 
 .il-demo-banner-inner {
   width: var(--il-content-wide);
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0.65rem 0;
+  padding: 0.65rem 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1.25rem;
@@ -75,8 +76,10 @@ select:focus-visible,
 
 .il-product-header-inner {
   width: var(--il-content-wide);
+  max-width: 100%;
   margin: 0 auto;
   min-height: var(--il-header-h);
+  padding: 0 1rem;
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--il-space-4);
@@ -88,6 +91,7 @@ select:focus-visible,
   align-items: center;
   gap: var(--il-space-3);
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .il-wordmark {
@@ -99,6 +103,7 @@ select:focus-visible,
   font-family: var(--il-font-serif);
   font-size: 1.25rem;
   letter-spacing: -0.02em;
+  min-width: 0;
 }
 
 .il-wordmark-mark {
@@ -224,9 +229,10 @@ select:focus-visible,
 
 .il-shell-body {
   width: var(--il-content-wide);
+  max-width: 100%;
   margin: 0 auto;
   flex: 1;
-  padding: var(--il-space-7) 0 var(--il-space-8);
+  padding: var(--il-space-7) 1rem var(--il-space-8);
 }
 
 .il-shell-body.has-rail {
@@ -256,7 +262,9 @@ select:focus-visible,
 
 .il-footer-inner {
   width: var(--il-content-wide);
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0 1rem;
   color: var(--il-text-secondary);
   font-size: var(--il-fs-body-sm);
   display: grid;
@@ -317,6 +325,104 @@ select:focus-visible,
 
 .il-preview-section:last-of-type {
   border-bottom: 0;
+}
+
+.il-domain-status {
+  margin-top: var(--il-space-5);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.il-domain-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--il-space-2);
+  margin-bottom: var(--il-space-4);
+  max-width: 100%;
+}
+
+.il-domain-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--il-space-4) var(--il-space-5);
+  margin: 0 0 var(--il-space-4);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.il-domain-status-grid dt {
+  margin: 0;
+  font-size: var(--il-fs-meta);
+  letter-spacing: var(--il-tracking-meta);
+  text-transform: uppercase;
+  color: var(--il-signal-blue);
+}
+
+.il-domain-status-grid dd {
+  margin: 0.2rem 0 0;
+  font-size: var(--il-fs-body-sm);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.il-domain-status-span {
+  grid-column: 1 / -1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.il-domain-status-span .il-domain-status-note {
+  margin-top: var(--il-space-2);
+}
+
+.il-domain-coverage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  max-width: 100%;
+}
+
+.il-domain-coverage-list li {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.il-domain-status-note {
+  margin: 0 0 var(--il-space-3);
+  max-width: min(42rem, 100%);
+  color: var(--il-text-secondary);
+  font-size: var(--il-fs-body-sm);
+  overflow-wrap: anywhere;
+}
+
+.il-domain-sample-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--il-space-3);
+}
+
+.il-domain-sample-list li {
+  display: grid;
+  gap: 0.15rem;
+  padding-bottom: var(--il-space-3);
+  border-bottom: 1px solid var(--il-border-hairline);
+}
+
+.il-domain-sample-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.il-domain-sample-list span {
+  color: var(--il-text-secondary);
+  font-size: var(--il-fs-body-sm);
 }
 
 /* ——— Controls ——— */
@@ -519,6 +625,7 @@ select:focus-visible,
 .il-status-badge {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   min-height: 1.4rem;
   padding: 0.1rem 0.45rem;
   border: 1px solid var(--il-border-hairline);
@@ -527,6 +634,8 @@ select:focus-visible,
   letter-spacing: var(--il-tracking-meta);
   text-transform: uppercase;
   border-radius: var(--il-radius-sm);
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .il-status-badge--neutral {
@@ -663,12 +772,14 @@ select:focus-visible,
   padding: var(--il-space-4);
   border: 1px dashed rgba(10, 82, 214, 0.45);
   background: var(--il-surface-selected);
+  overflow-wrap: anywhere;
 }
 
 .il-synthetic-notice p {
   margin: 0;
   color: var(--il-text-secondary);
   font-size: var(--il-fs-body-sm);
+  overflow-wrap: anywhere;
 }
 
 .il-synthetic-notice-label {
@@ -960,9 +1071,24 @@ select:focus-visible,
   }
 }
 
+@media (max-width: 600px) {
+  .il-domain-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .il-page-header {
+    display: grid;
+    gap: var(--il-space-3);
+  }
+}
+
 @media (max-width: 480px) {
   .il-page-title {
     font-size: clamp(2rem, 11vw, 2.75rem);
+  }
+
+  .il-wordmark {
+    font-size: 1.05rem;
   }
 
   .il-record-row {

@@ -17,11 +17,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:security": "vitest run src/lib/security src/lib/env.test.ts src/lib/demo-tenant.test.ts src/lib/health.test.ts src/components/design-system.contract.test.ts src/components/status/evidence-label.test.ts",
+    "test:security": "vitest run src/lib/security src/lib/env.test.ts src/lib/demo-tenant.test.ts src/lib/health.test.ts src/components/design-system.contract.test.ts src/components/status/evidence-label.test.ts src/authorization src/domain/invariants.test.ts src/repositories/synthetic-organization-repository.test.ts",
+    "test:domain": "vitest run src/domain src/authorization src/verticals src/repositories src/application",
+    "validate:synthetic": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-synthetic.ts",
     "scan:secrets": "tsx scripts/scan-secrets.ts",
     "scan:clean-room": "tsx scripts/scan-clean-room.ts",
     "scan:assets": "tsx scripts/scan-assets.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run scan:assets && npm run scan:secrets && npm run scan:clean-room && npm run build"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run validate:synthetic && npm run scan:assets && npm run scan:secrets && npm run scan:clean-room && npm run build"
   },
   "dependencies": {
     "next": "16.2.10",

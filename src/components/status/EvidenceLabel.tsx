@@ -2,7 +2,8 @@ export const EVIDENCE_LABELS = {
   verified: {
     id: "verified",
     label: "Verified",
-    description: "Confirmed against an approved source record in-system.",
+    description:
+      "Satisfies platform provenance and validation requirements for the cited source record. In synthetic demos this does not mean a real-world claim was independently verified.",
   },
   calculated: {
     id: "calculated",

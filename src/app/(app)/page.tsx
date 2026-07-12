@@ -29,6 +29,9 @@ import {
   InstitutionNetwork,
   LensMark,
 } from "@/components/svg";
+import { DomainFoundationStatus } from "@/components/shell/DomainFoundationStatus";
+import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { buildDomainFoundationView } from "@/application/domain-foundation";
 
 export const metadata: Metadata = {
   title: "Design system",
@@ -67,18 +70,23 @@ const SYNTHETIC_ROWS: SyntheticOrg[] = [
 ];
 
 export default function DesignSystemPage() {
+  const context = getDemoAuthorizationContext();
+  const domainView = buildDomainFoundationView(context);
+
   return (
     <>
       <PageHeader
         title="Design system preview"
-        description="Institutional fit, made explainable — a synthetic shell and component inventory. No live scores, real organizations, or customer data."
-        meta={<StatusBadge tone="info">Phase 2 · Visual only</StatusBadge>}
+        description="Institutional fit, made explainable — a synthetic shell, component inventory, and domain foundation. No live scores, real organizations, or customer data."
+        meta={<StatusBadge tone="info">Phase 3 · Domain foundation</StatusBadge>}
       />
 
       <SyntheticNotice>
-        This page demonstrates the InstitutionLens application shell and design language using
-        explicitly fictional examples. It is not a product dashboard.
+        This page demonstrates the InstitutionLens application shell, design language, and synthetic
+        domain core using explicitly fictional examples. It is not a product dashboard.
       </SyntheticNotice>
+
+      <DomainFoundationStatus view={domainView} />
 
       <section className="il-preview-section" aria-labelledby="type-title">
         <SectionHeader

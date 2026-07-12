@@ -15,6 +15,10 @@ describe("epistemic labels", () => {
     }
 
     expect(EVIDENCE_LABELS.inference.description.toLowerCase()).toMatch(/not.*verified|heuristic/);
+    expect(EVIDENCE_LABELS.verified.description.toLowerCase()).toMatch(/synthetic|provenance/);
+    expect(EVIDENCE_LABELS.verified.description.toLowerCase()).toMatch(
+      /does not mean a real-world|independently verified/,
+    );
   });
 });
 
