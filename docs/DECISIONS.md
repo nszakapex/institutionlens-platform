@@ -136,9 +136,9 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 
 ## Phase boundary
 
-**Completed:** Phase 0, Phase 1, and Phase 2.  
-**In progress:** Phase 3 — domain foundation, tenant-safe repository, vertical adapter, synthetic dataset.  
-**Do not proceed to Phase 4** until explicitly approved.
+**Completed:** Phase 0, Phase 1, Phase 2, and Phase 3.  
+**In progress:** Phase 4 wrap-up / Phase 5 not started — explainable assessment engine core delivered (repos, services, foundation preview).  
+**Do not proceed to Phase 5** until explicitly approved.
 
 ## D-014 — Phase 2 design system
 
@@ -162,3 +162,17 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 - Exactly 24 deterministic synthetic financial institutions; fit remains unassessed
 - Evidence/provenance invariants fail closed; no scoring, ranking, DB, or real auth
 - No dependency or lockfile changes in this phase
+
+## D-016 — Phase 4 explainable assessment engine
+
+**Status:** Approved for implementation
+
+- Generic typed predicate engine; vertical-owned synthetic rule sets only under adapters
+- Capability fit, portfolio priority, confidence, freshness, assessment completeness, publication eligibility, and opportunity context remain separate dimensions
+- Tenant-private overlays never alter fit points; opportunity context is overlay-derived and internal-only
+- Integer point scores with declared maxima; missing/stale evidence does not shrink the denominator
+- Deterministic manifests and fingerprints; injected clock only
+- Organization-level completeness remains `unknown`; evidence-state coverage keeps its Phase 3 name
+- No eval/dynamic code, ML/LLM scoring, DB, real auth, real client data, or Phase 5 UI
+- No dependency or lockfile changes; Node 22 remains canonical
+- Delivery model (managed / dedicated / hybrid) remains undecided; hybrid recommended; engine stays deployment-neutral

@@ -1,37 +1,50 @@
 # Domain model
 
 **Schema version:** `1.0.0`  
-**Phase:** 3 — foundation only (no scoring)
+**Phase:** 4 — assessment engine on synthetic domain foundation
 
 ## Boundaries
 
-| Layer                | Responsibility                                                       |
-| -------------------- | -------------------------------------------------------------------- |
-| `src/domain/`        | Generic identifiers, schemas, errors, clock, invariants, view models |
-| `src/authorization/` | Tenant/principal context and explicit action checks                  |
-| `src/repositories/`  | Tenant-scoped persistence contracts and synthetic implementation     |
-| `src/verticals/`     | Versioned adapters; financial-institutions specialization            |
-| `src/application/`   | Thin read services and safe view-model assembly                      |
+| Layer                | Responsibility                                                          |
+| -------------------- | ----------------------------------------------------------------------- |
+| `src/domain/`        | Generic identifiers, schemas, errors, clock, invariants, view models    |
+| `src/authorization/` | Tenant/principal context and explicit action checks                     |
+| `src/repositories/`  | Tenant-scoped persistence contracts and synthetic implementation        |
+| `src/assessment/`    | Generic deterministic engine (predicates, ledger evaluation, aggregate) |
+| `src/verticals/`     | Versioned adapters; financial-institutions specialization + rule sets   |
+| `src/application/`   | Thin read services and safe view-model assembly                         |
 
-**Dependency rule:** verticals may import domain contracts. Domain never imports a specific vertical.
+**Dependency rule:** verticals may import domain contracts and supply field bags/rule sets to the generic engine. Domain and `src/assessment/` never import a specific vertical.
 
 ## Core entities
 
 - **Tenant / Principal** — demo-flagged, status-aware
 - **Organization** — generic fields only; vertical payload validated by adapter
-- **Capability** — fictional catalog entries for alignment themes later
+- **Capability** — fictional catalog entries for alignment themes
+- **CapabilityPortfolio** — tenant binding of enabled capabilities, priorities, and rule-set pins
+- **OrganizationOverlay** — tenant-private relationship/usage context (never alters fit points)
 - **EvidenceRecord** — epistemic status, freshness, confidence, publication eligibility
 - **ProvenanceRecord** — synthetic-safe source references (`synthetic://` or `.example`)
+- **CapabilityAssessment / PortfolioAssessment** — explainable heuristic results with ledgers and manifests
 
 ## Separate assessment dimensions
 
-Fit, confidence, freshness, completeness, and publication eligibility are distinct types. Phase 3 keeps fit at `unassessed` and formal completeness at `unknown`. No scores are computed.
+Fit, confidence, freshness, assessment completeness, publication eligibility, and opportunity context are distinct types. They must never be merged into one opaque trust score.
+
+- **Fit** — integer points vs declared maximum when assessed
+- **Confidence** — evidentiary support strength
+- **Freshness** — temporal validity of supporting evidence
+- **Assessment completeness** — whether required rules/gates could be evaluated for a capability run
+- **Publication eligibility** — export / sharing policy gate
+- **Opportunity context** — overlay-derived internal relationship signal
+
+Organization-level **formal Completeness** remains `unknown` in the demo unless a validated domain record assigns it.
 
 Preview may show **Evidence-state coverage**: absolute counts of synthetic evidence records by `epistemicStatus`. That summary is not formal Completeness and must not be labeled Completeness.
 
 ## Synthetic “Verified”
 
-The epistemic status `verified` remains part of the generic model. In Phase 3 synthetic data it means the record satisfies platform provenance/validation requirements inside the demo dataset — not that a real institution, event, source, or claim was independently verified.
+The epistemic status `verified` remains part of the generic model. In synthetic data it means the record satisfies platform provenance/validation requirements inside the demo dataset — not that a real institution, event, source, or claim was independently verified.
 
 ## Fail-closed invariants
 
@@ -41,6 +54,7 @@ The epistemic status `verified` remains part of the generic model. In Phase 3 sy
 - Calculated evidence requires inputs or a descriptor
 - Stale evidence preserves observation and reason
 - Unknown license blocks publication eligibility
+- Cross-tenant repository access returns not-found without existence disclosure
 
 ## Future PostgreSQL / RLS (not implemented)
 

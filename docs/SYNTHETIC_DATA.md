@@ -18,11 +18,17 @@
 - Evidence set includes verified, calculated, rule-based, inference, missing, stale, and restricted cases
 - Synthetic **Verified** means provenance/validation requirements are satisfied inside the demo dataset only — not real-world verification
 - Provenance references use `synthetic://financial-institutions/...` only
+- Phase 4 adds a **capability portfolio**, a **deliberate subset of private overlays**, and **deterministic capability + portfolio assessments** for all 24 organizations (heuristic prioritization only)
+- Overlay notes are tenant-private and never appear in safe view models
+- Assessments are regenerated via `generateSyntheticAssessments()` and validated offline
 
 ## Validation
 
 - `npm run validate:synthetic`
+- `npm run validate:methodology`
+- `npm run validate:assessments`
 - Dataset and adapter contract tests under `src/verticals/financial-institutions/`
+- Assessment tests under `src/assessment/` and `src/repositories/synthetic-assessment-repository.test.ts`
 
 ## Clean-room
 

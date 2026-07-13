@@ -1,0 +1,37 @@
+# Phase 4 requirements traceability
+
+Maps product requirements for the explainable assessment engine to implementation status and code references.
+
+| ID    | Requirement                                                                                              | Status      | Code / docs                                                                                                                          |
+| ----- | -------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| P4-01 | Generic deterministic assessment engine (vertical-agnostic)                                              | Implemented | `src/assessment/engine.ts`, `predicates.ts`, `aggregate.ts`, `fingerprint.ts`, `opportunity.ts`                                      |
+| P4-02 | Typed predicate contracts; no eval/dynamic code                                                          | Implemented | `src/domain/assessments/predicates.ts`, `src/assessment/predicates.ts`                                                               |
+| P4-03 | Vertical-owned FI synthetic rule sets (5 × 100 points)                                                   | Implemented | `src/verticals/financial-institutions/assessment/rules.ts`                                                                           |
+| P4-04 | Tenant capability portfolio + catalog binding                                                            | Implemented | `src/verticals/financial-institutions/assessment/synthetic-portfolio.ts`, `src/repositories/synthetic-portfolio-repository.ts`       |
+| P4-05 | Tenant-private overlays; never alter fit points                                                          | Implemented | `src/verticals/financial-institutions/assessment/synthetic-overlays.ts`, `src/assessment/opportunity.ts`, `docs/PRIVATE_OVERLAYS.md` |
+| P4-06 | Opportunity context as separate overlay-derived dimension                                                | Implemented | `src/assessment/opportunity.ts`, portfolio aggregation in `src/assessment/aggregate.ts`                                              |
+| P4-07 | Capability + portfolio assessments for all 24 orgs                                                       | Implemented | `src/verticals/financial-institutions/assessment/generate.ts`                                                                        |
+| P4-08 | Full rule-reason ledger                                                                                  | Implemented | `src/domain/assessments/ledger.ts`, engine evaluation path                                                                           |
+| P4-09 | Manifests + fingerprints for reproducibility                                                             | Implemented | `src/domain/assessments/manifest.ts`, `src/assessment/fingerprint.ts`                                                                |
+| P4-10 | Methodology drift validation                                                                             | Implemented | `scripts/validate-methodology.ts`, `METHODOLOGY_MANIFEST`                                                                            |
+| P4-11 | Assessment regeneration validation                                                                       | Implemented | `scripts/validate-assessments.ts`                                                                                                    |
+| P4-12 | Separate dimensions (fit / confidence / freshness / assessment completeness / publication / opportunity) | Implemented | `src/domain/schemas/assessment.ts`, `src/domain/assessments/results.ts`, `docs/ASSESSMENT_ENGINE.md`                                 |
+| P4-13 | Organization formal Completeness remains unknown; evidence-state coverage keeps Phase 3 name             | Implemented | `src/application/domain-foundation.ts`, `ASSESSMENT_DIMENSIONS_NOTE`                                                                 |
+| P4-14 | Tenant-safe assessment / portfolio / overlay repositories                                                | Implemented | `src/repositories/*-repository.ts`, synthetic implementations                                                                        |
+| P4-15 | Safe assessment view models (no raw IDs / notes / evidence IDs)                                          | Implemented | `src/application/assessment-view-models.ts`, `assessment-service.ts`                                                                 |
+| P4-16 | Minimal foundation-preview UI integration                                                                | Implemented | `AssessmentFoundationStatus.tsx`, `src/app/(app)/page.tsx`                                                                           |
+| P4-17 | `assessment:read` on demo authorization context                                                          | Implemented | `src/authorization/demo-context.ts`, `src/authorization/policy.ts`                                                                   |
+| P4-18 | Server-only boundary for assessment generate / repos / services                                          | Implemented | `src/domain/server-boundary.contract.test.ts`                                                                                        |
+| P4-19 | Docs: engine, methodology, portfolios, overlays, governance                                              | Implemented | `docs/ASSESSMENT_ENGINE.md`, `SYNTHETIC_METHODOLOGY.md`, `CAPABILITY_PORTFOLIOS.md`, `PRIVATE_OVERLAYS.md`, `MODEL_GOVERNANCE.md`    |
+| P4-20 | CI validate methodology + assessments; Node 22; checkout/setup-node v5                                   | Implemented | `.github/workflows/ci.yml`, `package.json` scripts                                                                                   |
+| P4-21 | Explorer, ranking UI, briefs, exports                                                                    | Deferred    | Phase 5                                                                                                                              |
+| P4-22 | User-authored rule editors                                                                               | Deferred    | Future                                                                                                                               |
+| P4-23 | Real client data, DB, production auth                                                                    | Deferred    | Future                                                                                                                               |
+| P4-24 | ML / LLM scoring                                                                                         | Deferred    | Explicit non-goal                                                                                                                    |
+| P4-25 | Delivery-model finalization (managed / dedicated / hybrid)                                               | Partial     | Hybrid recommended in `docs/MODEL_GOVERNANCE.md`; engine deployment-neutral                                                          |
+
+## Status legend
+
+- **Implemented** — available in synthetic demo with tests/validation
+- **Partial** — documented decision without full productization
+- **Deferred** — intentionally out of Phase 4
