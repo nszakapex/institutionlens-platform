@@ -39,8 +39,8 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     id: "briefs",
     label: "Briefs",
     href: "/briefs",
-    available: false,
-    description: "Placeholder — research brief library arrives later",
+    available: true,
+    description: "Synthetic institutional briefs for research preparation",
   },
   {
     id: "methodology",

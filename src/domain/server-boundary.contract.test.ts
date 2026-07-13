@@ -52,7 +52,9 @@ describe("server-only domain boundary", () => {
       "src/application/evidence-catalog-service.ts",
       "src/application/methodology-service.ts",
       "src/application/compare-service.ts",
+      "src/application/brief-service.ts",
       "src/domain/organization-public-ref.ts",
+      "src/domain/brief-public-ref.ts",
       "src/lib/demo-tenant.ts",
     ];
 
@@ -90,7 +92,7 @@ describe("server-only domain boundary", () => {
   });
 
   it("keeps placeholder routes free of direct fixture access", () => {
-    const placeholders = ["src/app/(app)/briefs/page.tsx", "src/app/(app)/settings/page.tsx"];
+    const placeholders = ["src/app/(app)/settings/page.tsx"];
     for (const relative of placeholders) {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
       expect(content).toContain("PlaceholderPage");
@@ -106,6 +108,8 @@ describe("server-only domain boundary", () => {
       ["src/app/(app)/evidence/page.tsx", /buildEvidenceCatalogPageView/],
       ["src/app/(app)/methodology/page.tsx", /buildMethodologyPageView/],
       ["src/app/(app)/compare/page.tsx", /buildComparePageView/],
+      ["src/app/(app)/briefs/page.tsx", /buildBriefDirectoryPageView/],
+      ["src/app/(app)/briefs/[briefRef]/page.tsx", /buildBriefDocumentPageView/],
     ] as const;
     for (const [relative, servicePattern] of productRoutes) {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
@@ -147,6 +151,20 @@ describe("server-only domain boundary", () => {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
       expect(content, relative).toMatch(/from ["']@\/application\/compare-query["']/);
       expect(content, relative).toMatch(/compareHrefFor\(\[org\.publicRef\]\)/);
+    }
+  });
+
+  it("keeps BriefsWorkspacePage and BriefDocumentPage free of server-only query imports", () => {
+    for (const relative of [
+      "src/components/briefs/BriefsWorkspacePage.tsx",
+      "src/components/briefs/BriefDocumentPage.tsx",
+    ]) {
+      const content = readFileSync(path.join(ROOT, relative), "utf8");
+      expect(content, relative).not.toMatch(/^["']use client["']/m);
+      expect(content, relative).not.toMatch(/from ["']@\/application\/brief-query["']/);
+      expect(content, relative).not.toMatch(/from ["']@\/domain\/brief-public-ref["']/);
+      expect(content, relative).not.toMatch(/from ["']@\/domain\/organization-public-ref["']/);
+      expect(content, relative).not.toMatch(/from ["']@\/application\/brief-service["']/);
     }
   });
 });

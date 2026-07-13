@@ -234,6 +234,36 @@ Briefs, exports, notes, mutations, persistent saved comparisons, database, priva
 
 See `docs/PHASE_7_PLAN.md`, `docs/ORGANIZATION_COMPARISON.md`, and `docs/PHASE_7_REQUIREMENTS_TRACEABILITY.md`.
 
+## D-020 — Phase 8 deterministic institutional briefs
+
+**Status:** Approved for implementation (project Phase 8)
+
+### Roadmap numbering
+
+- Foundation Phase 9 (comparison ≤3 & briefs) was split: comparison delivered as **project Phase 7**; briefs delivered as **project Phase 8**
+- Foundation draft/approve/export workflow remains **deferred** beyond Phase 8
+
+### Product decision
+
+- Activate `/briefs` and `/briefs/[briefRef]` for synthetic, read-only, template-generated institutional briefs
+- One brief summarizes one organization for research/outreach preparation—not investment advice
+- Generate only from existing authorized, redacted research/assessment read models
+- Use fixed, reviewable language templates; stable section order; stable output for identical inputs
+- Canonical individual route uses opaque deterministic `BriefPublicRef` (`bref_…`) derived from **tenant id + organization id**; directory may use opaque `OrganizationPublicRef` query params
+- Require `brief:read` plus `organization:read` and `assessment:read` on every request, with reassertion before final projection
+- Local-demo `getDemoAuthorizationContext()` grants `brief:read` alongside existing research read actions (still excludes draft/approve/export mutations)
+- `brief:draft`, `brief:approve`, and `export:request` remain unused (no mutable approval or download pipeline in Phase 8)
+- Restricted evidence / overlay gating and no-private-notes rules match Phases 6–7
+- No Phase 4 methodology or score recalculation; no free-form LLM narrative
+
+### Explicit non-goals
+
+Database/Supabase/RLS, production authentication, billing, real customer data, scraping, AI narrative, mutations/comments, email, PDF/Word export, public sharing, Phase 4 changes, Vercel configuration/deployment, reconnecting Vercel Git
+
+### Binding plan
+
+See `docs/PHASE_8_PLAN.md` and `docs/PHASE_8_REQUIREMENTS_TRACEABILITY.md`.
+
 ## Current phase boundary
 
-Phases 0–7 are complete through D-019 for the synthetic local-demo comparison scope. Briefs and the remainder of Foundation Phase 9 remain deferred. Phase 8 has not started.
+Phases 0–7 are complete through D-019. Project Phase 8 is the deterministic institutional-brief portion of Foundation Phase 9 defined in D-020 and `docs/PHASE_8_PLAN.md`. Mutable brief workflow, exports, and production hosting remain deferred.
