@@ -74,6 +74,8 @@ export type BriefDirectoryCandidateView = {
   displayName: string;
   organizationType: string;
   assessmentStatusLabel: string;
+  briefState: Extract<BriefPageState, "available" | "insufficient_evidence" | "not_published">;
+  briefStateLabel: string;
   organizationPublicRef: OrganizationPublicRef;
   briefPublicRef: BriefPublicRef;
   briefHref: string;
@@ -112,6 +114,8 @@ export type BriefProvenanceSummaryView = {
   label: string;
   licenseStatusLabel: string;
   accessClassificationLabel: string;
+  /** Safe synthetic reference text for print/display — never a raw internal ID. */
+  sourceReferenceLabel: string | null;
 };
 
 export type BriefOverlayView =

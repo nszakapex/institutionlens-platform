@@ -167,4 +167,17 @@ describe("server-only domain boundary", () => {
       expect(content, relative).not.toMatch(/from ["']@\/application\/brief-service["']/);
     }
   });
+
+  it("keeps BriefSelectionForm as a narrow client island without server imports", () => {
+    const content = readFileSync(
+      path.join(ROOT, "src/components/briefs/BriefSelectionForm.tsx"),
+      "utf8",
+    );
+    expect(content).toMatch(/^["']use client["']/m);
+    expect(content).not.toMatch(/from ["']@\/application\//);
+    expect(content).not.toMatch(/from ["']@\/authorization\//);
+    expect(content).not.toMatch(/from ["']@\/domain\//);
+    expect(content).not.toMatch(/from ["']@\/application\/brief-service["']/);
+    expect(content).not.toMatch(/from ["']@\/domain\/brief-public-ref["']/);
+  });
 });

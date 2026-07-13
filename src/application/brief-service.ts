@@ -335,6 +335,44 @@ function buildEvidenceCoverage(
   };
 }
 
+/**
+ * Print/UI-safe provenance reference text. Never forward raw synthetic paths that
+ * embed internal org/evidence IDs (they fail redaction and would leak in the DOM).
+ */
+function safeSourceReferenceLabel(sourceReference: string): string | null {
+  const value = sourceReference.trim();
+  if (!value) return null;
+  if (FORBIDDEN.test(value)) {
+    return value.startsWith("synthetic://") ? "Synthetic demo source reference" : null;
+  }
+  // Reject schemes other than https? for .example hosts, and bare synthetic:// without IDs.
+  if (value.startsWith("synthetic://")) {
+    return "Synthetic demo source reference";
+  }
+  if (/^(javascript|data|blob|file):/i.test(value)) {
+    return null;
+  }
+  // Allow only clearly demo-safe .example URLs (http/https), length-bounded for print.
+  if (/\.example(?:\/|$)/i.test(value) || value.endsWith(".example")) {
+    try {
+      const parsed = new URL(value);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+      if (!parsed.hostname.endsWith(".example")) return null;
+      if (FORBIDDEN.test(parsed.href)) return null;
+      return parsed.href.length > 240
+        ? `${parsed.origin}${parsed.pathname.slice(0, 80)}…`
+        : parsed.href;
+    } catch {
+      // Non-URL .example token (legacy fixture shape)
+      if (value.endsWith(".example") && !/[\\s<>"']/.test(value) && value.length <= 240) {
+        return value;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
 function buildProvenanceSummaries(
   permitted: readonly EvidenceRecord[],
   provenanceById: ReadonlyMap<string, ProvenanceRecord>,
@@ -352,6 +390,7 @@ function buildProvenanceSummaries(
       label: provenance.sourceName,
       licenseStatusLabel: label(provenance.licenseStatus),
       accessClassificationLabel: label(provenance.accessClassification),
+      sourceReferenceLabel: safeSourceReferenceLabel(provenance.sourceReference),
     });
   }
   return Object.freeze(rows.sort((a, b) => a.label.localeCompare(b.label, "en")));
@@ -427,15 +466,27 @@ function buildSections(input: {
       BRIEF_TEMPLATES.portfolioStatus(statusLabel(org.portfolio.status)),
       "assessment",
     ),
-    observation(
-      "brief.portfolio.coverage",
-      BRIEF_TEMPLATES.portfolioCoverage(
-        org.portfolio.coverage.assessedCapabilityCount,
-        org.portfolio.coverage.enabledCapabilityCount,
-      ),
-      "assessment",
-    ),
   ];
+  if (suppressDetails) {
+    portfolioObservations.push(
+      observation(
+        "brief.portfolio.coverage",
+        BRIEF_TEMPLATES.notPublishedObservation,
+        "not_published",
+      ),
+    );
+  } else {
+    portfolioObservations.push(
+      observation(
+        "brief.portfolio.coverage",
+        BRIEF_TEMPLATES.portfolioCoverage(
+          org.portfolio.coverage.assessedCapabilityCount,
+          org.portfolio.coverage.enabledCapabilityCount,
+        ),
+        "assessment",
+      ),
+    );
+  }
   if (
     !suppressNumeric &&
     org.portfolio.portfolioPriorityScore &&
@@ -829,10 +880,18 @@ export async function buildBriefDirectoryPageView(
       .sort((a, b) => a.displayName.localeCompare(b.displayName, "en"))
       .map((org) => {
         const briefRef = briefPublicRefFor(context.tenant.id, org.organizationId);
+        const { state: briefState } = resolveDocumentState(org);
         return {
           displayName: org.displayName,
           organizationType: label(org.organizationType),
           assessmentStatusLabel: statusLabel(org.portfolio.status),
+          briefState,
+          briefStateLabel:
+            briefState === "available"
+              ? "Available brief"
+              : briefState === "insufficient_evidence"
+                ? "Insufficient evidence"
+                : "Not published",
           organizationPublicRef: org.publicRef as OrganizationPublicRef,
           briefPublicRef: briefRef,
           briefHref: briefDocumentHref(briefRef),

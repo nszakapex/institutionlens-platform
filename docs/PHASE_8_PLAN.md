@@ -1,6 +1,6 @@
 # Phase 8 plan — Deterministic institutional briefs
 
-**Status:** Authoritative for project Phase 8; Batch 2 implemented (uncommitted)  
+**Status:** Authoritative for project Phase 8; Batch 3 committed; Batch 4 in progress (uncommitted)  
 **Depends on:** Phases 0–7 (assessment engine, overview/explorer, detail/evidence/methodology, comparison)  
 **Does not include:** Database, production auth, billing, private-data ingestion, AI narrative, mutations, PDF/Word export, email, public sharing, Vercel changes
 

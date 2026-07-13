@@ -78,6 +78,16 @@ describe("brief service Batch 2 projections", () => {
     expect(JSON.stringify(view)).not.toMatch(
       /"organizationId"|"capabilityId"|"evidenceId"|"provenanceId"|"notes"/,
     );
+    expect(view.provenanceSummaries.length).toBeGreaterThan(0);
+    expect(
+      view.provenanceSummaries.every(
+        (row) =>
+          row.sourceReferenceLabel === null ||
+          row.sourceReferenceLabel === "Synthetic demo source reference" ||
+          (row.sourceReferenceLabel.endsWith(".example") &&
+            !FORBIDDEN.test(row.sourceReferenceLabel)),
+      ),
+    ).toBe(true);
   });
 
   it("keeps output deterministic and section order stable", async () => {
@@ -134,6 +144,8 @@ describe("brief service Batch 2 projections", () => {
     const gaps = view.sections.find((section) => section.key === "gaps");
     expect(gaps?.observations.some((item) => item.classification === "not_published")).toBe(true);
     expect(JSON.stringify(view)).not.toMatch(/\b\d+ of \d+ points\b/);
+    expect(JSON.stringify(view)).not.toMatch(/\b\d+ of \d+ enabled capabilities\b/);
+    expect(JSON.stringify(view)).not.toMatch(/\b\d+ of \d+\b/);
     expect(JSON.stringify(view)).not.toMatch(FORBIDDEN);
   });
 
