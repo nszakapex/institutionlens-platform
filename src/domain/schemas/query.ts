@@ -59,6 +59,39 @@ export const CapabilityQuerySchema = z
 export type CapabilityQueryInput = z.input<typeof CapabilityQuerySchema>;
 export type CapabilityQuery = z.output<typeof CapabilityQuerySchema>;
 
+export const AssessmentListQuerySchema = z
+  .object({
+    organizationId: z.string().min(1).max(64).optional(),
+    capabilityId: z.string().min(1).max(64).optional(),
+    page: z.number().int().min(1).default(1),
+    pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  })
+  .strict();
+
+export type AssessmentListQueryInput = z.input<typeof AssessmentListQuerySchema>;
+export type AssessmentListQuery = z.output<typeof AssessmentListQuerySchema>;
+
+export const PortfolioListQuerySchema = z
+  .object({
+    page: z.number().int().min(1).default(1),
+    pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  })
+  .strict();
+
+export type PortfolioListQueryInput = z.input<typeof PortfolioListQuerySchema>;
+export type PortfolioListQuery = z.output<typeof PortfolioListQuerySchema>;
+
+export const OverlayListQuerySchema = z
+  .object({
+    organizationId: z.string().min(1).max(64).optional(),
+    page: z.number().int().min(1).default(1),
+    pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  })
+  .strict();
+
+export type OverlayListQueryInput = z.input<typeof OverlayListQuerySchema>;
+export type OverlayListQuery = z.output<typeof OverlayListQuerySchema>;
+
 export function normalizeSearchText(text: string | undefined): string | undefined {
   if (text === undefined) return undefined;
   const normalized = text.trim().replace(/\s+/g, " ");

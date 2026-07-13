@@ -28,6 +28,10 @@ const POLICY_PATHS = new Set([
   path.join("docs", "ARCHITECTURE.md"),
   // Phase 3 plan non-goals explicitly exclude Coverage / AD&Co material
   path.join("docs", "PHASE_3_PLAN.md"),
+  // Phase 4 plan restates clean-room boundary for assessment methodology
+  path.join("docs", "PHASE_4_PLAN.md"),
+  // Model governance names the Coverage / AD&Co boundary in one sentence
+  path.join("docs", "MODEL_GOVERNANCE.md"),
   // Synthetic data guarantees that restate independent design vs Coverage-derived material
   path.join("docs", "SYNTHETIC_DATA.md"),
   // Top-level contributor/security docs that describe the boundary

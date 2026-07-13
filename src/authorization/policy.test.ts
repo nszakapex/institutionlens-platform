@@ -9,11 +9,13 @@ describe("authorization policy", () => {
       "organization:read",
       "evidence:read",
       "methodology:read",
+      "assessment:read",
       "brief:read",
     ]);
     expect(roleHasPermission("analyst", "organization:read")).toBe(true);
     expect(roleHasPermission("analyst", "evidence:read")).toBe(true);
     expect(roleHasPermission("analyst", "methodology:read")).toBe(true);
+    expect(roleHasPermission("analyst", "assessment:read")).toBe(true);
   });
 
   it("does not grant mutation actions to analysts", () => {

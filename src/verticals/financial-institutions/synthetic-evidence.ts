@@ -9,6 +9,7 @@ import { DEMO_DOMAIN_TENANT_ID } from "@/domain/demo-constants";
 import {
   FINANCIAL_INSTITUTIONS_ADAPTER_VERSION,
   FINANCIAL_INSTITUTIONS_VERTICAL_ID,
+  FinancialInstitutionPayloadSchema,
 } from "@/verticals/financial-institutions/schema";
 import { buildSyntheticOrganizations } from "@/verticals/financial-institutions/synthetic-organizations";
 
@@ -251,6 +252,7 @@ export function buildSyntheticProvenanceAndEvidence(): {
     }
 
     // complete / verified
+    const payload = FinancialInstitutionPayloadSchema.parse(org.verticalPayload);
     const verified = EvidenceRecordSchema.parse({
       id: `ev_syn_fi_${orgKey}_profile`,
       tenantId: DEMO_DOMAIN_TENANT_ID,
@@ -279,6 +281,65 @@ export function buildSyntheticProvenanceAndEvidence(): {
     });
     assertEvidenceInvariants(verified, provenanceRecord);
     evidence.push(verified);
+
+    const dataAvailability = EvidenceRecordSchema.parse({
+      id: `ev_syn_fi_${orgKey}_availability`,
+      tenantId: DEMO_DOMAIN_TENANT_ID,
+      organizationId: org.id,
+      verticalId: FINANCIAL_INSTITUTIONS_VERTICAL_ID,
+      adapterVersion: FINANCIAL_INSTITUTIONS_ADAPTER_VERSION,
+      evidenceType: "data_availability",
+      epistemicStatus: "verified",
+      title: "Synthetic data-availability observation",
+      summary: "Synthetic data-availability observation backing adapter availability fields.",
+      observation: {
+        kind: "category",
+        value: payload.regulatoryDataAvailability,
+      },
+      observedAt: OBSERVED,
+      effectivePeriod: null,
+      freshness: "current",
+      confidence: "moderate",
+      provenanceId: baseProvId,
+      publicationEligibility: "internal_only",
+      synthetic: true,
+      dataClassification: "synthetic",
+      createdAt: CREATED,
+      updatedAt: UPDATED,
+      domainSchemaVersion: "1.0.0",
+    });
+    assertEvidenceInvariants(dataAvailability, provenanceRecord);
+    evidence.push(dataAvailability);
+
+    const operatingContext = EvidenceRecordSchema.parse({
+      id: `ev_syn_fi_${orgKey}_context`,
+      tenantId: DEMO_DOMAIN_TENANT_ID,
+      organizationId: org.id,
+      verticalId: FINANCIAL_INSTITUTIONS_VERTICAL_ID,
+      adapterVersion: FINANCIAL_INSTITUTIONS_ADAPTER_VERSION,
+      evidenceType: "operating_context",
+      epistemicStatus: "verified",
+      title: "Synthetic operating-context observation",
+      summary: "Synthetic operating-context observation backing adapter region fields.",
+      observation: {
+        kind: "integer",
+        value: payload.operatingRegions.length,
+        unit: "regions",
+      },
+      observedAt: OBSERVED,
+      effectivePeriod: null,
+      freshness: "current",
+      confidence: "moderate",
+      provenanceId: baseProvId,
+      publicationEligibility: "internal_only",
+      synthetic: true,
+      dataClassification: "synthetic",
+      createdAt: CREATED,
+      updatedAt: UPDATED,
+      domainSchemaVersion: "1.0.0",
+    });
+    assertEvidenceInvariants(operatingContext, provenanceRecord);
+    evidence.push(operatingContext);
 
     // Additional public change signal evidence for complete orgs with signals
     const changeEv = EvidenceRecordSchema.parse({

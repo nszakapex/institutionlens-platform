@@ -1,10 +1,11 @@
 /**
- * Explicit action vocabulary — Phase 3 enforces read actions only.
+ * Explicit action vocabulary — Phase 4 adds assessment:read; mutations remain future-facing.
  */
 export const ACTIONS = [
   "organization:read",
   "evidence:read",
   "methodology:read",
+  "assessment:read",
   "comparison:create",
   "brief:read",
   "brief:draft",
@@ -15,9 +16,14 @@ export const ACTIONS = [
 
 export type Action = (typeof ACTIONS)[number];
 
-export const READ_ACTIONS = ["organization:read", "evidence:read", "methodology:read"] as const;
+export const READ_ACTIONS = [
+  "organization:read",
+  "evidence:read",
+  "methodology:read",
+  "assessment:read",
+] as const;
 
-/** Mutation actions are defined for future use but unused in Phase 3. */
+/** Mutation actions are defined for future use but unused in Phase 4 schema foundations. */
 export const MUTATION_ACTIONS = [
   "comparison:create",
   "brief:draft",
@@ -29,11 +35,18 @@ export const MUTATION_ACTIONS = [
 import type { PrincipalRole } from "@/domain/schemas/tenant";
 
 const ROLE_PERMISSIONS: Record<PrincipalRole, readonly Action[]> = {
-  analyst: ["organization:read", "evidence:read", "methodology:read", "brief:read"],
+  analyst: [
+    "organization:read",
+    "evidence:read",
+    "methodology:read",
+    "assessment:read",
+    "brief:read",
+  ],
   reviewer: [
     "organization:read",
     "evidence:read",
     "methodology:read",
+    "assessment:read",
     "brief:read",
     "brief:approve",
   ],

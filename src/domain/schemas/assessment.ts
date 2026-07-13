@@ -2,13 +2,27 @@ import { z } from "zod";
 
 /** Separate assessment dimensions — never merge into a trust score. */
 
+export const ObservedFitBandSchema = z.enum([
+  "limited_observed_alignment",
+  "emerging_observed_alignment",
+  "meaningful_observed_alignment",
+  "strong_observed_alignment",
+]);
+export type ObservedFitBand = z.infer<typeof ObservedFitBandSchema>;
+
 export const FitAssessmentSchema = z.discriminatedUnion("status", [
-  z.object({ status: z.literal("unassessed") }),
-  z.object({
-    status: z.literal("assessed"),
-    /** Deferred — Phase 3 never produces assessed fit. */
-    score: z.never().optional(),
-  }),
+  z.object({ status: z.literal("unassessed") }).strict(),
+  z.object({ status: z.literal("insufficient_evidence") }).strict(),
+  z.object({ status: z.literal("invalid") }).strict(),
+  z.object({ status: z.literal("superseded") }).strict(),
+  z
+    .object({
+      status: z.literal("assessed"),
+      pointsAwarded: z.number().int().min(0).max(10_000),
+      pointsPossible: z.number().int().min(1).max(10_000),
+      band: ObservedFitBandSchema,
+    })
+    .strict(),
 ]);
 
 export type FitAssessment = z.infer<typeof FitAssessmentSchema>;

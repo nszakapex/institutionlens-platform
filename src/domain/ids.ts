@@ -23,6 +23,11 @@ export const EvidenceIdSchema = prefixedId("ev_", "ev_syn_fi_001_profile");
 export const ProvenanceIdSchema = prefixedId("prov_", "prov_syn_fi_001_profile");
 export const CapabilityIdSchema = prefixedId("cap_", "cap_syn_fi_ops_analytics");
 export const AssessmentIdSchema = prefixedId("assess_", "assess_syn_fi_001_fit");
+export const PortfolioIdSchema = prefixedId("portfolio_", "portfolio_syn_fi_demo");
+export const OverlayIdSchema = prefixedId("overlay_", "overlay_syn_fi_001");
+export const RuleIdSchema = prefixedId("rule_", "rule_syn_fi_ops_profile");
+export const RuleSetIdSchema = prefixedId("ruleset_", "ruleset_syn_fi_ops_analytics");
+export const LedgerEntryIdSchema = prefixedId("ledger_", "ledger_syn_fi_001_rule_01");
 
 export const VerticalIdSchema = z
   .string()
@@ -43,6 +48,11 @@ export type EvidenceId = z.infer<typeof EvidenceIdSchema>;
 export type ProvenanceId = z.infer<typeof ProvenanceIdSchema>;
 export type CapabilityId = z.infer<typeof CapabilityIdSchema>;
 export type AssessmentId = z.infer<typeof AssessmentIdSchema>;
+export type PortfolioId = z.infer<typeof PortfolioIdSchema>;
+export type OverlayId = z.infer<typeof OverlayIdSchema>;
+export type RuleId = z.infer<typeof RuleIdSchema>;
+export type RuleSetId = z.infer<typeof RuleSetIdSchema>;
+export type LedgerEntryId = z.infer<typeof LedgerEntryIdSchema>;
 export type VerticalId = z.infer<typeof VerticalIdSchema>;
 export type AdapterVersion = z.infer<typeof AdapterVersionSchema>;
 

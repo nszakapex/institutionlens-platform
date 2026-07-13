@@ -36,7 +36,10 @@ export function getDemoAuthorizationContext(): AuthorizationContext {
   getDemoPrincipal();
   const permissions = permissionsForRole("analyst").filter(
     (action) =>
-      action === "organization:read" || action === "evidence:read" || action === "methodology:read",
+      action === "organization:read" ||
+      action === "evidence:read" ||
+      action === "methodology:read" ||
+      action === "assessment:read",
   );
   return createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, permissions);
 }

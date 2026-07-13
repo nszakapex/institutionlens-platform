@@ -17,13 +17,16 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:security": "vitest run src/lib/security src/lib/env.test.ts src/lib/demo-tenant.test.ts src/lib/health.test.ts src/components/design-system.contract.test.ts src/components/status/evidence-label.test.ts src/authorization src/domain/invariants.test.ts src/repositories/synthetic-organization-repository.test.ts",
-    "test:domain": "vitest run src/domain src/authorization src/verticals src/repositories src/application",
+    "test:security": "vitest run src/lib/security src/lib/env.test.ts src/lib/demo-tenant.test.ts src/lib/health.test.ts src/components/design-system.contract.test.ts src/components/status/evidence-label.test.ts src/authorization src/domain/invariants.test.ts src/domain/server-boundary.contract.test.ts src/repositories/synthetic-organization-repository.test.ts src/repositories/synthetic-assessment-repository.test.ts",
+    "test:domain": "vitest run src/domain src/authorization src/verticals src/repositories src/application src/assessment",
+    "test:assessment": "vitest run src/assessment src/verticals/financial-institutions/assessment src/repositories/synthetic-assessment-repository.test.ts src/application/assessment-service.test.ts",
     "validate:synthetic": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-synthetic.ts",
+    "validate:methodology": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-methodology.ts",
+    "validate:assessments": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-assessments.ts",
     "scan:secrets": "tsx scripts/scan-secrets.ts",
     "scan:clean-room": "tsx scripts/scan-clean-room.ts",
     "scan:assets": "tsx scripts/scan-assets.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run validate:synthetic && npm run scan:assets && npm run scan:secrets && npm run scan:clean-room && npm run build"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run validate:synthetic && npm run validate:methodology && npm run validate:assessments && npm run scan:assets && npm run scan:secrets && npm run scan:clean-room && npm run build"
   },
   "dependencies": {
     "next": "16.2.10",
