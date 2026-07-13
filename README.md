@@ -4,20 +4,21 @@ Configurable **institutional-fit intelligence** for specialized B2B companies.
 
 This repository is the **authenticated application foundation** only. It is a clean-room product. It is **not** the InstitutionLens marketing website, and it must not import from Coverage or any AD&Co-specific prototype.
 
-## Current status (Phase 0–1)
+## Current status (Phase 0–7)
 
-- Synthetic demo foundation only
+- Synthetic demo foundation through read-only organization comparison (Phase 7)
 - No real organization data
 - No PostgreSQL / Supabase configuration
 - Explicit **local-demo** principal and tenant context (server-side, non-production)
 - **No production deployment** while demo authentication is in place
-- Brand tokens and self-hosted fonts loaded for a single foundation page
+- Brand tokens and self-hosted fonts loaded for product surfaces
 
 See:
 
 - [`docs/FOUNDATION_PLAN.md`](docs/FOUNDATION_PLAN.md) — product and architecture plan
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — approved architecture decisions
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical shape
+- [`docs/PHASE_7_PLAN.md`](docs/PHASE_7_PLAN.md) / [`docs/ORGANIZATION_COMPARISON.md`](docs/ORGANIZATION_COMPARISON.md) — comparison
 - [`docs/CLEAN_ROOM_POLICY.md`](docs/CLEAN_ROOM_POLICY.md) — Coverage separation rules
 - [`SECURITY.md`](SECURITY.md) — security posture and reporting
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to work in this repo

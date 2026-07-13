@@ -6,9 +6,9 @@
 
 ## Purpose and boundary
 
-The organization-detail surface connects an organization profile to its conditional portfolio assessment, capability assessments, complete rule ledgers, evidence, provenance, change signals, limitations, tenant-private context, and assessment manifest. It is a read-only research surface. It does not implement comparison, briefs, exports, notes, mutations, real ingestion, a database, or production authentication.
+The organization-detail surface connects an organization profile to its conditional portfolio assessment, capability assessments, complete rule ledgers, evidence, provenance, change signals, limitations, tenant-private context, and assessment manifest. It is a read-only research surface. It does not implement briefs, exports, notes, mutations, real ingestion, a database, or production authentication.
 
-Phase 6 ends at these read surfaces. Phase 7 has not started.
+Phase 7 adds a Compare inbound action on the detail action row (`compareHrefFor`) that opens `/compare` with the organization preselected. Full comparison UX lives on `/compare` (`docs/ORGANIZATION_COMPARISON.md`).
 
 ## Public route references
 

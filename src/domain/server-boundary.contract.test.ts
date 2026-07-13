@@ -137,4 +137,16 @@ describe("server-only domain boundary", () => {
     expect(content).not.toMatch(/from ["']@\/application\/compare-service["']/);
     expect(content).toMatch(/from ["']@\/lib\/compare-url["']/);
   });
+
+  it("builds inbound Compare hrefs through shared compareHrefFor on research surfaces", () => {
+    for (const relative of [
+      "src/application/overview-service.ts",
+      "src/application/explorer-service.ts",
+      "src/application/detail-service.ts",
+    ]) {
+      const content = readFileSync(path.join(ROOT, relative), "utf8");
+      expect(content, relative).toMatch(/from ["']@\/application\/compare-query["']/);
+      expect(content, relative).toMatch(/compareHrefFor\(\[org\.publicRef\]\)/);
+    }
+  });
 });

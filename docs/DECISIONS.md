@@ -206,7 +206,7 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 
 ## D-019 — Phase 7 read-only organization comparison (≤3)
 
-**Status:** Approved for implementation (project Phase 7)
+**Status:** Delivered (project Phase 7 complete for synthetic local-demo scope)
 
 ### Roadmap numbering
 
@@ -222,6 +222,8 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 - Build one bounded comparison read model per request; reuse Phase 4/6 outputs without recalculation
 - Explain differences without ranking leaderboards, automatic recommendations, or investment “winners”
 - Overlay content requires `overlay:read`; restricted evidence remains gated; no private notes
+- Overview shortlist, Explorer results, and organization detail offer inbound Compare links via shared `compareHrefFor`
+- Attention and evidence-review queues intentionally omit Compare actions
 - `comparison:create` stays reserved for future saved comparisons and is unused in Phase 7
 
 ### Explicit non-goals
@@ -230,8 +232,8 @@ Briefs, exports, notes, mutations, persistent saved comparisons, database, priva
 
 ### Binding plan
 
-See `docs/PHASE_7_PLAN.md` for acceptance criteria, test matrix, and batch boundaries.
+See `docs/PHASE_7_PLAN.md`, `docs/ORGANIZATION_COMPARISON.md`, and `docs/PHASE_7_REQUIREMENTS_TRACEABILITY.md`.
 
 ## Current phase boundary
 
-Phases 0–6 are complete through D-018. Project Phase 7 is the read-only ≤3 organization comparison defined in D-019 and `docs/PHASE_7_PLAN.md`. Briefs and the remainder of Foundation Phase 9 remain deferred.
+Phases 0–7 are complete through D-019 for the synthetic local-demo comparison scope. Briefs and the remainder of Foundation Phase 9 remain deferred. Phase 8 has not started.

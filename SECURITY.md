@@ -11,9 +11,9 @@ Please include:
 - Impact assessment
 - Whether the issue is reproducible offline
 
-## Current posture (Phase 0–1)
+## Current posture (Phase 0–7 synthetic demo)
 
-This repository is in **synthetic demo foundation** mode.
+This repository is in **synthetic demo foundation** mode through project Phase 7 (read-only organization comparison).
 
 | Control                               | Status                                               |
 | ------------------------------------- | ---------------------------------------------------- |
@@ -22,6 +22,7 @@ This repository is in **synthetic demo foundation** mode.
 | No third-party fonts/scripts/trackers | Required                                             |
 | Secrets in client bundles             | Forbidden; env validation rejects unsafe exposure    |
 | Demo tenant context                   | Server-only; fail closed outside `local-demo`        |
+| Compare URLs                          | Opaque `oref_` refs only; authz before resolve       |
 | Database / RLS                        | Not configured — **not** production tenant isolation |
 | Real authentication provider          | Not configured                                       |
 | Production deployment                 | **Forbidden** while demo auth is in place            |

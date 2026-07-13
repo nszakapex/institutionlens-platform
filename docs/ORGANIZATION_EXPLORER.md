@@ -28,3 +28,7 @@ Default page size 12; allowed 12 / 24 / 48; hard maximum 50. Beyond-range pages 
 ## Search
 
 Safe fields only: display name, organization type, approved tags, approved adapter vocabulary labels. Max 100 characters. No regex, fuzzy search, private notes, or ID search.
+
+## Comparison entry (Phase 7)
+
+Each authorized result row exposes a Compare action. The href is built server-side with `compareHrefFor([publicRef])` and opens `/compare` in partial state. Visible label is concise (“Compare”); accessible name includes the organization. Browser Back restores filters, pagination, and sort.

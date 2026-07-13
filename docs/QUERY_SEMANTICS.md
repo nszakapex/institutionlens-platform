@@ -39,4 +39,8 @@ Filter groups that support multiple values use checkbox fieldsets.
 
 ## Clear All
 
-Resets to documented defaults, including the default exclusion policy.
+Resets to documented defaults, including the default exclusion policy. Reset returns to `/organizations` defaults without preserving ad-hoc unknown parameters.
+
+## Comparison query (Phase 7)
+
+Organization comparison uses a separate canonical contract: repeated `org` parameters on `/compare` containing only opaque `OrganizationPublicRef` values. See `docs/ORGANIZATION_COMPARISON.md` and `src/application/compare-query.ts`. Explorer filter URLs are independent; Browser Back from Compare restores the prior Explorer query intact.

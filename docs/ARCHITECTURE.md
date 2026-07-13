@@ -108,4 +108,4 @@ Preferred later: Vercel (Next.js) + Supabase (Postgres/Auth). Neither is configu
 
 ## Phase boundary
 
-Phase 6 provides read-only synthetic organization detail, evidence/provenance, methodology, lineage, and private-context UI. Project Phase 7 adds read-only comparison of up to three organizations (`docs/PHASE_7_PLAN.md`, D-019). Real ingestion, database persistence/RLS, production authentication, briefs, exports, notes, and mutations remain deferred.
+Phase 6 provides read-only synthetic organization detail, evidence/provenance, methodology, lineage, and private-context UI. Project Phase 7 delivers read-only comparison of up to three organizations (`docs/PHASE_7_PLAN.md`, `docs/ORGANIZATION_COMPARISON.md`, D-019), including inbound Compare links from Overview shortlist, Explorer results, and organization detail. Real ingestion, database persistence/RLS, production authentication, briefs, exports, notes, and mutations remain deferred.
