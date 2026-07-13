@@ -20,6 +20,7 @@ import {
   loadFinancialInstitutionsStore,
   type SyntheticStore,
 } from "@/repositories/synthetic-organization-repository";
+import { organizationPublicRefFor } from "@/domain/organization-public-ref";
 import { generateSyntheticAssessments } from "@/verticals/financial-institutions/assessment/generate";
 import { getOverlayForOrg } from "@/verticals/financial-institutions/assessment/synthetic-overlays";
 import { FINANCIAL_INSTITUTION_CAPABILITIES } from "@/verticals/financial-institutions/capabilities";
@@ -41,9 +42,13 @@ import { AuthorizationError } from "@/domain/errors";
 export type OrgResearchRecord = {
   /** Internal join key — never expose in client view models. */
   organizationId: string;
+  /** Public route handle — only expose as part of detail hrefs. */
+  publicRef: string;
   displayName: string;
   organizationType: string;
   lifecycleStatus: string;
+  locationLabel: string;
+  dataClassification: "synthetic";
   tags: readonly string[];
   summary: string;
   verticalLabel: string;
@@ -58,6 +63,7 @@ export type OrgResearchRecord = {
   opportunityContextLabel: string;
   portfolio: PortfolioAssessment;
   capabilityAssessments: readonly CapabilityAssessment[];
+  assessmentOutputFingerprints: readonly string[];
   changeSignals: readonly EvidenceRecord[];
 };
 
@@ -173,9 +179,13 @@ function buildModel(context: AuthorizationContext, store: SyntheticStore): Tenan
 
     organizations.push({
       organizationId: org.id,
+      publicRef: organizationPublicRefFor(org.id),
       displayName: org.displayName,
       organizationType: org.organizationType,
       lifecycleStatus: org.lifecycleStatus,
+      locationLabel:
+        org.primaryLocation.localityLabel ?? vocabularyLabel(org.primaryLocation.regionCode),
+      dataClassification: org.dataClassification,
       tags: Object.freeze([...org.tags]),
       summary: org.summary,
       verticalLabel: "Financial institutions",
@@ -190,6 +200,9 @@ function buildModel(context: AuthorizationContext, store: SyntheticStore): Tenan
       opportunityContextLabel: opportunityReasonLabelFor(opportunityContextStatus),
       portfolio: assessment.portfolioAssessment,
       capabilityAssessments: assessment.capabilityAssessments,
+      assessmentOutputFingerprints: Object.freeze(
+        assessment.manifests.map((item) => item.outputFingerprint),
+      ),
       changeSignals,
     });
   }

@@ -10,12 +10,15 @@ describe("authorization policy", () => {
       "evidence:read",
       "methodology:read",
       "assessment:read",
+      "overlay:read",
       "brief:read",
     ]);
     expect(roleHasPermission("analyst", "organization:read")).toBe(true);
     expect(roleHasPermission("analyst", "evidence:read")).toBe(true);
     expect(roleHasPermission("analyst", "methodology:read")).toBe(true);
     expect(roleHasPermission("analyst", "assessment:read")).toBe(true);
+    expect(roleHasPermission("analyst", "overlay:read")).toBe(true);
+    expect(roleHasPermission("analyst", "evidence:restricted_read")).toBe(false);
   });
 
   it("does not grant mutation actions to analysts", () => {
@@ -24,6 +27,11 @@ describe("authorization policy", () => {
     expect(roleHasPermission("analyst", "brief:approve")).toBe(false);
     expect(roleHasPermission("analyst", "export:request")).toBe(false);
     expect(roleHasPermission("analyst", "vertical:configure")).toBe(false);
+  });
+
+  it("grants restricted evidence read only to administrators", () => {
+    expect(roleHasPermission("administrator", "evidence:restricted_read")).toBe(true);
+    expect(roleHasPermission("reviewer", "evidence:restricted_read")).toBe(false);
   });
 
   it("grants reviewers approval but not administrative configuration", () => {

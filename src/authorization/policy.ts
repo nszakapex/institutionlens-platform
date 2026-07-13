@@ -1,11 +1,14 @@
 /**
- * Explicit action vocabulary — Phase 4 adds assessment:read; mutations remain future-facing.
+ * Explicit action vocabulary — Phase 6 adds overlay:read and evidence:restricted_read.
+ * Mutations remain future-facing.
  */
 export const ACTIONS = [
   "organization:read",
   "evidence:read",
+  "evidence:restricted_read",
   "methodology:read",
   "assessment:read",
+  "overlay:read",
   "comparison:create",
   "brief:read",
   "brief:draft",
@@ -21,6 +24,7 @@ export const READ_ACTIONS = [
   "evidence:read",
   "methodology:read",
   "assessment:read",
+  "overlay:read",
 ] as const;
 
 /** Mutation actions are defined for future use but unused in Phase 4 schema foundations. */
@@ -40,6 +44,7 @@ const ROLE_PERMISSIONS: Record<PrincipalRole, readonly Action[]> = {
     "evidence:read",
     "methodology:read",
     "assessment:read",
+    "overlay:read",
     "brief:read",
   ],
   reviewer: [
@@ -47,6 +52,7 @@ const ROLE_PERMISSIONS: Record<PrincipalRole, readonly Action[]> = {
     "evidence:read",
     "methodology:read",
     "assessment:read",
+    "overlay:read",
     "brief:read",
     "brief:approve",
   ],

@@ -48,6 +48,10 @@ describe("server-only domain boundary", () => {
       "src/application/research-read-model.ts",
       "src/application/overview-service.ts",
       "src/application/explorer-service.ts",
+      "src/application/detail-service.ts",
+      "src/application/evidence-catalog-service.ts",
+      "src/application/methodology-service.ts",
+      "src/domain/organization-public-ref.ts",
       "src/lib/demo-tenant.ts",
     ];
 
@@ -87,9 +91,7 @@ describe("server-only domain boundary", () => {
   it("keeps placeholder routes free of direct fixture access", () => {
     const placeholders = [
       "src/app/(app)/compare/page.tsx",
-      "src/app/(app)/evidence/page.tsx",
       "src/app/(app)/briefs/page.tsx",
-      "src/app/(app)/methodology/page.tsx",
       "src/app/(app)/settings/page.tsx",
     ];
     for (const relative of placeholders) {
@@ -100,13 +102,19 @@ describe("server-only domain boundary", () => {
   });
 
   it("keeps product routes on application services without fixture imports", () => {
-    const productRoutes = ["src/app/(app)/page.tsx", "src/app/(app)/organizations/page.tsx"];
-    for (const relative of productRoutes) {
+    const productRoutes = [
+      ["src/app/(app)/page.tsx", /buildOverviewPageView/],
+      ["src/app/(app)/organizations/page.tsx", /buildExplorerPageView/],
+      ["src/app/(app)/organizations/[organizationRef]/page.tsx", /buildOrganizationDetailPageView/],
+      ["src/app/(app)/evidence/page.tsx", /buildEvidenceCatalogPageView/],
+      ["src/app/(app)/methodology/page.tsx", /buildMethodologyPageView/],
+    ] as const;
+    for (const [relative, servicePattern] of productRoutes) {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
       expect(content).not.toMatch(
         /buildSynthetic|loadFinancial|OrganizationRepository|generateSynthetic/,
       );
-      expect(content).toMatch(/buildOverviewPageView|buildExplorerPageView/);
+      expect(content).toMatch(servicePattern);
     }
   });
 });
