@@ -87,16 +87,36 @@ function manifest() {
 }
 
 function baseView(
-  partial: Omit<ComparePageView, "manifest" | "differences"> & {
+  partial: Omit<ComparePageView, "manifest" | "differences" | "candidates"> & {
     manifest?: ComparePageView["manifest"];
     differences?: ComparePageView["differences"];
+    candidates?: ComparePageView["candidates"];
   },
 ): ComparePageView {
   return deepFreeze({
     manifest: manifest(),
     differences: Object.freeze([]),
+    candidates: Object.freeze([]),
     ...partial,
   });
+}
+
+function buildCandidates(
+  model: TenantResearchReadModel,
+  selectedRefs: readonly string[],
+): ComparePageView["candidates"] {
+  const selected = new Set(selectedRefs);
+  return Object.freeze(
+    [...model.organizations]
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, "en"))
+      .map((org) => ({
+        publicRef: org.publicRef as OrganizationPublicRef,
+        displayName: org.displayName,
+        organizationType: label(org.organizationType),
+        assessmentStatusLabel: statusLabel(org.portfolio.status),
+        selected: selected.has(org.publicRef),
+      })),
+  );
 }
 
 function publicationAllowsNumericFit(eligibility: string): boolean {
@@ -369,7 +389,7 @@ function attachRemoveHrefs(columns: readonly CompareColumnView[]): CompareColumn
 
 function selectionGuidance(resolvedCount: number, requestedCount: number): string {
   if (resolvedCount === 0 && requestedCount === 0) {
-    return `Select ${MIN_COMPARE_ORGS} or ${MAX_COMPARE_ORGS} organizations from Overview, Explorer, or organization detail.`;
+    return `Choose ${MIN_COMPARE_ORGS} or ${MAX_COMPARE_ORGS} synthetic organizations below to begin a comparison.`;
   }
   if (resolvedCount < MIN_COMPARE_ORGS) {
     return `Add at least ${MIN_COMPARE_ORGS - resolvedCount} more organization${
@@ -624,6 +644,7 @@ export async function buildComparePageView(
     const columnsWithRemoval = attachRemoveHrefs(columns);
     const compareHref = compareHrefFor(columnsWithRemoval.map((column) => column.publicRef));
     const selectedRefs = Object.freeze(columnsWithRemoval.map((column) => column.publicRef));
+    const candidates = buildCandidates(model, selectedRefs);
 
     if (parsed.query.orgRefs.length === 0) {
       return baseView({
@@ -633,6 +654,7 @@ export async function buildComparePageView(
         selectedRefs: Object.freeze([]),
         columns: Object.freeze([]),
         missing: Object.freeze([]),
+        candidates: buildCandidates(model, []),
         selectionGuidance: selectionGuidance(0, 0),
         contrastNotes: Object.freeze([]),
       });
@@ -646,6 +668,7 @@ export async function buildComparePageView(
         selectedRefs: Object.freeze([]),
         columns: Object.freeze([]),
         missing: Object.freeze(missing),
+        candidates: buildCandidates(model, []),
         selectionGuidance: selectionGuidance(0, parsed.query.orgRefs.length),
         contrastNotes: Object.freeze([]),
       });
@@ -659,6 +682,7 @@ export async function buildComparePageView(
         selectedRefs,
         columns: Object.freeze(columnsWithRemoval),
         missing: Object.freeze(missing),
+        candidates,
         selectionGuidance: selectionGuidance(
           columnsWithRemoval.length,
           parsed.query.orgRefs.length,
@@ -676,10 +700,11 @@ export async function buildComparePageView(
       selectedRefs,
       columns: Object.freeze(columnsWithRemoval),
       missing: Object.freeze(missing),
+      candidates,
       selectionGuidance: selectionGuidance(columnsWithRemoval.length, parsed.query.orgRefs.length),
       differences,
       contrastNotes: Object.freeze([
-        "Contrast rows use fixed labels for same, different, unavailable, and not-comparable published values. No organization is ranked as a winner.",
+        "Contrast rows use fixed labels for same, different, unavailable, and not-comparable published values. No organization is presented as a preferred result.",
       ]),
     });
   } catch (error) {

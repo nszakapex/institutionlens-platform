@@ -117,13 +117,24 @@ describe("server-only domain boundary", () => {
   });
 
   it("keeps ComparePage free of server-only query and public-ref imports", () => {
-    const content = readFileSync(
-      path.join(ROOT, "src/components/compare/ComparePage.tsx"),
-      "utf8",
-    );
+    const content = readFileSync(path.join(ROOT, "src/components/compare/ComparePage.tsx"), "utf8");
     expect(content).not.toMatch(/^["']use client["']/m);
     expect(content).not.toMatch(/from ["']@\/application\/compare-query["']/);
     expect(content).not.toMatch(/from ["']@\/domain\/organization-public-ref["']/);
     expect(content).toMatch(/removeHref/);
+  });
+
+  it("keeps CompareSelectionForm as a narrow client island without server imports", () => {
+    const content = readFileSync(
+      path.join(ROOT, "src/components/compare/CompareSelectionForm.tsx"),
+      "utf8",
+    );
+    expect(content).toMatch(/^["']use client["']/m);
+    expect(content).not.toMatch(/from ["']@\/application\//);
+    expect(content).not.toMatch(/from ["']@\/authorization\//);
+    expect(content).not.toMatch(/from ["']@\/domain\/organization-public-ref["']/);
+    expect(content).not.toMatch(/from ["']@\/application\/compare-query["']/);
+    expect(content).not.toMatch(/from ["']@\/application\/compare-service["']/);
+    expect(content).toMatch(/from ["']@\/lib\/compare-url["']/);
   });
 });

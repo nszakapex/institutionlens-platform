@@ -126,6 +126,14 @@ export type CompareManifestView = {
   minOrganizations: number;
 };
 
+export type CompareCandidateOptionView = {
+  publicRef: OrganizationPublicRef;
+  displayName: string;
+  organizationType: string;
+  assessmentStatusLabel: string;
+  selected: boolean;
+};
+
 export type ComparePageView = {
   state: ComparePageState;
   stateMessage: string;
@@ -134,6 +142,8 @@ export type ComparePageView = {
   selectedRefs: readonly OrganizationPublicRef[];
   columns: readonly CompareColumnView[];
   missing: readonly CompareMissingSlotView[];
+  /** Redacted catalog for selection UI — opaque refs and labels only. */
+  candidates: readonly CompareCandidateOptionView[];
   selectionGuidance: string;
   /** Deterministic cross-organization difference rows (Batch 2). */
   differences: readonly CompareDifferenceRowView[];

@@ -72,6 +72,79 @@ describe("buildComparePageView Batch 2 projections", () => {
     expect(three.differences.length).toBeGreaterThan(0);
   });
 
+  it("exposes redacted candidates for selection without raw IDs", async () => {
+    const [one] = publicRefs(1);
+    const empty = await buildComparePageView(getDemoAuthorizationContext(), {});
+    const partial = await buildComparePageView(getDemoAuthorizationContext(), { org: one });
+    expect(empty.candidates.length).toBeGreaterThan(2);
+    expect(partial.candidates.some((candidate) => candidate.selected)).toBe(true);
+    expect(partial.candidates.filter((candidate) => candidate.selected)).toHaveLength(1);
+    const names = empty.candidates.map((candidate) => candidate.displayName);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en")));
+    expect(JSON.stringify(empty.candidates)).not.toMatch(FORBIDDEN);
+    expect(JSON.stringify(empty.candidates)).not.toMatch(
+      /"organizationId"|"capabilityId"|"evidenceId"/,
+    );
+    expect(empty.candidates.every((candidate) => /^oref_/.test(candidate.publicRef))).toBe(true);
+  });
+
+  it("keeps column order as URL selection order without ranking by score", async () => {
+    const refs = publicRefs(3);
+    const reversed = [...refs].reverse();
+    const forward = await buildComparePageView(getDemoAuthorizationContext(), { org: refs });
+    const backward = await buildComparePageView(getDemoAuthorizationContext(), { org: reversed });
+    expect(forward.state).toBe("ready");
+    expect(backward.state).toBe("ready");
+    expect(forward.columns.map((column) => column.publicRef)).toEqual(refs);
+    expect(backward.columns.map((column) => column.publicRef)).toEqual(reversed);
+    expect(forward.compareHref).toBe(`/compare?org=${refs[0]}&org=${refs[1]}&org=${refs[2]}`);
+    expect(backward.compareHref).toBe(
+      `/compare?org=${reversed[0]}&org=${reversed[1]}&org=${reversed[2]}`,
+    );
+    const scores = forward.columns.map((column) => column.conditionalScore?.pointsAwarded ?? -1);
+    const sortedByScore = [...scores].sort((a, b) => b - a);
+    // Column order must not silently become score rank even when scores differ.
+    if (new Set(scores).size > 1) {
+      expect(scores).not.toEqual(sortedByScore);
+    }
+    expect(JSON.stringify(forward)).not.toMatch(
+      /\b(?:winner|top pick|recommended organization)\b/i,
+    );
+  });
+
+  it("canonicalizes add, remove, replace, duplicate, and max-three selections", async () => {
+    const refs = publicRefs(4);
+    expect(refs).toHaveLength(4);
+    const [a, b, c, d] = refs as [string, string, string, string];
+    const two = await buildComparePageView(getDemoAuthorizationContext(), { org: [a, b] });
+    expect(two.compareHref).toBe(`/compare?org=${a}&org=${b}`);
+    expect(two.columns[0]!.removeHref).toBe(`/compare?org=${b}`);
+    expect(two.columns[1]!.removeHref).toBe(`/compare?org=${a}`);
+
+    const replaced = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: [a, c],
+    });
+    expect(replaced.compareHref).toBe(`/compare?org=${a}&org=${c}`);
+    expect(replaced.columns.map((column) => column.publicRef)).toEqual([a, c]);
+
+    const deduped = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: [a, a, b, a],
+    });
+    expect(deduped.compareHref).toBe(`/compare?org=${a}&org=${b}`);
+    expect(deduped.columns).toHaveLength(2);
+
+    const capped = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: [a, b, c],
+    });
+    expect(capped.columns).toHaveLength(3);
+    expect(capped.compareHref).toBe(`/compare?org=${a}&org=${b}&org=${c}`);
+    // Four distinct refs fail closed rather than silently ranking a subset.
+    const tooMany = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: [a, b, c, d],
+    });
+    expect(tooMany.state).toBe("malformed");
+  });
+
   it("projects mixed assessment states without declaring a winner", async () => {
     const refs = refsWithMixedAssessmentStates();
     const view = await buildComparePageView(getDemoAuthorizationContext(), { org: [...refs] });
@@ -82,7 +155,9 @@ describe("buildComparePageView Batch 2 projections", () => {
     const serialized = JSON.stringify(view);
     expect(serialized).not.toMatch(/\b(?:top pick|buy now|invest in|recommended organization)\b/i);
     expect(
-      view.contrastNotes.some((note) => /no organization is ranked as a winner/i.test(note)),
+      view.contrastNotes.some((note) =>
+        /no organization is presented as a preferred result/i.test(note),
+      ),
     ).toBe(true);
     expect(view.differences.some((row) => row.state === "different" || row.state === "same")).toBe(
       true,
