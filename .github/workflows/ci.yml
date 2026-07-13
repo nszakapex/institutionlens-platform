@@ -54,6 +54,12 @@ jobs:
       - name: Validate assessments
         run: npm run validate:assessments
 
+      - name: Validate read models
+        run: npm run validate:read-models
+
+      - name: Validate prioritization policy
+        run: npm run validate:prioritization
+
       - name: Asset scan
         run: npm run scan:assets
 
