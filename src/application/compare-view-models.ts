@@ -34,6 +34,56 @@ export type CompareCapabilityColumnView = {
   publicationEligibility: PublicationEligibility;
 };
 
+/** Fixed difference states — never ranking or recommendation language. */
+export type CompareDifferenceState = "same" | "different" | "unavailable" | "not_comparable";
+
+export const COMPARE_DIFFERENCE_STATE_LABELS: Readonly<Record<CompareDifferenceState, string>> =
+  Object.freeze({
+    same: "Same published value",
+    different: "Different published values",
+    unavailable: "Value unavailable for one or more organizations",
+    not_comparable: "Not comparable under current publication or assessment rules",
+  });
+
+export type CompareDifferenceCellView = {
+  displayName: string;
+  publicRef: OrganizationPublicRef;
+  valueLabel: string;
+};
+
+export type CompareDifferenceRowView = {
+  dimensionKey: string;
+  dimensionLabel: string;
+  state: CompareDifferenceState;
+  stateLabel: string;
+  cells: readonly CompareDifferenceCellView[];
+};
+
+export type CompareCapabilityEvidenceView = {
+  capabilityName: string;
+  /** Count of evidence titles the viewer is permitted to know about. */
+  publishedEvidenceCount: number;
+  provenanceSummary: string;
+  assessmentStatusLabel: string;
+  gapLabel: string;
+};
+
+/**
+ * Overlay projection. When access is restricted, no further fields are present so
+ * unauthorized callers cannot infer whether overlay rows exist.
+ */
+export type CompareOverlayProjectionView =
+  | { access: "restricted" }
+  | { access: "omitted"; summary: string }
+  | {
+      access: "available";
+      relationshipStatusLabel: string;
+      matchStatusLabel: string;
+      reviewStatusLabel: string;
+      sourceClassificationLabel: string;
+      capabilityUsageLabels: readonly string[];
+    };
+
 export type CompareColumnView = {
   displayName: string;
   detailHref: string;
@@ -55,11 +105,9 @@ export type CompareColumnView = {
   opportunityContextStatus: OpportunityContextStatus;
   opportunityContextLabel: string;
   capabilities: readonly CompareCapabilityColumnView[];
-  /** Batch 2 fills these; Batch 1 leaves them empty. */
-  evidenceCoverageNotes: readonly string[];
-  gapNotes: readonly string[];
-  overlayNotes: readonly string[];
-  differenceNotes: readonly string[];
+  evidenceByCapability: readonly CompareCapabilityEvidenceView[];
+  gapIndicators: readonly string[];
+  overlay: CompareOverlayProjectionView;
   warnings: readonly string[];
   synthetic: true;
 };
@@ -87,7 +135,9 @@ export type ComparePageView = {
   columns: readonly CompareColumnView[];
   missing: readonly CompareMissingSlotView[];
   selectionGuidance: string;
-  /** Non-recommending contrast copy — Batch 2 expands; Batch 1 may be empty. */
+  /** Deterministic cross-organization difference rows (Batch 2). */
+  differences: readonly CompareDifferenceRowView[];
+  /** Non-recommending contrast copy. */
   contrastNotes: readonly string[];
   manifest: CompareManifestView;
 };

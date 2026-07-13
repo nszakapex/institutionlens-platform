@@ -177,6 +177,41 @@ export function ComparePage({ view }: { view: ComparePageView }) {
                     </li>
                   ))}
                 </ul>
+                <h4>Evidence coverage</h4>
+                <ul>
+                  {column.evidenceByCapability.map((row) => (
+                    <li key={row.capabilityName}>
+                      <strong>{row.capabilityName}</strong> — {row.publishedEvidenceCount} permitted
+                      linked evidence · {row.provenanceSummary} · {row.gapLabel}
+                    </li>
+                  ))}
+                </ul>
+                {column.gapIndicators.length > 0 ? (
+                  <>
+                    <h4>Gap indicators</h4>
+                    <ul>
+                      {column.gapIndicators.map((gap) => (
+                        <li key={gap}>{gap}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+                <h4>Private overlay</h4>
+                {column.overlay.access === "restricted" ? (
+                  <p className="il-muted">Overlay access is restricted for this workspace role.</p>
+                ) : column.overlay.access === "omitted" ? (
+                  <p className="il-muted">{column.overlay.summary}</p>
+                ) : (
+                  <ul>
+                    <li>Relationship: {column.overlay.relationshipStatusLabel}</li>
+                    <li>Match: {column.overlay.matchStatusLabel}</li>
+                    <li>Review: {column.overlay.reviewStatusLabel}</li>
+                    <li>Source: {column.overlay.sourceClassificationLabel}</li>
+                    {column.overlay.capabilityUsageLabels.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                )}
                 {column.warnings.length > 0 ? (
                   <ul className="il-warning-list">
                     {column.warnings.map((warning) => (
@@ -190,6 +225,18 @@ export function ComparePage({ view }: { view: ComparePageView }) {
               </article>
             ))}
           </div>
+          {view.differences.length > 0 ? (
+            <section aria-label="Published value differences">
+              <h3 className="il-section-title">Published differences</h3>
+              <ul>
+                {view.differences.map((row) => (
+                  <li key={row.dimensionKey}>
+                    <strong>{row.dimensionLabel}</strong> — {row.stateLabel}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           {view.contrastNotes.map((note) => (
             <p key={note} className="il-research-disclaimer">
               {note}
