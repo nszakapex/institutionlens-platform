@@ -9,8 +9,8 @@ import {
 import { PageHeader } from "@/components/ui/PageHeader";
 
 /**
- * Batch 1 brief document shell — Server Component only.
- * Full section layout, print styling, and a11y polish arrive in Batches 2–3.
+ * Batch 2 document shell — Server Component only.
+ * Renders projected sections without Batch 3 presentation polish.
  */
 export function BriefDocumentPage({ view }: { view: BriefDocumentPageView }) {
   if (view.state === "unauthorized") {
@@ -98,20 +98,31 @@ export function BriefDocumentPage({ view }: { view: BriefDocumentPageView }) {
         </p>
       ) : null}
 
-      <section aria-labelledby="brief-shell-sections">
-        <h2 id="brief-shell-sections" className="il-section-title">
-          Brief sections
-        </h2>
-        <p className="il-muted">
-          Batch 1 establishes the fail-closed route and state shell. Evidence-backed section
-          projections arrive in Batch 2.
-        </p>
-        <ul>
-          {view.sectionPlaceholders.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </section>
+      {view.sections.map((section) => (
+        <section key={section.key} aria-labelledby={`brief-section-${section.key}`}>
+          <h2 id={`brief-section-${section.key}`} className="il-section-title">
+            {section.title}
+          </h2>
+          <p className="il-muted">{section.summary}</p>
+          <ul>
+            {section.observations.map((item) => (
+              <li key={item.key}>
+                <p>{item.language}</p>
+                {item.supportingEvidenceTitles.length > 0 ? (
+                  <p className="il-muted">
+                    Supporting evidence: {item.supportingEvidenceTitles.join("; ")}
+                  </p>
+                ) : null}
+                {item.supportingProvenanceLabels.length > 0 ? (
+                  <p className="il-muted">
+                    Supporting provenance: {item.supportingProvenanceLabels.join("; ")}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
 
       <nav className="il-filter-actions" aria-label="Brief navigation">
         <Link className="il-button il-button--secondary il-button--md" href={view.directoryHref}>
@@ -123,11 +134,6 @@ export function BriefDocumentPage({ view }: { view: BriefDocumentPageView }) {
           </Link>
         ) : null}
       </nav>
-
-      <p className="il-research-disclaimer" role="note">
-        Methodology {view.manifest.methodologyVersion}. Dataset {view.manifest.datasetVersion}.{" "}
-        {view.manifest.nonRecommendationDisclaimer}
-      </p>
     </article>
   );
 }
