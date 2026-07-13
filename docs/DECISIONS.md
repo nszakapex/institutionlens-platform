@@ -134,7 +134,7 @@ Design synthetic financial-institutions rules independently. Do not inspect or r
 
 Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may be committed with the initial documentation/scaffold work after review.
 
-## Phase boundary
+## Phase boundary recorded before Phase 5
 
 **Completed:** Phase 0, Phase 1, Phase 2, Phase 3, and Phase 4.  
 **In progress:** Phase 5 — portfolio overview and organization explorer.  
@@ -188,3 +188,22 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 - Insufficient evidence never treated as limited alignment or zero score
 - No org detail, briefs, exports, DB, real auth, or Phase 6
 - No dependency or lockfile changes
+
+## D-018 — Phase 6 organization detail, evidence, and methodology
+
+**Status:** Implemented in the current working tree; approval/commit status is separate
+
+- Read-only organization detail at `/organizations/[organizationRef]`, evidence/provenance catalog at `/evidence`, and executable methodology presentation at `/methodology`
+- `OrganizationPublicRef` is an opaque deterministic synthetic SHA-256 truncation used for routes; it is not authorization, carries no tenant/name meaning, and resolves only inside the active tenant
+- Detail reads require organization and assessment permissions and build a bounded tenant read model per request without global caching or authorization-decision reuse
+- Evidence, provenance, rule, capability, and portfolio lineage is projected through redacted server-only view models; complete ledgers remain authoritative
+- Restricted evidence requires `evidence:restricted_read`; analysts and reviewers receive placeholders, while administrators may receive safe restricted fields
+- Tenant-private overlay projection requires `overlay:read`; overlay data remains separate from and invariant to fit
+- Methodology UI derives from executable declarations; offline validators detect manifest/rule and rule/UI structural drift
+- Generic noindex metadata and response privacy/security headers are defense in depth, not substitutes for authentication or authorization
+- PostgreSQL, RLS, real ingestion, production auth, comparison, briefs, exports, notes, mutations, and production performance validation remain deferred
+- No production isolation, scale, availability, or predictive-performance claim
+
+## Current phase boundary
+
+Phases 0–5 precede the current Phase 6 implementation. Phase 6 is limited to the read-only synthetic surfaces and controls described in D-018. Phase 7 has not started.
