@@ -78,6 +78,9 @@ export function OrganizationDetailPage({ view }: { view: OrganizationDetailPageV
       <p className="il-detail-actions">
         <Link href="/methodology">Inspect executable methodology</Link>
         <Link href={organizationEvidenceHref}>View this organization’s evidence catalog</Link>
+        <Link href={view.header.compareHref} aria-label={view.header.compareActionLabel}>
+          Compare
+        </Link>
       </p>
       {view.header.warnings.length > 0 ? (
         <aside className="il-detail-warnings" aria-labelledby="detail-warnings-heading">

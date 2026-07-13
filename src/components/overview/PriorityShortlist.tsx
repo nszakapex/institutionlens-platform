@@ -50,6 +50,11 @@ export function PriorityShortlist({ shortlist }: Props) {
                     <Link href={row.detailHref}>{row.displayName}</Link>
                   </div>
                   <div>{row.organizationType}</div>
+                  <p className="il-inbound-compare">
+                    <Link href={row.compareHref} aria-label={row.compareActionLabel}>
+                      Compare
+                    </Link>
+                  </p>
                   {row.warnings.length > 0 ? (
                     <ul className="il-warning-list">
                       {row.warnings.map((warning) => (
@@ -90,6 +95,11 @@ export function PriorityShortlist({ shortlist }: Props) {
             <h3 className="il-result-record-title">
               <Link href={row.detailHref}>{row.displayName}</Link>
             </h3>
+            <p className="il-inbound-compare">
+              <Link href={row.compareHref} aria-label={row.compareActionLabel}>
+                Compare
+              </Link>
+            </p>
             <div className="il-result-record-meta">
               <span>{row.organizationType}</span>
               <span>

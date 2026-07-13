@@ -28,6 +28,7 @@ import type {
   OverviewPageView,
   ShortlistRowView,
 } from "@/application/overview-view-models";
+import { compareHrefFor } from "@/application/compare-query";
 import {
   bandLabel,
   capabilityNameById,
@@ -156,6 +157,8 @@ function buildShortlist(model: TenantResearchReadModel) {
     return {
       displayName: org.displayName,
       detailHref: `/organizations/${org.publicRef}`,
+      compareHref: compareHrefFor([org.publicRef]),
+      compareActionLabel: `Add ${org.displayName} to comparison`,
       organizationType: org.organizationType,
       conditionalScore: {
         pointsAwarded: score.pointsAwarded,

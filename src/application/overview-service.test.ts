@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { getDemoAuthorizationContext } from "@/authorization/demo-context";
 import { createAuthorizationContext } from "@/authorization/context";
 import { DEMO_ANALYST, DEMO_TENANT } from "@/authorization/demo-context";
@@ -8,7 +8,16 @@ import { PRIORITIZATION_POLICY_MANIFEST } from "@/application/prioritization-pol
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+function setDemoEnv(): void {
+  process.env.IL_APP_MODE = "local-demo";
+  process.env.IL_DEMO_TENANT_ID = "demo-tenant-local";
+  process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
+}
+
 describe("overview service", () => {
+  beforeEach(() => {
+    setDemoEnv();
+  });
   it("derives exact universe partition counts", async () => {
     const view = await buildOverviewPageView(getDemoAuthorizationContext());
     expect(view.state).toBe("ready");
@@ -44,6 +53,27 @@ describe("overview service", () => {
       expect(JSON.stringify(row)).not.toMatch(/org_syn_fi_|tenant_|principal_|overlay_/);
       expect(row.opportunityContextStatus).not.toBe("excluded");
     }
+  });
+
+  it("exposes opaque Compare inbound hrefs into partial selection state", async () => {
+    const view = await buildOverviewPageView(getDemoAuthorizationContext());
+    expect(view.state).toBe("ready");
+    expect(view.shortlist.rows.length).toBeGreaterThan(0);
+    for (const row of view.shortlist.rows) {
+      expect(row.compareHref).toMatch(/^\/compare\?org=oref_[a-f0-9]{16,32}$/);
+      expect(row.compareActionLabel).toBe(`Add ${row.displayName} to comparison`);
+      expect(row.compareHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
+      const ref = new URL(row.compareHref, "https://example.test").searchParams.get("org");
+      expect(row.detailHref).toBe(`/organizations/${ref}`);
+    }
+  });
+
+  it("omits Compare inbound actions when overview is unauthorized", async () => {
+    const context = createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, ["organization:read"]);
+    const view = await buildOverviewPageView(context);
+    expect(view.state).toBe("unauthorized");
+    expect(view.shortlist.rows).toHaveLength(0);
+    expect(JSON.stringify(view)).not.toMatch(/compareHref|\/compare\?org=/);
   });
 
   it("shows evidence review without numeric scores", async () => {

@@ -10,6 +10,10 @@ import type { ExplorerSort } from "@/application/explorer-query";
 export type ExplorerResultRowView = {
   displayName: string;
   detailHref: string;
+  /** Server-built /compare href with this organization preselected (opaque ref only). */
+  compareHref: string;
+  /** Accessible action name including organization context. */
+  compareActionLabel: string;
   organizationType: string;
   verticalSummary: string;
   portfolioAssessmentStatus: string;

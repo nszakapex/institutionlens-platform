@@ -46,6 +46,11 @@ function ResultTable({
                 </div>
                 <div>{row.organizationType}</div>
                 <div className="il-score-disclosure">{row.verticalSummary}</div>
+                <p className="il-inbound-compare">
+                  <Link href={row.compareHref} aria-label={row.compareActionLabel}>
+                    Compare
+                  </Link>
+                </p>
                 {row.warnings.length > 0 ? (
                   <ul className="il-warning-list">
                     {row.warnings.map((w) => (
@@ -97,6 +102,11 @@ function ResultStack({ rows }: { rows: readonly ExplorerResultRowView[] }) {
           <h3 className="il-result-record-title">
             <Link href={row.detailHref}>{row.displayName}</Link>
           </h3>
+          <p className="il-inbound-compare">
+            <Link href={row.compareHref} aria-label={row.compareActionLabel}>
+              Compare
+            </Link>
+          </p>
           <div className="il-result-record-meta">
             <span>{row.organizationType}</span>
             <span>{row.verticalSummary}</span>

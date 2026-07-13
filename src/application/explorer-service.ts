@@ -18,6 +18,7 @@ import type {
   ExplorerPageView,
   ExplorerResultRowView,
 } from "@/application/explorer-view-models";
+import { compareHrefFor } from "@/application/compare-query";
 import {
   compareDisplayName,
   compareStableId,
@@ -283,6 +284,8 @@ function toResultRow(org: OrgResearchRecord): ExplorerResultRowView {
   const base = {
     displayName: org.displayName,
     detailHref: `/organizations/${org.publicRef}`,
+    compareHref: compareHrefFor([org.publicRef]),
+    compareActionLabel: `Add ${org.displayName} to comparison`,
     organizationType: org.organizationType,
     verticalSummary: org.verticalSummary,
     portfolioAssessmentStatus:

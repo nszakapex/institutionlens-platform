@@ -27,6 +27,7 @@ import {
   opportunityReasonLabelFor,
   outcomeLabelFor,
 } from "@/application/assessment-view-models";
+import { compareHrefFor } from "@/application/compare-query";
 import type {
   DetailCapabilitySectionView,
   DetailEvidenceCardView,
@@ -772,6 +773,8 @@ export async function buildOrganizationDetailPageView(
       header: {
         displayName: org.displayName,
         detailHref: `/organizations/${org.publicRef}`,
+        compareHref: compareHrefFor([org.publicRef]),
+        compareActionLabel: `Add ${org.displayName} to comparison`,
         organizationType: org.organizationType,
         lifecycleStatus: org.lifecycleStatus,
         locationLabel: org.locationLabel,

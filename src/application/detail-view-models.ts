@@ -17,6 +17,10 @@ export type DetailPageState =
 export type OrganizationDetailHeaderView = {
   displayName: string;
   detailHref: string;
+  /** Server-built /compare href with this organization preselected (opaque ref only). */
+  compareHref: string;
+  /** Accessible action name including organization context. */
+  compareActionLabel: string;
   organizationType: string;
   lifecycleStatus: string;
   locationLabel: string;

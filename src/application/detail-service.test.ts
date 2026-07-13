@@ -74,6 +74,7 @@ describe("organization detail service", () => {
     const view = await buildOrganizationDetailPageView(withoutPermission("organization:read"), ref);
     expect(view.state).toBe("unauthorized");
     expect(JSON.stringify(view)).not.toContain(ref);
+    expect(JSON.stringify(view)).not.toMatch(/compareHref|\/compare\?org=/);
   });
 
   it("returns malformed for invalid route references", async () => {
@@ -105,6 +106,11 @@ describe("organization detail service", () => {
     if (assessed.state !== "ok" || insufficient.state !== "ok") return;
 
     expect(assessed.header.detailHref).toBe(`/organizations/${assessedRef}`);
+    expect(assessed.header.compareHref).toBe(`/compare?org=${assessedRef}`);
+    expect(assessed.header.compareActionLabel).toBe(
+      `Add ${assessed.header.displayName} to comparison`,
+    );
+    expect(assessed.header.compareHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
     expect(assessed.header.displayName).toBeTruthy();
     expect(assessed.portfolioSummary.statusLabel).toBe("Assessed");
     expect(insufficient.portfolioSummary.statusLabel).toBe("Insufficient evidence");

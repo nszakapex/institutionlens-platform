@@ -1,11 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { getDemoAuthorizationContext } from "@/authorization/demo-context";
 import { createAuthorizationContext } from "@/authorization/context";
 import { DEMO_ANALYST, DEMO_TENANT } from "@/authorization/demo-context";
 import { buildExplorerPageView } from "@/application/explorer-service";
 import { defaultExplorerQuery, parseExplorerSearchParams } from "@/application/explorer-query";
 
+function setDemoEnv(): void {
+  process.env.IL_APP_MODE = "local-demo";
+  process.env.IL_DEMO_TENANT_ID = "demo-tenant-local";
+  process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
+}
+
 describe("explorer query validation", () => {
+  beforeEach(() => {
+    setDemoEnv();
+  });
   it("parses defaults", () => {
     const parsed = parseExplorerSearchParams({});
     expect(parsed.ok).toBe(true);
@@ -52,6 +61,10 @@ describe("explorer query validation", () => {
 });
 
 describe("explorer service", () => {
+  beforeEach(() => {
+    setDemoEnv();
+  });
+
   it("returns default explorer results without excluded orgs", async () => {
     const view = await buildExplorerPageView(getDemoAuthorizationContext(), {});
     expect(view.state).toBe("ready");
@@ -157,6 +170,31 @@ describe("explorer service", () => {
     expect(payload).not.toMatch(/Synthetic prospect flagged|private note/i);
   });
 
+  it("exposes opaque Compare inbound hrefs that open partial comparison state", async () => {
+    const view = await buildExplorerPageView(getDemoAuthorizationContext(), {
+      assessmentStatus: ["assessed"],
+      pageSize: "12",
+    });
+    expect(view.state).toBe("ready");
+    expect(view.combinedRows.length).toBeGreaterThan(0);
+    for (const row of view.combinedRows) {
+      expect(row.compareHref).toMatch(/^\/compare\?org=oref_[a-f0-9]{16,32}$/);
+      expect(row.compareActionLabel).toContain(row.displayName);
+      expect(row.compareActionLabel).toMatch(/comparison/i);
+      expect(row.compareHref).not.toMatch(/org_syn_fi_|cap_syn_|tenant_/);
+    }
+    // Filtered explorer href remains shareable independently of Compare.
+    expect(view.clearAllHref).toBe("/organizations");
+  });
+
+  it("omits Compare inbound hrefs when explorer is unauthorized", async () => {
+    const context = createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, []);
+    const view = await buildExplorerPageView(context, {});
+    expect(view.state).toBe("unauthorized");
+    expect(view.combinedRows).toHaveLength(0);
+    expect(JSON.stringify(view)).not.toMatch(/compareHref|\/compare\?org=/);
+  });
+
   it("fails closed without permissions", async () => {
     const context = createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, []);
     const view = await buildExplorerPageView(context, {});
@@ -165,6 +203,10 @@ describe("explorer service", () => {
 });
 
 describe("explorer multi-select", () => {
+  beforeEach(() => {
+    setDemoEnv();
+  });
+
   it("ORs two values within one filter group", async () => {
     const view = await buildExplorerPageView(getDemoAuthorizationContext(), {
       assessmentStatus: ["assessed", "insufficient_evidence"],

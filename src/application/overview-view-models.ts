@@ -34,6 +34,10 @@ export type ObservedAlignmentDistributionView = {
 export type ShortlistRowView = {
   displayName: string;
   detailHref: string;
+  /** Server-built /compare href with this organization preselected (opaque ref only). */
+  compareHref: string;
+  /** Accessible action name including organization context. */
+  compareActionLabel: string;
   organizationType: string;
   conditionalScore: {
     pointsAwarded: number;

@@ -518,6 +518,17 @@
   }
 }
 
+.il-inbound-compare {
+  margin: var(--il-space-1) 0 0;
+  font-size: var(--il-fs-body-sm);
+  overflow-wrap: anywhere;
+}
+
+.il-inbound-compare a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .il-distribution-fill {
     transition: none;
