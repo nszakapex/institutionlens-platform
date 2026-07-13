@@ -1,5 +1,6 @@
 /* Phase 6 research detail, evidence, and methodology */
 .il-phase6-page,
+.il-phase7-page,
 .il-research-section,
 .il-detail-capabilities {
   display: grid;
@@ -285,6 +286,49 @@
   .il-section-nav a {
     flex: 1 1 9rem;
   }
+
+  .il-compare-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Phase 7 comparison shell */
+.il-compare-selection-list,
+.il-compare-columns {
+  display: grid;
+  gap: var(--il-space-4);
+  min-width: 0;
+}
+
+.il-compare-columns {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.il-compare-selection-item,
+.il-compare-column {
+  min-width: 0;
+  padding: var(--il-space-4);
+  border: 1px solid var(--il-border-hairline);
+}
+
+.il-compare-facts {
+  display: grid;
+  gap: var(--il-space-2);
+  margin: var(--il-space-3) 0;
+}
+
+.il-compare-facts div {
+  display: grid;
+  gap: var(--il-space-1);
+}
+
+.il-compare-facts dt {
+  font-size: var(--il-fs-body-sm);
+  color: var(--il-text-muted, inherit);
+}
+
+.il-compare-facts dd {
+  margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

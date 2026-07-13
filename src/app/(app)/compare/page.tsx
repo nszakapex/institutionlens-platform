@@ -1,12 +1,20 @@
-import { PlaceholderPage, placeholderMetadata } from "@/components/shell/PlaceholderPage";
+import type { Metadata } from "next";
+import { buildComparePageView } from "@/application/compare-service";
+import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { ComparePage } from "@/components/compare/ComparePage";
 
-export const metadata = placeholderMetadata("Compare");
+export const metadata: Metadata = {
+  title: "Compare",
+  description: "Side-by-side comparison of up to three synthetic organizations.",
+  robots: { index: false, follow: false, noarchive: true },
+};
 
-export default function ComparePlaceholder() {
-  return (
-    <PlaceholderPage
-      title="Compare"
-      summary="Bounded comparison of up to three organizations will land in a later phase."
-    />
-  );
+export default async function CompareRoute({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const view = await buildComparePageView(getDemoAuthorizationContext(), params);
+  return <ComparePage view={view} />;
 }

@@ -25,8 +25,8 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     id: "compare",
     label: "Compare",
     href: "/compare",
-    available: false,
-    description: "Placeholder — bounded comparison arrives later",
+    available: true,
+    description: "Bounded side-by-side comparison of up to three organizations",
   },
   {
     id: "evidence",

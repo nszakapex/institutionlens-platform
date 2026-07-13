@@ -51,6 +51,7 @@ describe("server-only domain boundary", () => {
       "src/application/detail-service.ts",
       "src/application/evidence-catalog-service.ts",
       "src/application/methodology-service.ts",
+      "src/application/compare-service.ts",
       "src/domain/organization-public-ref.ts",
       "src/lib/demo-tenant.ts",
     ];
@@ -89,11 +90,7 @@ describe("server-only domain boundary", () => {
   });
 
   it("keeps placeholder routes free of direct fixture access", () => {
-    const placeholders = [
-      "src/app/(app)/compare/page.tsx",
-      "src/app/(app)/briefs/page.tsx",
-      "src/app/(app)/settings/page.tsx",
-    ];
+    const placeholders = ["src/app/(app)/briefs/page.tsx", "src/app/(app)/settings/page.tsx"];
     for (const relative of placeholders) {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
       expect(content).toContain("PlaceholderPage");
@@ -108,6 +105,7 @@ describe("server-only domain boundary", () => {
       ["src/app/(app)/organizations/[organizationRef]/page.tsx", /buildOrganizationDetailPageView/],
       ["src/app/(app)/evidence/page.tsx", /buildEvidenceCatalogPageView/],
       ["src/app/(app)/methodology/page.tsx", /buildMethodologyPageView/],
+      ["src/app/(app)/compare/page.tsx", /buildComparePageView/],
     ] as const;
     for (const [relative, servicePattern] of productRoutes) {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
@@ -116,5 +114,16 @@ describe("server-only domain boundary", () => {
       );
       expect(content).toMatch(servicePattern);
     }
+  });
+
+  it("keeps ComparePage free of server-only query and public-ref imports", () => {
+    const content = readFileSync(
+      path.join(ROOT, "src/components/compare/ComparePage.tsx"),
+      "utf8",
+    );
+    expect(content).not.toMatch(/^["']use client["']/m);
+    expect(content).not.toMatch(/from ["']@\/application\/compare-query["']/);
+    expect(content).not.toMatch(/from ["']@\/domain\/organization-public-ref["']/);
+    expect(content).toMatch(/removeHref/);
   });
 });

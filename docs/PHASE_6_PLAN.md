@@ -1,8 +1,8 @@
 # Phase 6 plan — Organization detail, evidence, and methodology
 
-**Status:** Implemented in the current working tree; Phase 7 not started  
+**Status:** Implemented; superseded phase boundary is D-018 / this plan  
 **Depends on:** Phases 0–5  
-**Does not include:** Comparison, briefs, exports, notes, mutations, database, real auth, Phase 7
+**Does not include:** Comparison (now project Phase 7 — see `PHASE_7_PLAN.md`), briefs, exports, notes, mutations, database, real auth
 
 ## Goal
 
@@ -84,7 +84,7 @@ Current classification:
 
 ## Non-goals
 
-Side-by-side comparison, saved views, notes, brief generation, exports, CRM, rule editing, real ingestion, database, production auth, deployment, Phase 7.
+Side-by-side comparison (deferred to project Phase 7), saved views, notes, brief generation, exports, CRM, rule editing, real ingestion, database, production auth, deployment.
 
 ## Delivered documentation
 
@@ -97,4 +97,4 @@ Side-by-side comparison, saved views, notes, brief generation, exports, CRM, rul
 
 ## Boundary after Phase 6
 
-Phase 6 is a read-only synthetic research experience. Future briefs and real ingestion are deferred, together with comparison, exports, notes, mutations, database persistence/RLS, production authentication, deployment, and measured production performance. Phase 7 has not started.
+Phase 6 is a read-only synthetic research experience. Project Phase 7 (read-only ≤3 comparison) is defined in `docs/PHASE_7_PLAN.md` and D-019. Briefs, exports, notes, mutations, database persistence/RLS, production authentication, deployment, and measured production performance remain deferred beyond Phase 6.

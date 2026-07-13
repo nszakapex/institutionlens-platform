@@ -49,11 +49,11 @@ describe("primary navigation", () => {
     expect(PRIMARY_NAV.filter((item) => item.available).map((item) => item.id)).toEqual([
       "overview",
       "organizations",
+      "compare",
       "evidence",
       "methodology",
     ]);
     expect(PRIMARY_NAV.filter((item) => !item.available).map((item) => item.id)).toEqual([
-      "compare",
       "briefs",
       "settings",
     ]);

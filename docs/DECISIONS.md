@@ -204,6 +204,34 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 - PostgreSQL, RLS, real ingestion, production auth, comparison, briefs, exports, notes, mutations, and production performance validation remain deferred
 - No production isolation, scale, availability, or predictive-performance claim
 
+## D-019 — Phase 7 read-only organization comparison (≤3)
+
+**Status:** Approved for implementation (project Phase 7)
+
+### Roadmap numbering
+
+- Foundation Phase 7 (scoring engine & explainability) was delivered as **project Phase 4**
+- Foundation Phase 8 (core read UI) was delivered through **project Phases 5–6**
+- Project Phase 7 implements **only the comparison portion** of Foundation Phase 9; briefs remain deferred
+
+### Product decision
+
+- Activate `/compare` for **exactly two or three** organizations from the existing synthetic dataset
+- Canonical shareable URL uses repeated `org` search params containing only opaque `OrganizationPublicRef` values
+- Resolve refs server-side after `organization:read` and `assessment:read` on every request
+- Build one bounded comparison read model per request; reuse Phase 4/6 outputs without recalculation
+- Explain differences without ranking leaderboards, automatic recommendations, or investment “winners”
+- Overlay content requires `overlay:read`; restricted evidence remains gated; no private notes
+- `comparison:create` stays reserved for future saved comparisons and is unused in Phase 7
+
+### Explicit non-goals
+
+Briefs, exports, notes, mutations, persistent saved comparisons, database, private-data ingestion, production authentication, billing, external-data collection, AI-generated assessments/narratives, Phase 4 methodology/score changes, Vercel configuration, and deployment
+
+### Binding plan
+
+See `docs/PHASE_7_PLAN.md` for acceptance criteria, test matrix, and batch boundaries.
+
 ## Current phase boundary
 
-Phases 0–5 precede the current Phase 6 implementation. Phase 6 is limited to the read-only synthetic surfaces and controls described in D-018. Phase 7 has not started.
+Phases 0–6 are complete through D-018. Project Phase 7 is the read-only ≤3 organization comparison defined in D-019 and `docs/PHASE_7_PLAN.md`. Briefs and the remainder of Foundation Phase 9 remain deferred.

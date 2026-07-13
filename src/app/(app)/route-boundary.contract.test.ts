@@ -17,7 +17,7 @@ describe("route loading and error boundaries", () => {
     expect(orgLoading).not.toMatch(/pointsAwarded|portfolioAssessed|\b77\b|\b233\b/);
     expect(appLoading).not.toMatch(/org_syn_fi_|tenant_demo|principal_demo/);
 
-    for (const route of ["organizations/[organizationRef]", "evidence", "methodology"]) {
+    for (const route of ["organizations/[organizationRef]", "evidence", "methodology", "compare"]) {
       const content = readFileSync(path.join(ROOT, `src/app/(app)/${route}/loading.tsx`), "utf8");
       expect(content).toMatch(/LoadingState/);
       expect(content).toMatch(/withheld|when .* ready/i);
@@ -38,7 +38,7 @@ describe("route loading and error boundaries", () => {
       expect(content).not.toMatch(/node_modules|C:\\\\Users/);
     }
 
-    for (const route of ["organizations/[organizationRef]", "evidence", "methodology"]) {
+    for (const route of ["organizations/[organizationRef]", "evidence", "methodology", "compare"]) {
       const content = readFileSync(path.join(ROOT, `src/app/(app)/${route}/error.tsx`), "utf8");
       expect(content).toMatch(/"use client"/);
       expect(content).toMatch(/Retry/);
@@ -48,8 +48,8 @@ describe("route loading and error boundaries", () => {
     }
   });
 
-  it("keeps Phase 6 route metadata generic and non-indexable", () => {
-    for (const route of ["organizations/[organizationRef]", "evidence", "methodology"]) {
+  it("keeps Phase 6 and Phase 7 route metadata generic and non-indexable", () => {
+    for (const route of ["organizations/[organizationRef]", "evidence", "methodology", "compare"]) {
       const content = readFileSync(path.join(ROOT, `src/app/(app)/${route}/page.tsx`), "utf8");
       expect(content).toMatch(/noarchive:\s*true/);
       expect(content).toMatch(/index:\s*false/);
