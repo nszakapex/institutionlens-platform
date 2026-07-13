@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -44,6 +44,15 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      - name: Validate synthetic fixtures
+        run: npm run validate:synthetic
+
+      - name: Validate methodology
+        run: npm run validate:methodology
+
+      - name: Validate assessments
+        run: npm run validate:assessments
 
       - name: Asset scan
         run: npm run scan:assets
