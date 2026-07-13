@@ -12,12 +12,30 @@ institutionlens-platform/
   public/brand/               # App-owned fonts + mark copies for runtime
   src/
     app/                      # App Router (RSC by default)
-    components/               # UI components (server unless interaction requires client)
-    lib/                      # Domain boundaries, env, demo tenant, security helpers
-    styles/                   # Tokens (canonical brand layer) + global styles
+    application/              # Tenant-safe read services & view models
+    assessment/               # Phase 4 explainable assessment engine
+    authorization/            # Server-only authz context
+    components/               # UI (overview/, explorer/, shell/, status/)
+    domain/                   # Schemas, invariants, ids
+    repositories/             # Synthetic repositories (server-only)
+    verticals/                # Vertical adapters + synthetic fixtures
+    lib/                      # Env, demo tenant, navigation, security
+    styles/                   # Tokens + component + overview/explorer CSS
   docs/                       # Plans, decisions, policies
   scripts/                    # Offline verification scanners
 ```
+
+## Phase 5 research surfaces
+
+- `/` — portfolio overview (shortlist, attention, opportunity, signals)
+- `/organizations` — URL-driven explorer (filter/sort/pagination)
+- `/foundation` — local-demo design-system / foundation preview
+
+UI consumes application view models only. Ranking and filtering run on the server. Repositories and assessment internals remain `server-only`.
+
+## Future PostgreSQL implications (not implemented)
+
+Explorer filters map cleanly to indexed columns on `organizations` (tenant_id, type, lifecycle, tags GIN) plus assessment summary tables (status, band, confidence, freshness, coverage weights). Prefer a tenant-scoped materialized read model or denormalized summary row per organization rather than joining full ledgers for list pages.
 
 ## Runtime principles
 

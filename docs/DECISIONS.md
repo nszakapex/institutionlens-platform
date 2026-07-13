@@ -136,9 +136,9 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 
 ## Phase boundary
 
-**Completed:** Phase 0, Phase 1, Phase 2, and Phase 3.  
-**In progress:** Phase 4 wrap-up / Phase 5 not started — explainable assessment engine core delivered (repos, services, foundation preview).  
-**Do not proceed to Phase 5** until explicitly approved.
+**Completed:** Phase 0, Phase 1, Phase 2, Phase 3, and Phase 4.  
+**In progress:** Phase 5 — portfolio overview and organization explorer.  
+**Do not proceed to Phase 6** until Phase 5 is approved and committed.
 
 ## D-014 — Phase 2 design system
 
@@ -176,3 +176,15 @@ Phase 0 README and governance files are approved. `docs/FOUNDATION_PLAN.md` may 
 - No eval/dynamic code, ML/LLM scoring, DB, real auth, real client data, or Phase 5 UI
 - No dependency or lockfile changes; Node 22 remains canonical
 - Delivery model (managed / dedicated / hybrid) remains undecided; hybrid recommended; engine stays deployment-neutral
+
+## D-017 — Phase 5 portfolio overview & explorer
+
+**Status:** Approved for implementation
+
+- Functional overview at `/`; explorer at `/organizations`; foundation preview at `/foundation`
+- Tenant-safe read services; UI never accesses fixtures or recalculates scores
+- Prioritization/attention policies define ordering and bounds only — no new fit thresholds
+- URL-canonical explorer query with Zod validation; GET forms; default hide excluded
+- Insufficient evidence never treated as limited alignment or zero score
+- No org detail, briefs, exports, DB, real auth, or Phase 6
+- No dependency or lockfile changes
