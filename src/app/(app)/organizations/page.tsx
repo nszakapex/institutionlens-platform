@@ -1,12 +1,22 @@
-import { PlaceholderPage, placeholderMetadata } from "@/components/shell/PlaceholderPage";
+import type { Metadata } from "next";
+import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { buildExplorerPageView } from "@/application/explorer-service";
+import { ExplorerPage } from "@/components/explorer/ExplorerPage";
 
-export const metadata = placeholderMetadata("Organizations");
+export const metadata: Metadata = {
+  title: "Organizations",
+  description: "Search and filter the InstitutionLens synthetic organization universe.",
+};
 
-export default function OrganizationsPlaceholder() {
-  return (
-    <PlaceholderPage
-      title="Organizations"
-      summary="Organization explorer, filters, and ranked results will land in a later phase. This route exists so the shell navigation can be evaluated."
-    />
-  );
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function OrganizationsRoute({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const context = getDemoAuthorizationContext();
+  const params = await searchParams;
+  const view = await buildExplorerPageView(context, params);
+  return <ExplorerPage view={view} />;
 }

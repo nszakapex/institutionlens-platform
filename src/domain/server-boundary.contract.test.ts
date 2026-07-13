@@ -45,6 +45,9 @@ describe("server-only domain boundary", () => {
       "src/application/organization-service.ts",
       "src/application/assessment-service.ts",
       "src/application/portfolio-service.ts",
+      "src/application/research-read-model.ts",
+      "src/application/overview-service.ts",
+      "src/application/explorer-service.ts",
       "src/lib/demo-tenant.ts",
     ];
 
@@ -83,7 +86,6 @@ describe("server-only domain boundary", () => {
 
   it("keeps placeholder routes free of direct fixture access", () => {
     const placeholders = [
-      "src/app/(app)/organizations/page.tsx",
       "src/app/(app)/compare/page.tsx",
       "src/app/(app)/evidence/page.tsx",
       "src/app/(app)/briefs/page.tsx",
@@ -94,6 +96,17 @@ describe("server-only domain boundary", () => {
       const content = readFileSync(path.join(ROOT, relative), "utf8");
       expect(content).toContain("PlaceholderPage");
       expect(content).not.toMatch(/buildSynthetic|loadFinancial|OrganizationRepository/);
+    }
+  });
+
+  it("keeps product routes on application services without fixture imports", () => {
+    const productRoutes = ["src/app/(app)/page.tsx", "src/app/(app)/organizations/page.tsx"];
+    for (const relative of productRoutes) {
+      const content = readFileSync(path.join(ROOT, relative), "utf8");
+      expect(content).not.toMatch(
+        /buildSynthetic|loadFinancial|OrganizationRepository|generateSynthetic/,
+      );
+      expect(content).toMatch(/buildOverviewPageView|buildExplorerPageView/);
     }
   });
 });

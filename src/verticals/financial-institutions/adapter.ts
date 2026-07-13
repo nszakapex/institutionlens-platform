@@ -10,14 +10,19 @@ import { buildSyntheticOrganizations } from "@/verticals/financial-institutions/
 import { buildSyntheticProvenanceAndEvidence } from "@/verticals/financial-institutions/synthetic-evidence";
 import { FINANCIAL_INSTITUTIONS_VOCABULARY } from "@/verticals/financial-institutions/vocabulary";
 import {
+  BreadthBandSchema,
+  ComplexityBandSchema,
   DataAvailabilitySchema,
   FINANCIAL_INSTITUTIONS_ADAPTER_VERSION,
   FINANCIAL_INSTITUTIONS_FIXTURE_VERSION,
   FINANCIAL_INSTITUTIONS_VERTICAL_ID,
   FinancialInstitutionPayloadSchema,
   InstitutionKindSchema,
+  MaturityBandSchema,
   OperatingRegionSchema,
+  OwnershipModelSchema,
   ScaleBandSchema,
+  ServiceAreaTypeSchema,
   type FinancialInstitutionPayload,
 } from "@/verticals/financial-institutions/schema";
 import { FreshnessStatusSchema } from "@/domain/schemas/assessment";
@@ -28,6 +33,11 @@ const VerticalFilterSchema = z
     scaleBand: ScaleBandSchema.optional(),
     operatingRegion: OperatingRegionSchema.optional(),
     dataAvailability: DataAvailabilitySchema.optional(),
+    serviceAreaType: ServiceAreaTypeSchema.optional(),
+    ownershipModel: OwnershipModelSchema.optional(),
+    operatingComplexityBand: ComplexityBandSchema.optional(),
+    digitalServiceMaturity: MaturityBandSchema.optional(),
+    lendingBreadth: BreadthBandSchema.optional(),
     freshnessCategory: FreshnessStatusSchema.optional(),
   })
   .strict();
@@ -77,6 +87,31 @@ export const financialInstitutionsAdapter: VerticalAdapter<FinancialInstitutionP
       parse: (value) => DataAvailabilitySchema.parse(value),
     },
     {
+      key: "serviceAreaType",
+      description: "Synthetic service-area type",
+      parse: (value) => ServiceAreaTypeSchema.parse(value),
+    },
+    {
+      key: "ownershipModel",
+      description: "Synthetic ownership model",
+      parse: (value) => OwnershipModelSchema.parse(value),
+    },
+    {
+      key: "operatingComplexityBand",
+      description: "Synthetic operating-complexity band",
+      parse: (value) => ComplexityBandSchema.parse(value),
+    },
+    {
+      key: "digitalServiceMaturity",
+      description: "Synthetic digital-service maturity category",
+      parse: (value) => MaturityBandSchema.parse(value),
+    },
+    {
+      key: "lendingBreadth",
+      description: "Synthetic lending-breadth category",
+      parse: (value) => BreadthBandSchema.parse(value),
+    },
+    {
       key: "freshnessCategory",
       description: "Evidence freshness category (applied at query layer when provided)",
       parse: (value) => FreshnessStatusSchema.parse(value),
@@ -118,6 +153,18 @@ export const financialInstitutionsAdapter: VerticalAdapter<FinancialInstitutionP
     if (typeof availability === "string" && payload.regulatoryDataAvailability !== availability) {
       return false;
     }
+    const serviceArea = filters.serviceAreaType;
+    if (typeof serviceArea === "string" && payload.serviceAreaType !== serviceArea) return false;
+    const ownership = filters.ownershipModel;
+    if (typeof ownership === "string" && payload.ownershipModel !== ownership) return false;
+    const complexity = filters.operatingComplexityBand;
+    if (typeof complexity === "string" && payload.operatingComplexityBand !== complexity) {
+      return false;
+    }
+    const maturity = filters.digitalServiceMaturity;
+    if (typeof maturity === "string" && payload.digitalServiceMaturity !== maturity) return false;
+    const breadth = filters.lendingBreadth;
+    if (typeof breadth === "string" && payload.lendingBreadth !== breadth) return false;
     // freshnessCategory is applied by the repository against evidence, not payload.
     return true;
   },
