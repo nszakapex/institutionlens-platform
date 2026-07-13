@@ -155,6 +155,7 @@ function buildShortlist(model: TenantResearchReadModel) {
     const score = org.portfolio.portfolioPriorityScore!;
     return {
       displayName: org.displayName,
+      detailHref: `/organizations/${org.publicRef}`,
       organizationType: org.organizationType,
       conditionalScore: {
         pointsAwarded: score.pointsAwarded,
@@ -208,6 +209,7 @@ function buildEvidenceReview(model: TenantResearchReadModel) {
     const codes = insufficientReasonCodes(org);
     return {
       displayName: org.displayName,
+      detailHref: `/organizations/${org.publicRef}`,
       organizationType: org.organizationType,
       unresolvedPriorityWeight:
         org.portfolio.coverage.enabledPriorityWeight -
@@ -231,6 +233,7 @@ function buildEvidenceReview(model: TenantResearchReadModel) {
 type AttentionCandidate = {
   organizationId: string;
   organizationLabel: string;
+  detailHref: string;
   reasonCode: AttentionReasonCode;
   capabilityLabel?: string;
   freshness: OrgResearchRecord["portfolio"]["freshness"] | "unknown";
@@ -245,6 +248,7 @@ function buildAttentionCandidates(org: OrgResearchRecord): AttentionCandidate[] 
     const item: AttentionCandidate = {
       organizationId: org.organizationId,
       organizationLabel: org.displayName,
+      detailHref: `/organizations/${org.publicRef}`,
       reasonCode,
       freshness: opts?.freshness ?? org.portfolio.freshness,
     };
@@ -325,6 +329,7 @@ function buildAttentionQueue(model: TenantResearchReadModel) {
     const def = attentionDefinitionFor(item.reasonCode);
     const view: AttentionItemView = {
       organizationLabel: item.organizationLabel,
+      detailHref: item.detailHref,
       category: def.category,
       reasonCode: item.reasonCode,
       humanReason: def.humanReason,

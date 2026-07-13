@@ -8,6 +8,7 @@ describe("security headers", () => {
 
     expect(map["X-Content-Type-Options"]).toBe("nosniff");
     expect(map["X-Frame-Options"]).toBe("DENY");
+    expect(map["X-Robots-Tag"]).toBe("noindex, nofollow, noarchive");
     expect(map["Referrer-Policy"]).toBe("no-referrer");
     expect(map["Cross-Origin-Opener-Policy"]).toBe("same-origin");
     expect(map["Content-Security-Policy"]).toBeUndefined();

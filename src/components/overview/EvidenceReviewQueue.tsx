@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { OverviewPageView } from "@/application/overview-view-models";
 
 type Props = {
@@ -23,7 +24,9 @@ export function EvidenceReviewQueue({ queue }: Props) {
         {queue.rows.map((row) => (
           <article className="il-queue-item" key={row.displayName}>
             <div className="il-queue-item-head">
-              <span className="il-queue-org">{row.displayName}</span>
+              <Link className="il-queue-org" href={row.detailHref}>
+                {row.displayName}
+              </Link>
               <span className="il-queue-meta">{row.organizationType}</span>
               <span className="il-insufficient-label">Insufficient evidence</span>
             </div>

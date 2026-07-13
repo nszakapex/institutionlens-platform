@@ -9,6 +9,7 @@ import type { ExplorerSort } from "@/application/explorer-query";
 
 export type ExplorerResultRowView = {
   displayName: string;
+  detailHref: string;
   organizationType: string;
   verticalSummary: string;
   portfolioAssessmentStatus: string;

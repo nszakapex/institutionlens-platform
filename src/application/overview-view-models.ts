@@ -33,6 +33,7 @@ export type ObservedAlignmentDistributionView = {
 
 export type ShortlistRowView = {
   displayName: string;
+  detailHref: string;
   organizationType: string;
   conditionalScore: {
     pointsAwarded: number;
@@ -56,6 +57,7 @@ export type ShortlistRowView = {
 
 export type EvidenceReviewRowView = {
   displayName: string;
+  detailHref: string;
   organizationType: string;
   unresolvedPriorityWeight: number;
   insufficientCapabilityCount: number;
@@ -66,6 +68,7 @@ export type EvidenceReviewRowView = {
 
 export type AttentionItemView = {
   organizationLabel: string;
+  detailHref: string;
   category: string;
   reasonCode: AttentionReasonCode;
   humanReason: string;

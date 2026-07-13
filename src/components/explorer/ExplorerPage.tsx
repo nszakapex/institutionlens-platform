@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ExplorerPageView, ExplorerResultRowView } from "@/application/explorer-view-models";
 import { EXPLORER_SORT_LABELS, type ExplorerSort } from "@/application/explorer-query";
 import { PageHeader, SectionHeader } from "@/components/ui/PageHeader";
@@ -40,7 +41,9 @@ function ResultTable({
           {rows.map((row) => (
             <tr key={row.displayName}>
               <td>
-                <div className="il-org-name">{row.displayName}</div>
+                <div className="il-org-name">
+                  <Link href={row.detailHref}>{row.displayName}</Link>
+                </div>
                 <div>{row.organizationType}</div>
                 <div className="il-score-disclosure">{row.verticalSummary}</div>
                 {row.warnings.length > 0 ? (
@@ -91,7 +94,9 @@ function ResultStack({ rows }: { rows: readonly ExplorerResultRowView[] }) {
     <div className="il-result-stack" aria-label="Organization results">
       {rows.map((row) => (
         <article className="il-result-record" key={row.displayName}>
-          <h3 className="il-result-record-title">{row.displayName}</h3>
+          <h3 className="il-result-record-title">
+            <Link href={row.detailHref}>{row.displayName}</Link>
+          </h3>
           <div className="il-result-record-meta">
             <span>{row.organizationType}</span>
             <span>{row.verticalSummary}</span>

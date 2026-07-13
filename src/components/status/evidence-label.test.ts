@@ -46,5 +46,16 @@ describe("primary navigation", () => {
     for (const term of forbidden) {
       expect(blob.toLowerCase()).not.toContain(term.toLowerCase());
     }
+    expect(PRIMARY_NAV.filter((item) => item.available).map((item) => item.id)).toEqual([
+      "overview",
+      "organizations",
+      "evidence",
+      "methodology",
+    ]);
+    expect(PRIMARY_NAV.filter((item) => !item.available).map((item) => item.id)).toEqual([
+      "compare",
+      "briefs",
+      "settings",
+    ]);
   });
 });

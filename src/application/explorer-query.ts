@@ -28,6 +28,26 @@ export type ExplorerPageSize = (typeof EXPLORER_PAGE_SIZES)[number];
 /** Bound for multi-select values within one filter group. */
 export const MAX_MULTI_SELECT = 8;
 
+const CAPABILITY_QUERY_VALUES: Readonly<Record<string, string>> = Object.freeze({
+  "operational-analytics-support": "cap_syn_fi_ops_analytics",
+  "data-quality-modernization": "cap_syn_fi_data_quality",
+  "portfolio-reporting-workflow": "cap_syn_fi_portfolio_reporting",
+  "scenario-planning-support": "cap_syn_fi_scenario_planning",
+  "governance-process-review": "cap_syn_fi_governance_review",
+});
+
+const CAPABILITY_QUERY_VALUES_BY_ID = new Map(
+  Object.entries(CAPABILITY_QUERY_VALUES).map(([safeValue, internalId]) => [internalId, safeValue]),
+);
+
+export function capabilityIdFromQueryValue(value: string): string {
+  return CAPABILITY_QUERY_VALUES[value] ?? value;
+}
+
+export function capabilityQueryValueFor(value: string): string {
+  return CAPABILITY_QUERY_VALUES_BY_ID.get(value) ?? value;
+}
+
 export const ExplorerSortSchema = z.enum([
   "observed_alignment_desc",
   "observed_alignment_asc",
@@ -323,7 +343,7 @@ export function parseExplorerSearchParams(
       normalizedMultis.publicationEligibility as ExplorerQueryInput["publicationEligibility"],
     opportunityContext:
       normalizedMultis.opportunityContext as ExplorerQueryInput["opportunityContext"],
-    capabilityId: normalizedMultis.capabilityId,
+    capabilityId: normalizedMultis.capabilityId?.map(capabilityIdFromQueryValue),
     capabilityAssessmentStatus:
       normalizedMultis.capabilityAssessmentStatus as ExplorerQueryInput["capabilityAssessmentStatus"],
     ...(Object.keys(verticalFilters).length > 0 ? { verticalFilters } : {}),
@@ -365,7 +385,7 @@ export function explorerQueryToSearchParams(query: ExplorerQuery): URLSearchPara
   multi("assessmentCompleteness", query.assessmentCompleteness);
   multi("publicationEligibility", query.publicationEligibility);
   multi("opportunityContext", query.opportunityContext);
-  multi("capabilityId", query.capabilityId);
+  multi("capabilityId", query.capabilityId?.map(capabilityQueryValueFor));
   multi("capabilityAssessmentStatus", query.capabilityAssessmentStatus);
   if (query.verticalFilters) {
     for (const [key, values] of Object.entries(query.verticalFilters)) {

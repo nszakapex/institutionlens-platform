@@ -32,8 +32,8 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     id: "evidence",
     label: "Evidence",
     href: "/evidence",
-    available: false,
-    description: "Placeholder — evidence ledger arrives later",
+    available: true,
+    description: "Synthetic evidence and provenance catalog",
   },
   {
     id: "briefs",
@@ -46,8 +46,8 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     id: "methodology",
     label: "Methodology",
     href: "/methodology",
-    available: false,
-    description: "Placeholder — methodology surface arrives later",
+    available: true,
+    description: "Versioned synthetic assessment methodology",
   },
   {
     id: "settings",

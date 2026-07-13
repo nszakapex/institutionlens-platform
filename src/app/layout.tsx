@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   robots: {
     index: false,
     follow: false,
+    nocache: true,
+    noarchive: true,
+    nosnippet: true,
+    noimageindex: true,
   },
   icons: {
     icon: "/brand/institutionlens-mark.svg",

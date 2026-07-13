@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { OverviewPageView } from "@/application/overview-view-models";
 
 type Props = {
@@ -24,7 +25,9 @@ export function AttentionQueue({ queue }: Props) {
             key={`${item.organizationLabel}-${item.reasonCode}-${item.capabilityLabel ?? ""}`}
           >
             <div className="il-queue-item-head">
-              <span className="il-queue-org">{item.organizationLabel}</span>
+              <Link className="il-queue-org" href={item.detailHref}>
+                {item.organizationLabel}
+              </Link>
               <span className={`il-severity il-severity--${item.severity}`}>
                 {item.severity} · {item.category}
               </span>

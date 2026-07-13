@@ -5,6 +5,7 @@ import { AuthorizationError } from "@/domain/errors";
 import { ASSESSMENT_HEURISTIC_DISCLAIMER } from "@/application/assessment-view-models";
 import {
   EXPLORER_SORT_LABELS,
+  capabilityQueryValueFor,
   defaultExplorerQuery,
   explorerQueryToSearchParams,
   parseExplorerSearchParams,
@@ -281,6 +282,7 @@ function toResultRow(org: OrgResearchRecord): ExplorerResultRowView {
 
   const base = {
     displayName: org.displayName,
+    detailHref: `/organizations/${org.publicRef}`,
     organizationType: org.organizationType,
     verticalSummary: org.verticalSummary,
     portfolioAssessmentStatus:
@@ -408,7 +410,7 @@ function buildActiveFilters(query: ExplorerQuery): ActiveFilterChipView[] {
   }
   if (query.capabilityId) {
     for (const value of query.capabilityId) {
-      add(`capability:${value}`, `Capability filter`, {
+      add(`capability:${capabilityQueryValueFor(value)}`, `Capability filter`, {
         capabilityId: query.capabilityId.filter((v) => v !== value),
       });
     }
@@ -484,7 +486,10 @@ function buildFacets(model: TenantResearchReadModel): ExplorerFacetsView {
     publicationEligibility: opt(["eligible", "internal_only", "review_required", "restricted"]),
     opportunityContexts: opt(OpportunityContextStatusSchema.options),
     capabilities: Object.freeze(
-      model.capabilityCatalog.map((c) => ({ value: c.capabilityId, label: c.name })),
+      model.capabilityCatalog.map((c) => ({
+        value: capabilityQueryValueFor(c.capabilityId),
+        label: c.name,
+      })),
     ),
     verticalFilters: {
       institutionKind: {
@@ -544,7 +549,7 @@ function formValuesFromQuery(query: ExplorerQuery): ExplorerPageView["formValues
     assessmentCompleteness: query.assessmentCompleteness ?? [],
     publicationEligibility: query.publicationEligibility ?? [],
     opportunityContext: query.opportunityContext ?? [],
-    capabilityId: query.capabilityId ?? [],
+    capabilityId: query.capabilityId?.map(capabilityQueryValueFor) ?? [],
     capabilityAssessmentStatus: query.capabilityAssessmentStatus ?? [],
     institutionKind: list(vf.institutionKind),
     scaleBand: list(vf.scaleBand),

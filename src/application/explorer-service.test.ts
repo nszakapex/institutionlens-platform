@@ -30,6 +30,18 @@ describe("explorer query validation", () => {
     expect(parseExplorerSearchParams({ q: "x".repeat(101) }).ok).toBe(false);
   });
 
+  it("maps safe capability URL values to internal filters without exposing catalog IDs", () => {
+    const parsed = parseExplorerSearchParams({
+      capabilityId: ["operational-analytics-support", "data-quality-modernization"],
+    });
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.query.capabilityId).toEqual([
+      "cap_syn_fi_data_quality",
+      "cap_syn_fi_ops_analytics",
+    ]);
+  });
+
   it("records unknown params without accepting them as filters", () => {
     const parsed = parseExplorerSearchParams({ bogus: "1", q: "Cedar" });
     expect(parsed.ok).toBe(true);
@@ -46,6 +58,18 @@ describe("explorer service", () => {
     expect(view.totalCount).toBeLessThanOrEqual(23);
     expect(view.combinedRows.length).toBeLessThanOrEqual(12);
     expect(view.activeFilters.some((f) => f.label.includes("Excluded hidden"))).toBe(true);
+  });
+
+  it("emits safe capability filter values in client-facing view models", async () => {
+    const view = await buildExplorerPageView(getDemoAuthorizationContext(), {
+      capabilityId: "operational-analytics-support",
+    });
+    expect(view.state).toBe("ready");
+    expect(view.facets.capabilities.map((item) => item.value)).toContain(
+      "operational-analytics-support",
+    );
+    expect(view.formValues.capabilityId).toEqual(["operational-analytics-support"]);
+    expect(JSON.stringify(view)).not.toMatch(/cap_syn_fi_/);
   });
 
   it("searches by synthetic display name", async () => {

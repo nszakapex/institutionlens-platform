@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { OverviewPageView } from "@/application/overview-view-models";
 import { StatusBadge } from "@/components/status/StatusBadge";
 import { DataFreshness } from "@/components/status/DataFreshness";
@@ -45,7 +46,9 @@ export function PriorityShortlist({ shortlist }: Props) {
             {shortlist.rows.map((row) => (
               <tr key={row.displayName}>
                 <td>
-                  <div className="il-org-name">{row.displayName}</div>
+                  <div className="il-org-name">
+                    <Link href={row.detailHref}>{row.displayName}</Link>
+                  </div>
                   <div>{row.organizationType}</div>
                   {row.warnings.length > 0 ? (
                     <ul className="il-warning-list">
@@ -84,7 +87,9 @@ export function PriorityShortlist({ shortlist }: Props) {
       <div className="il-result-stack" aria-label="Shortlist records">
         {shortlist.rows.map((row) => (
           <article className="il-result-record" key={row.displayName}>
-            <h3 className="il-result-record-title">{row.displayName}</h3>
+            <h3 className="il-result-record-title">
+              <Link href={row.detailHref}>{row.displayName}</Link>
+            </h3>
             <div className="il-result-record-meta">
               <span>{row.organizationType}</span>
               <span>
