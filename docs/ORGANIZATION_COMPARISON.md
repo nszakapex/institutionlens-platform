@@ -51,7 +51,7 @@ Client format helper (opaque-format only): `src/lib/compare-url.ts`.
 
 Inbound Compare links from Overview shortlist, Explorer rows, and organization detail are server-built with `compareHrefFor([publicRef])`. Visible label is concise (“Compare”); accessible name is `Add {organization} to comparison`.
 
-Attention and evidence-review queues intentionally omit Compare actions in Phase 7.
+Phase 8 adds per-column Brief actions via `inboundBriefActionFor` (opaque `bref_` only). Attention and evidence-review queues intentionally omit Compare and Brief actions.
 
 ## Authorization and redaction
 

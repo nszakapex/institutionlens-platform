@@ -29,6 +29,6 @@ Default page size 12; allowed 12 / 24 / 48; hard maximum 50. Beyond-range pages 
 
 Safe fields only: display name, organization type, approved tags, approved adapter vocabulary labels. Max 100 characters. No regex, fuzzy search, private notes, or ID search.
 
-## Comparison entry (Phase 7)
+## Comparison and brief entry (Phases 7–8)
 
-Each authorized result row exposes a Compare action. The href is built server-side with `compareHrefFor([publicRef])` and opens `/compare` in partial state. Visible label is concise (“Compare”); accessible name includes the organization. Browser Back restores filters, pagination, and sort.
+Each authorized result row exposes Compare and Brief actions. Compare hrefs use `compareHrefFor([publicRef])`. Brief hrefs use shared `inboundBriefActionFor` (opaque `bref_` only). Visible labels are concise (“Compare”, “Brief”); accessible names include the organization. Browser Back restores filters, pagination, and sort. Attention/evidence-review surfaces intentionally omit these actions.

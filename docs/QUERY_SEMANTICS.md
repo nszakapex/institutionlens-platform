@@ -44,3 +44,5 @@ Resets to documented defaults, including the default exclusion policy. Reset ret
 ## Comparison query (Phase 7)
 
 Organization comparison uses a separate canonical contract: repeated `org` parameters on `/compare` containing only opaque `OrganizationPublicRef` values. See `docs/ORGANIZATION_COMPARISON.md` and `src/application/compare-query.ts`. Explorer filter URLs are independent; Browser Back from Compare restores the prior Explorer query intact.
+
+Institutional briefs use `/briefs` with optional opaque `org=<oref_…>` for directory selection and `/briefs/<bref_…>` for documents. See `docs/INSTITUTIONAL_BRIEFS.md`, `src/application/brief-query.ts`, and `src/application/inbound-brief-action.ts`. Browser Back from a brief restores the prior research-surface URL intact.

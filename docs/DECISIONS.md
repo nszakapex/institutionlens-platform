@@ -236,7 +236,7 @@ See `docs/PHASE_7_PLAN.md`, `docs/ORGANIZATION_COMPARISON.md`, and `docs/PHASE_7
 
 ## D-020 — Phase 8 deterministic institutional briefs
 
-**Status:** Approved for implementation (project Phase 8)
+**Status:** Delivered (project Phase 8 complete for synthetic local-demo scope)
 
 ### Roadmap numbering
 
@@ -255,6 +255,8 @@ See `docs/PHASE_7_PLAN.md`, `docs/ORGANIZATION_COMPARISON.md`, and `docs/PHASE_7
 - `brief:draft`, `brief:approve`, and `export:request` remain unused (no mutable approval or download pipeline in Phase 8)
 - Restricted evidence / overlay gating and no-private-notes rules match Phases 6–7
 - No Phase 4 methodology or score recalculation; no free-form LLM narrative
+- Inbound Brief actions from Overview, Explorer, detail, and Compare use shared `inboundBriefActionFor` only
+- Print CSS is presentation-only — not a product export feature
 
 ### Explicit non-goals
 
@@ -262,8 +264,8 @@ Database/Supabase/RLS, production authentication, billing, real customer data, s
 
 ### Binding plan
 
-See `docs/PHASE_8_PLAN.md` and `docs/PHASE_8_REQUIREMENTS_TRACEABILITY.md`.
+See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_REQUIREMENTS_TRACEABILITY.md`.
 
 ## Current phase boundary
 
-Phases 0–7 are complete through D-019. Project Phase 8 is the deterministic institutional-brief portion of Foundation Phase 9 defined in D-020 and `docs/PHASE_8_PLAN.md`. Mutable brief workflow, exports, and production hosting remain deferred.
+Phases 0–8 are complete through D-020 for synthetic local-demo scope. Mutable brief workflow, exports, notes, production authentication, database/RLS, billing, and production hosting remain deferred.
