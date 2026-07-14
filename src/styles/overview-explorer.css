@@ -524,9 +524,14 @@
   overflow-wrap: anywhere;
 }
 
-.il-inbound-compare a {
+.il-inbound-compare a,
+.il-inbound-brief {
   text-decoration: underline;
   text-underline-offset: 0.15em;
+}
+
+.il-inbound-brief {
+  display: inline;
 }
 
 @media (prefers-reduced-motion: reduce) {

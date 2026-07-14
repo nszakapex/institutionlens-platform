@@ -38,6 +38,10 @@ export type ShortlistRowView = {
   compareHref: string;
   /** Accessible action name including organization context. */
   compareActionLabel: string;
+  /** Opaque brief document href when brief:read is granted; otherwise null. */
+  briefHref: string | null;
+  /** Accessible brief action name; null when briefHref is null. */
+  briefActionLabel: string | null;
   organizationType: string;
   conditionalScore: {
     pointsAwarded: number;

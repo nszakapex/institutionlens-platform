@@ -75,6 +75,18 @@ describe("organization detail service", () => {
     expect(view.state).toBe("unauthorized");
     expect(JSON.stringify(view)).not.toContain(ref);
     expect(JSON.stringify(view)).not.toMatch(/compareHref|\/compare\?org=/);
+    expect(JSON.stringify(view)).not.toMatch(/briefHref|\/briefs\/bref_/);
+  });
+
+  it("omits Brief inbound action when brief:read is missing", async () => {
+    const ref = firstPublicRefWhere((org) => org.portfolio.status === "assessed");
+    const view = await buildOrganizationDetailPageView(withoutPermission("brief:read"), ref);
+    expect(view.state).toBe("ok");
+    if (view.state !== "ok") return;
+    expect(view.header.briefHref).toBeNull();
+    expect(view.header.briefActionLabel).toBeNull();
+    expect(view.header.compareHref).toMatch(/^\/compare\?org=/);
+    expect(JSON.stringify(view)).not.toMatch(/\/briefs\/bref_/);
   });
 
   it("returns malformed for invalid route references", async () => {
@@ -111,6 +123,11 @@ describe("organization detail service", () => {
       `Add ${assessed.header.displayName} to comparison`,
     );
     expect(assessed.header.compareHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
+    expect(assessed.header.briefHref).toMatch(/^\/briefs\/bref_[a-f0-9]{16,32}$/);
+    expect(assessed.header.briefActionLabel).toBe(
+      `Open institutional brief for ${assessed.header.displayName}`,
+    );
+    expect(assessed.header.briefHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
     expect(assessed.header.displayName).toBeTruthy();
     expect(assessed.portfolioSummary.statusLabel).toBe("Assessed");
     expect(insufficient.portfolioSummary.statusLabel).toBe("Insufficient evidence");

@@ -81,6 +81,11 @@ export function OrganizationDetailPage({ view }: { view: OrganizationDetailPageV
         <Link href={view.header.compareHref} aria-label={view.header.compareActionLabel}>
           Compare
         </Link>
+        {view.header.briefHref && view.header.briefActionLabel ? (
+          <Link href={view.header.briefHref} aria-label={view.header.briefActionLabel}>
+            Open brief
+          </Link>
+        ) : null}
       </p>
       {view.header.warnings.length > 0 ? (
         <aside className="il-detail-warnings" aria-labelledby="detail-warnings-heading">

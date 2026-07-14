@@ -28,6 +28,7 @@ import {
   outcomeLabelFor,
 } from "@/application/assessment-view-models";
 import { compareHrefFor } from "@/application/compare-query";
+import { inboundBriefActionFor } from "@/application/inbound-brief-action";
 import type {
   DetailCapabilitySectionView,
   DetailEvidenceCardView,
@@ -768,6 +769,7 @@ export async function buildOrganizationDetailPageView(
     const evidenceUsage = buildEvidenceUsage(org);
 
     const capabilities = buildCapabilities(context, org, evidenceById);
+    const briefAction = inboundBriefActionFor(context, org);
     const view: OrganizationDetailPageView = {
       state: "ok",
       header: {
@@ -775,6 +777,8 @@ export async function buildOrganizationDetailPageView(
         detailHref: `/organizations/${org.publicRef}`,
         compareHref: compareHrefFor([org.publicRef]),
         compareActionLabel: `Add ${org.displayName} to comparison`,
+        briefHref: briefAction?.briefHref ?? null,
+        briefActionLabel: briefAction?.briefActionLabel ?? null,
         organizationType: org.organizationType,
         lifecycleStatus: org.lifecycleStatus,
         locationLabel: org.locationLabel,

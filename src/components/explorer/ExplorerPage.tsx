@@ -50,6 +50,18 @@ function ResultTable({
                   <Link href={row.compareHref} aria-label={row.compareActionLabel}>
                     Compare
                   </Link>
+                  {row.briefHref && row.briefActionLabel ? (
+                    <>
+                      {" · "}
+                      <Link
+                        className="il-inbound-brief"
+                        href={row.briefHref}
+                        aria-label={row.briefActionLabel}
+                      >
+                        Brief
+                      </Link>
+                    </>
+                  ) : null}
                 </p>
                 {row.warnings.length > 0 ? (
                   <ul className="il-warning-list">
@@ -106,6 +118,18 @@ function ResultStack({ rows }: { rows: readonly ExplorerResultRowView[] }) {
             <Link href={row.compareHref} aria-label={row.compareActionLabel}>
               Compare
             </Link>
+            {row.briefHref && row.briefActionLabel ? (
+              <>
+                {" · "}
+                <Link
+                  className="il-inbound-brief"
+                  href={row.briefHref}
+                  aria-label={row.briefActionLabel}
+                >
+                  Brief
+                </Link>
+              </>
+            ) : null}
           </p>
           <div className="il-result-record-meta">
             <span>{row.organizationType}</span>

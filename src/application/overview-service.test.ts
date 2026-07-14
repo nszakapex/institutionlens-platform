@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { getDemoAuthorizationContext } from "@/authorization/demo-context";
 import { createAuthorizationContext } from "@/authorization/context";
 import { DEMO_ANALYST, DEMO_TENANT } from "@/authorization/demo-context";
+import { permissionsForRole } from "@/authorization/policy";
 import { buildOverviewPageView } from "@/application/overview-service";
 import { ATTENTION_POLICY_MANIFEST, ATTENTION_REASON_CODES } from "@/application/attention-policy";
 import { PRIORITIZATION_POLICY_MANIFEST } from "@/application/prioritization-policy";
@@ -65,6 +66,10 @@ describe("overview service", () => {
       expect(row.compareHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
       const ref = new URL(row.compareHref, "https://example.test").searchParams.get("org");
       expect(row.detailHref).toBe(`/organizations/${ref}`);
+      expect(row.briefHref).toMatch(/^\/briefs\/bref_[a-f0-9]{16,32}$/);
+      expect(row.briefActionLabel).toBe(`Open institutional brief for ${row.displayName}`);
+      expect(row.briefHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
+      expect(row.briefActionLabel).not.toMatch(/available|insufficient|not published/i);
     }
   });
 
@@ -74,6 +79,24 @@ describe("overview service", () => {
     expect(view.state).toBe("unauthorized");
     expect(view.shortlist.rows).toHaveLength(0);
     expect(JSON.stringify(view)).not.toMatch(/compareHref|\/compare\?org=/);
+    expect(JSON.stringify(view)).not.toMatch(/briefHref|\/briefs\/bref_/);
+  });
+
+  it("omits Brief inbound actions when brief:read is missing", async () => {
+    const context = createAuthorizationContext(
+      DEMO_TENANT,
+      DEMO_ANALYST,
+      permissionsForRole("analyst").filter((item) => item !== "brief:read"),
+    );
+    const view = await buildOverviewPageView(context);
+    expect(view.state).toBe("ready");
+    expect(view.shortlist.rows.length).toBeGreaterThan(0);
+    for (const row of view.shortlist.rows) {
+      expect(row.briefHref).toBeNull();
+      expect(row.briefActionLabel).toBeNull();
+      expect(row.compareHref).toMatch(/^\/compare\?org=/);
+    }
+    expect(JSON.stringify(view)).not.toMatch(/\/briefs\/bref_/);
   });
 
   it("shows evidence review without numeric scores", async () => {

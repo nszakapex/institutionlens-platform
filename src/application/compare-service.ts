@@ -32,6 +32,7 @@ import {
   type OrgResearchRecord,
   type TenantResearchReadModel,
 } from "@/application/research-read-model";
+import { inboundBriefActionFor } from "@/application/inbound-brief-action";
 import { AuthorizationError } from "@/domain/errors";
 import type { OrganizationPublicRef } from "@/domain/organization-public-ref";
 import type { EvidenceRecord } from "@/domain/schemas/evidence";
@@ -350,10 +351,13 @@ function buildColumn(
     provenanceById,
   );
 
+  const briefAction = inboundBriefActionFor(context, org);
   const column: CompareColumnView = {
     displayName: org.displayName,
     detailHref: `/organizations/${org.publicRef}`,
     removeHref: "/compare",
+    briefHref: briefAction?.briefHref ?? null,
+    briefActionLabel: briefAction?.briefActionLabel ?? null,
     publicRef: org.publicRef as OrganizationPublicRef,
     organizationType: label(org.organizationType),
     lifecycleStatus: label(org.lifecycleStatus),

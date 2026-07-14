@@ -19,6 +19,7 @@ import type {
   ExplorerResultRowView,
 } from "@/application/explorer-view-models";
 import { compareHrefFor } from "@/application/compare-query";
+import { inboundBriefActionFor } from "@/application/inbound-brief-action";
 import {
   compareDisplayName,
   compareStableId,
@@ -272,7 +273,7 @@ function sortOrganizations(
   return { assessed: [], insufficient: [], combined };
 }
 
-function toResultRow(org: OrgResearchRecord): ExplorerResultRowView {
+function toResultRow(org: OrgResearchRecord, context: AuthorizationContext): ExplorerResultRowView {
   const warnings: string[] = [];
   if (org.portfolio.status === "insufficient_evidence") {
     warnings.push(reasonSummaryFromCodes(insufficientReasonCodes(org)));
@@ -281,11 +282,14 @@ function toResultRow(org: OrgResearchRecord): ExplorerResultRowView {
   if (org.portfolio.confidence === "low") warnings.push("Low confidence");
   if (org.excluded) warnings.push("Explicitly excluded (synthetic overlay)");
 
+  const briefAction = inboundBriefActionFor(context, org);
   const base = {
     displayName: org.displayName,
     detailHref: `/organizations/${org.publicRef}`,
     compareHref: compareHrefFor([org.publicRef]),
     compareActionLabel: `Add ${org.displayName} to comparison`,
+    briefHref: briefAction?.briefHref ?? null,
+    briefActionLabel: briefAction?.briefActionLabel ?? null,
     organizationType: org.organizationType,
     verticalSummary: org.verticalSummary,
     portfolioAssessmentStatus:
@@ -712,12 +716,16 @@ export async function buildExplorerPageView(
     const pageItems = sorted.combined.slice(start, start + query.pageSize);
     const useSplit = isScoreSort(query.sort);
     const assessedSection = useSplit
-      ? pageItems.filter((o) => o.portfolio.status === "assessed").map(toResultRow)
+      ? pageItems
+          .filter((o) => o.portfolio.status === "assessed")
+          .map((org) => toResultRow(org, context))
       : [];
     const insufficientSection = useSplit
-      ? pageItems.filter((o) => o.portfolio.status !== "assessed").map(toResultRow)
+      ? pageItems
+          .filter((o) => o.portfolio.status !== "assessed")
+          .map((org) => toResultRow(org, context))
       : [];
-    const combinedRows = pageItems.map(toResultRow);
+    const combinedRows = pageItems.map((org) => toResultRow(org, context));
 
     let state: ExplorerPageView["state"] = "ready";
     let stateMessage: string | undefined;

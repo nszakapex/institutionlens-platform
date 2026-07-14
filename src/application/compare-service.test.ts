@@ -120,6 +120,22 @@ describe("buildComparePageView Batch 2 projections", () => {
     expect(two.compareHref).toBe(`/compare?org=${a}&org=${b}`);
     expect(two.columns[0]!.removeHref).toBe(`/compare?org=${b}`);
     expect(two.columns[1]!.removeHref).toBe(`/compare?org=${a}`);
+    for (const column of two.columns) {
+      expect(column.briefHref).toMatch(/^\/briefs\/bref_[a-f0-9]{16,32}$/);
+      expect(column.briefActionLabel).toBe(`Open institutional brief for ${column.displayName}`);
+      expect(column.briefHref).not.toMatch(/org_syn_fi_|tenant_|principal_/);
+    }
+
+    const withoutBrief = await buildComparePageView(withoutPermission("brief:read"), {
+      org: [a, b],
+    });
+    expect(withoutBrief.compareHref).toBe(`/compare?org=${a}&org=${b}`);
+    expect(withoutBrief.columns).toHaveLength(2);
+    for (const column of withoutBrief.columns) {
+      expect(column.briefHref).toBeNull();
+      expect(column.briefActionLabel).toBeNull();
+    }
+    expect(JSON.stringify(withoutBrief)).not.toMatch(/\/briefs\/bref_/);
 
     const replaced = await buildComparePageView(getDemoAuthorizationContext(), {
       org: [a, c],

@@ -74,6 +74,15 @@ function OrganizationColumn({ column }: { column: ComparePageView["columns"][num
         </h3>
         <p className="il-muted">{column.verticalSummary}</p>
         <p className="il-filter-actions">
+          {column.briefHref && column.briefActionLabel ? (
+            <Link
+              className="il-button il-button--secondary il-button--md il-inbound-brief"
+              href={column.briefHref}
+              aria-label={column.briefActionLabel}
+            >
+              Brief
+            </Link>
+          ) : null}
           <Link className="il-button il-button--secondary il-button--md" href={column.removeHref}>
             Remove {column.displayName} from comparison
           </Link>

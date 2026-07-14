@@ -29,6 +29,7 @@ import type {
   ShortlistRowView,
 } from "@/application/overview-view-models";
 import { compareHrefFor } from "@/application/compare-query";
+import { inboundBriefActionFor } from "@/application/inbound-brief-action";
 import {
   bandLabel,
   capabilityNameById,
@@ -142,7 +143,7 @@ function compareShortlist(a: OrgResearchRecord, b: OrgResearchRecord): number {
   return compareStableId(a.organizationId, b.organizationId);
 }
 
-function buildShortlist(model: TenantResearchReadModel) {
+function buildShortlist(model: TenantResearchReadModel, context: AuthorizationContext) {
   const eligible = model.organizations.filter(
     (org) =>
       isCompatibleAdapter(org) &&
@@ -154,11 +155,14 @@ function buildShortlist(model: TenantResearchReadModel) {
   const maxRows = PRIORITIZATION_POLICY_MANIFEST.shortlistMaxRows;
   const rows: ShortlistRowView[] = ordered.slice(0, maxRows).map((org) => {
     const score = org.portfolio.portfolioPriorityScore!;
+    const briefAction = inboundBriefActionFor(context, org);
     return {
       displayName: org.displayName,
       detailHref: `/organizations/${org.publicRef}`,
       compareHref: compareHrefFor([org.publicRef]),
       compareActionLabel: `Add ${org.displayName} to comparison`,
+      briefHref: briefAction?.briefHref ?? null,
+      briefActionLabel: briefAction?.briefActionLabel ?? null,
       organizationType: org.organizationType,
       conditionalScore: {
         pointsAwarded: score.pointsAwarded,
@@ -549,7 +553,7 @@ export async function buildOverviewPageView(
       asAssessedAt: model.asAssessedAt,
       universe: buildUniverse(model),
       alignmentDistribution: buildAlignmentDistribution(model),
-      shortlist: buildShortlist(model),
+      shortlist: buildShortlist(model, context),
       evidenceReview: buildEvidenceReview(model),
       attention: buildAttentionQueue(model),
       capabilityOpportunities: buildCapabilityOpportunities(model),

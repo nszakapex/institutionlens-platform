@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { getDemoAuthorizationContext } from "@/authorization/demo-context";
 import { createAuthorizationContext } from "@/authorization/context";
 import { DEMO_ANALYST, DEMO_TENANT } from "@/authorization/demo-context";
+import { permissionsForRole } from "@/authorization/policy";
 import { buildExplorerPageView } from "@/application/explorer-service";
 import { defaultExplorerQuery, parseExplorerSearchParams } from "@/application/explorer-query";
 
@@ -182,6 +183,9 @@ describe("explorer service", () => {
       expect(row.compareActionLabel).toContain(row.displayName);
       expect(row.compareActionLabel).toMatch(/comparison/i);
       expect(row.compareHref).not.toMatch(/org_syn_fi_|cap_syn_|tenant_/);
+      expect(row.briefHref).toMatch(/^\/briefs\/bref_[a-f0-9]{16,32}$/);
+      expect(row.briefActionLabel).toBe(`Open institutional brief for ${row.displayName}`);
+      expect(row.briefHref).not.toMatch(/org_syn_fi_|cap_syn_|tenant_/);
     }
     // Filtered explorer href remains shareable independently of Compare.
     expect(view.clearAllHref).toBe("/organizations");
@@ -193,6 +197,29 @@ describe("explorer service", () => {
     expect(view.state).toBe("unauthorized");
     expect(view.combinedRows).toHaveLength(0);
     expect(JSON.stringify(view)).not.toMatch(/compareHref|\/compare\?org=/);
+    expect(JSON.stringify(view)).not.toMatch(/briefHref|\/briefs\/bref_/);
+  });
+
+  it("omits Brief inbound hrefs when brief:read is missing while preserving filters", async () => {
+    const context = createAuthorizationContext(
+      DEMO_TENANT,
+      DEMO_ANALYST,
+      permissionsForRole("analyst").filter((item) => item !== "brief:read"),
+    );
+    const view = await buildExplorerPageView(context, {
+      assessmentStatus: ["assessed"],
+      pageSize: "12",
+      page: "1",
+    });
+    expect(view.state).toBe("ready");
+    expect(view.combinedRows.length).toBeGreaterThan(0);
+    for (const row of view.combinedRows) {
+      expect(row.briefHref).toBeNull();
+      expect(row.briefActionLabel).toBeNull();
+      expect(row.compareHref).toMatch(/^\/compare\?org=/);
+    }
+    expect(view.pagination.pageHrefs.some((item) => item.current && item.page === 1)).toBe(true);
+    expect(JSON.stringify(view)).not.toMatch(/\/briefs\/bref_/);
   });
 
   it("fails closed without permissions", async () => {

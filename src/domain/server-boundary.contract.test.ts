@@ -154,6 +154,40 @@ describe("server-only domain boundary", () => {
     }
   });
 
+  it("builds inbound Brief hrefs through shared inboundBriefActionFor on research surfaces", () => {
+    for (const relative of [
+      "src/application/overview-service.ts",
+      "src/application/explorer-service.ts",
+      "src/application/detail-service.ts",
+      "src/application/compare-service.ts",
+    ]) {
+      const content = readFileSync(path.join(ROOT, relative), "utf8");
+      expect(content, relative).toMatch(/from ["']@\/application\/inbound-brief-action["']/);
+      expect(content, relative).toMatch(/inboundBriefActionFor\(/);
+      expect(content, relative).not.toMatch(/briefPublicRefFor\(/);
+      expect(content, relative).not.toMatch(/briefDocumentHref\(/);
+    }
+    const helper = readFileSync(path.join(ROOT, "src/application/inbound-brief-action.ts"), "utf8");
+    expect(helper).toMatch(/import ["']server-only["']/);
+    expect(helper).toMatch(/briefPublicRefFor\(/);
+    expect(helper).toMatch(/briefDocumentHref\(/);
+  });
+
+  it("keeps research UI free of brief-public-ref and inbound-brief-action imports", () => {
+    for (const relative of [
+      "src/components/overview/PriorityShortlist.tsx",
+      "src/components/explorer/ExplorerPage.tsx",
+      "src/components/detail/OrganizationDetailPage.tsx",
+      "src/components/compare/ComparePage.tsx",
+    ]) {
+      const content = readFileSync(path.join(ROOT, relative), "utf8");
+      expect(content, relative).not.toMatch(/from ["']@\/domain\/brief-public-ref["']/);
+      expect(content, relative).not.toMatch(/from ["']@\/application\/inbound-brief-action["']/);
+      expect(content, relative).not.toMatch(/from ["']@\/application\/brief-query["']/);
+      expect(content, relative).toMatch(/briefHref/);
+    }
+  });
+
   it("keeps BriefsWorkspacePage and BriefDocumentPage free of server-only query imports", () => {
     for (const relative of [
       "src/components/briefs/BriefsWorkspacePage.tsx",

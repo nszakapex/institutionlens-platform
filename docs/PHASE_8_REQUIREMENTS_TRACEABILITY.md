@@ -5,25 +5,25 @@
 
 ## Requirements
 
-| ID    | Requirement                                                     | Classification | Batch | Exact evidence (update as batches land)                                                  | Remaining limitation |
-| ----- | --------------------------------------------------------------- | -------------- | ----- | ---------------------------------------------------------------------------------------- | -------------------- |
-| B8-01 | Activate `/briefs` directory with opaque org selection          | Implemented    | 1–3   | `BriefsWorkspacePage` + `BriefSelectionForm`; briefState labels; eligibility caveat copy | —                    |
-| B8-02 | Canonical individual brief route with opaque `BriefPublicRef`   | Implemented    | 1–3   | Tenant-scoped `bref_`; `BriefDocumentPage` research hierarchy                            | —                    |
-| B8-03 | Fail-closed unauthorized / malformed / not_found / error states | Implemented    | 1–3   | Service states + workspace/document UI state branches                                    | —                    |
-| B8-04 | Require `brief:read` + org/assessment read                      | Implemented    | 1     | `requireBriefReadAccess` / `finalizeBriefView`; demo context grants `brief:read` only    | —                    |
-| B8-05 | No raw IDs / private notes in view models                       | Implemented    | 1–3   | Leakage asserts; UI contract forbids raw ID patterns; client island boundary             | —                    |
-| B8-06 | Deterministic templates; no LLM; no Phase 4 recalculation       | Implemented    | 2     | `brief-templates.ts`; deterministic JSON equality; score parity                          | —                    |
-| B8-07 | Evidence, provenance, gaps, overlay gating                      | Implemented    | 2–3   | Projection gating + evidence index/support links in document UI                          | —                    |
-| B8-08 | Missing evidence ≠ missing capability                           | Implemented    | 2–3   | Templates + insufficient state legend/copy                                               | —                    |
-| B8-09 | Available / insufficient / not_published projections            | Implemented    | 2–3   | Projection states + directory state pills + document status badge                        | —                    |
-| B8-10 | Accessible workspace + document UI; print-friendly              | Implemented    | 3     | `BriefSelectionForm`; classification badges; `briefs.css` print rules; contract tests    | Browser matrix below |
-| B8-11 | Responsive 320–1920; real 200% zoom                             | Implemented    | 3     | Responsive CSS; CDP `setPageScaleFactor` with `visualViewport.scale===2` at 320/1024     | —                    |
-| B8-12 | Inbound Open brief from Overview/Explorer/detail/Compare        | Planned        | 4     | —                                                                                        | Batch 4              |
-| B8-13 | Preserve Explorer filters / Browser Back                        | Planned        | 4     | —                                                                                        | Batch 4              |
-| B8-14 | noindex / nofollow / noarchive                                  | Implemented    | 1–3   | Route metadata + UI contract                                                             | —                    |
-| B8-15 | Docs + full verify + Phase 4 regression                         | Planned        | 5     | —                                                                                        | Batch 5              |
-| B8-16 | `brief:draft` / `brief:approve` / export mutations              | Deferred       | —     | Vocabulary retained in `authorization/policy.ts`                                         | Explicit non-goal    |
-| B8-17 | PDF/Word download, email, public sharing                        | Deferred       | —     | Print CSS only; no product export                                                        | Explicit non-goal    |
+| ID    | Requirement                                                     | Classification | Batch | Exact evidence (update as batches land)                                                  | Remaining limitation        |
+| ----- | --------------------------------------------------------------- | -------------- | ----- | ---------------------------------------------------------------------------------------- | --------------------------- |
+| B8-01 | Activate `/briefs` directory with opaque org selection          | Implemented    | 1–3   | `BriefsWorkspacePage` + `BriefSelectionForm`; briefState labels; eligibility caveat copy | —                           |
+| B8-02 | Canonical individual brief route with opaque `BriefPublicRef`   | Implemented    | 1–3   | Tenant-scoped `bref_`; `BriefDocumentPage` research hierarchy                            | —                           |
+| B8-03 | Fail-closed unauthorized / malformed / not_found / error states | Implemented    | 1–3   | Service states + workspace/document UI state branches                                    | —                           |
+| B8-04 | Require `brief:read` + org/assessment read                      | Implemented    | 1     | `requireBriefReadAccess` / `finalizeBriefView`; demo context grants `brief:read` only    | —                           |
+| B8-05 | No raw IDs / private notes in view models                       | Implemented    | 1–3   | Leakage asserts; UI contract forbids raw ID patterns; client island boundary             | —                           |
+| B8-06 | Deterministic templates; no LLM; no Phase 4 recalculation       | Implemented    | 2     | `brief-templates.ts`; deterministic JSON equality; score parity                          | —                           |
+| B8-07 | Evidence, provenance, gaps, overlay gating                      | Implemented    | 2–3   | Projection gating + evidence index/support links in document UI                          | —                           |
+| B8-08 | Missing evidence ≠ missing capability                           | Implemented    | 2–3   | Templates + insufficient state legend/copy                                               | —                           |
+| B8-09 | Available / insufficient / not_published projections            | Implemented    | 2–3   | Projection states + directory state pills + document status badge                        | —                           |
+| B8-10 | Accessible workspace + document UI; print-friendly              | Implemented    | 3     | `BriefSelectionForm`; classification badges; `briefs.css` print rules; contract tests    | Browser matrix below        |
+| B8-11 | Responsive 320–1920; real 200% zoom                             | Implemented    | 3     | Responsive CSS; CDP `setPageScaleFactor` with `visualViewport.scale===2` at 320/1024     | —                           |
+| B8-12 | Inbound Open brief from Overview/Explorer/detail/Compare        | Implemented    | 4     | `inboundBriefActionFor` + UI Brief/Open brief actions; opaque `bref_` only               | Browser Back evidence below |
+| B8-13 | Preserve Explorer filters / Browser Back                        | Implemented    | 4     | Plain `<Link href>` navigation; no localStorage/cookies; Back restores prior URL         | —                           |
+| B8-14 | noindex / nofollow / noarchive                                  | Implemented    | 1–3   | Route metadata + UI contract                                                             | —                           |
+| B8-15 | Docs + full verify + Phase 4 regression                         | Planned        | 5     | —                                                                                        | Batch 5                     |
+| B8-16 | `brief:draft` / `brief:approve` / export mutations              | Deferred       | —     | Vocabulary retained in `authorization/policy.ts`                                         | Explicit non-goal           |
+| B8-17 | PDF/Word download, email, public sharing                        | Deferred       | —     | Print CSS only; no product export                                                        | Explicit non-goal           |
 
 ## Batch completion log
 
@@ -31,8 +31,8 @@
 | ----- | ---------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1     | Plan, ADR, contracts, fail-closed shells, route act. | `21a8553` feat: establish Phase 8 brief foundation                | format ✓ lint ✓ typecheck ✓ brief tests ✓ security ✓ build ✓                                                                                                       |
 | 2     | Projections + templates                              | `9ef8851` feat: add deterministic institutional brief projections | format ✓ lint ✓ typecheck ✓ brief tests ✓ security ✓ build ✓                                                                                                       |
-| 3     | Workspace + document UI                              | Pending commit                                                    | format ✓ lint ✓ typecheck ✓ focused brief/UI/boundary ✓ security ✓ build ✓; CDP page-scale `scale===2` @320/1024; print stress; not_published coverage suppression |
-| 4     | Inbound navigation                                   | —                                                                 | —                                                                                                                                                                  |
+| 3     | Workspace + document UI                              | `95fdc12` feat: build accessible institutional brief workspace    | format ✓ lint ✓ typecheck ✓ focused brief/UI/boundary ✓ security ✓ build ✓; CDP page-scale `scale===2` @320/1024; print stress; not_published coverage suppression |
+| 4     | Inbound navigation                                   | Pending user commit request                                       | format ✓ lint ✓ typecheck ✓ focused integration/boundary ✓ security ✓ build ✓; Browser Back restores Overview/Explorer/detail/Compare exactly                      |
 | 5     | Docs finalize + full verify                          | —                                                                 | —                                                                                                                                                                  |
 
 ## Permission matrix (Phase 8 brief reads)
@@ -71,3 +71,21 @@ Recorded against production `next build` + `next start` on 2026-07-13 (local-dem
 | Privacy DOM scan                                          | No `org_syn_fi_` / `ev_syn_` / `prov_syn_` / `cap_syn_` / private notes                                                                                                                                                                                                     |
 
 **Fix during Batch 3 verification:** provenance `sourceReferenceLabel` sanitized so synthetic paths embedding internal org IDs cannot enter the view model (leakage assert). **Final review fix:** `not_published` suppresses portfolio coverage counts (`N of M enabled capabilities`) so print/screen cannot reveal withheld assessment detail.
+
+## Batch 4 browser verification evidence
+
+Recorded against production `next build` + `next start` on 2026-07-13 (local-demo).
+
+| Check                            | Result                                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| Overview Brief action            | Opaque `/briefs/bref_…`; `aria-label` = `Open institutional brief for {org}` |
+| Overview → brief → Back          | Restores `/`                                                                 |
+| Explorer filtered → brief → Back | Exact URL restored (`assessmentStatus`, `pageSize`, `page`, `sort`)          |
+| Detail → brief → Back            | Exact `/organizations/oref_…` restored                                       |
+| Compare 2-org → brief → Back     | Exact canonical compare URL + selection order restored                       |
+| Compare 3-org → brief → Back     | Exact canonical compare URL + selection order restored                       |
+| 320px Overview/Explorer          | No page-level horizontal overflow with Brief actions                         |
+| Storage                          | No localStorage/cookies brief cart                                           |
+| Privacy DOM                      | No `org_syn_fi_` / `ev_syn_` / `cap_syn_` on Overview                        |
+
+**Architecture:** shared `inboundBriefActionFor` (server-only); services must not call `briefPublicRefFor` / `briefDocumentHref` directly (boundary contract).
