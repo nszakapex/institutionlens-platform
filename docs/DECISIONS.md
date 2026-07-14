@@ -304,6 +304,20 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - Retention expiry columns do not authorize automated deletion. No purge job is implemented in Phase 9 Batch 1.
 - See `docs/PRODUCTION_DATA_FOUNDATION.md` for the schema, migration, rollback, and retention controls.
 
+## D-024 - Production repository and configuration boundary
+
+**Status:** Approved for Phase 9 Batch 2 structure; live transport and cutover remain deferred
+
+- Keep existing domain repository interfaces as the read contract and compose them into one server-only repository bundle.
+- Construct repository bundles per request; do not add a process-global repository, authorization decision, or tenant-data cache.
+- Keep `local-demo` explicit. Production-like modes require validated server-only configuration and an injected authenticated Supabase/Postgres gateway and must never fall back to synthetic data.
+- Use a server-only publishable-key configuration for the future authenticated user gateway. Do not admit privileged Supabase credentials or direct database connection strings into user-request configuration.
+- Enforce bounded pages/page sizes, resource-specific sort allowlists, timeouts, tenant-response checks, frozen outputs, and constant safe error messages at the repository boundary.
+- Read persisted Phase 4 results; do not implement a second assessment calculator in the database adapter.
+- Reassert `evidence:restricted_read` and `overlay:read`; remove private note fields and reject unsafe brief snapshot content before application projection.
+- The typed gateway is an offline seam only. A Supabase client/SSR package, authenticated session binding, narrow RPCs, RLS allow policies, live row decoders, query plans, and PostgreSQL parity remain mandatory later work.
+- No write method is introduced while the application is read-only. The first write repository must use an explicit bounded transaction with audit and lineage updates.
+
 ## Current phase boundary
 
-Phases 0-8 are complete for synthetic local-demo scope. Phase 9 Batch 1 establishes a fail-closed production database contract only. Runtime persistence, RLS allow policies, production authentication, external infrastructure, real data, billing, and hosting remain deferred.
+Phases 0-8 are complete for synthetic local-demo scope. Phase 9 Batches 1-2 establish fail-closed production database and repository contracts only. Runtime persistence, RLS allow policies, production authentication, external infrastructure, real data, billing, and hosting remain deferred.

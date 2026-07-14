@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { AuthorizationContext } from "@/authorization/context";
 import type { OrganizationId, OverlayId } from "@/domain/ids";
 import type { OrganizationOverlay } from "@/domain/overlays/schemas";

@@ -266,6 +266,7 @@ export class SyntheticAssessmentRepository implements AssessmentRepository {
     capabilityId: CapabilityId,
   ): Promise<OpportunityContext> {
     assertPermission(context, "assessment:read");
+    assertPermission(context, "overlay:read");
     let orgId: OrganizationId;
     let capId: CapabilityId;
     try {

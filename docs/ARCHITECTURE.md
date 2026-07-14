@@ -17,7 +17,7 @@ institutionlens-platform/
     authorization/            # Server-only authz context
     components/               # UI (overview/, explorer/, detail/, evidence/, methodology/)
     domain/                   # Schemas, invariants, ids
-    repositories/             # Tenant-scoped contracts + synthetic implementations
+    repositories/             # Server-only contracts, synthetic adapters, production boundary
     verticals/                # Vertical adapters + synthetic fixtures
     lib/                      # Env, demo tenant, navigation, security
     styles/                   # Tokens + component + research-surface CSS
@@ -52,7 +52,7 @@ The complete rule ledgers are authoritative. The detail diagram presents one rep
 
 ## Phase 9 production data foundation
 
-Phase 9 Batch 1 adds a versioned Supabase/Postgres schema migration under `supabase/migrations` without changing the runtime adapter. The core schema is named `institutionlens`, is not an approved Data API surface, and contains only server-side raw UUID join keys.
+Phase 9 Batch 1 adds a versioned Supabase/Postgres schema migration under `supabase/migrations`. Batch 2 adds shared server-only read contracts, an explicit repository provider, and an offline-testable Supabase/Postgres gateway structure without changing the application's default adapter wiring. The core schema is named `institutionlens`, is not an approved Data API surface, and contains only server-side raw UUID join keys.
 
 Every tenant-owned relationship uses a tenant-composite foreign key. All core tables have RLS enabled and forced. Batch 1 deliberately grants no API role and creates no allow policy, so database access remains closed until the separately tested Phase 9 RLS batch.
 
@@ -62,7 +62,9 @@ Future customer data flow is:
 
 Only existing frozen/redacted application view models may reach UI. A later API/RPC schema must expose opaque references, never raw database IDs or private fields. Production configuration must fail closed and must never silently select synthetic repositories.
 
-Schema, migration, rollback, and retention details are in `docs/PRODUCTION_DATA_FOUNDATION.md`. Phase 9 Batch 1 does not connect Supabase, install runtime clients, execute migrations, add authentication, or deploy.
+`local-demo` explicitly selects fresh synthetic repository bundles outside production. `development`, `staging`, and `production` require consistent server-only configuration and an injected per-request authenticated gateway; absent configuration or gateway fails closed without a demo fallback. Repository adapters reauthorize every operation, enforce query/page/timeout limits, reject cross-tenant response data, freeze outputs, and classify errors without upstream details. No new global cache is used.
+
+The gateway has typed operations but no SDK transport or live RPC. Schema, repository selection, migration, rollback, and retention details are in `docs/PRODUCTION_DATA_FOUNDATION.md`. Phase 9 Batches 1-2 do not connect Supabase, install runtime clients, execute migrations, add authentication, add RLS allow policies, or deploy.
 
 ## PostgreSQL query implications
 
@@ -70,15 +72,15 @@ Explorer filters map cleanly to indexed columns on `organizations` (tenant_id, t
 
 Detail and lineage reads will need tenant-keyed indexes across public organization refs, evidence, provenance, assessment runs, ledger/evidence joins, capabilities, portfolios, and overlays. Catalog text search must index publication-safe fields separately from restricted content. Query-level projection, stable pagination, section/payload limits, RLS-aware composite joins, and measured explain plans are required before production use.
 
-The current in-memory implementation still scans/materializes fixed synthetic arrays. Its bounded fixture behavior is not a latency, throughput, payload, or production-scale claim. Database query plans and adapter parity remain Phase 9 Batch 2/5 verification work.
+The current in-memory implementation still scans/materializes fixed synthetic arrays. Its bounded fixture behavior is not a latency, throughput, payload, or production-scale claim. Live row mapping, database query plans, RLS attack tests, and PostgreSQL adapter parity remain Phase 9 Batch 4/5 verification work.
 
 ## Runtime principles
 
 - **App Router** with React Server Components by default.
 - Client components only where interaction requires them.
-- Server-only modules for demo tenant context, future authz, and future repositories.
+- Server-only modules for demo tenant context, authorization, configuration, and repositories.
 - CSS variables/tokens as the canonical brand layer; avoid scattering brand decisions into utility-class soup.
-- Repository interfaces will wrap a typed synthetic data layer first; PostgreSQL can replace that layer later without rewriting UI contracts.
+- Shared repository interfaces wrap the typed synthetic layer and the injected production gateway without exposing either to UI contracts.
 
 ## Data (MVP direction)
 
@@ -91,7 +93,7 @@ The current in-memory implementation still scans/materializes fixed synthetic ar
 - Explicit local-demo principal + tenant context, constructed server-side.
 - Labeled non-production; fail closed if missing/invalid or if `IL_APP_MODE` is not `local-demo`.
 - No fake production login page.
-- Supabase Auth is the approved Phase 9 direction, but no provider integration exists in Batch 1.
+- Supabase Auth is the approved Phase 9 direction, but no provider/session integration exists in Batches 1-2.
 - **No protected production deployment** while demo authentication is in place.
 
 ## Scoring concepts (product invariant)
@@ -118,8 +120,8 @@ Keep `src/lib/` boundaries clear enough that workers or shared packages can be e
 
 ## Hosting (future only)
 
-Preferred later: Vercel (Next.js) + Supabase (Postgres/Auth). Neither is connected for Phase 9 Batch 1. No analytics or telemetry.
+Preferred later: Vercel (Next.js) + Supabase (Postgres/Auth). Neither is connected for Phase 9 Batches 1-2. No analytics or telemetry.
 
 ## Phase boundary
 
-Phases 6-8 provide read-only synthetic detail, evidence/provenance, methodology, comparison, and deterministic briefs. Phase 9 Batch 1 establishes the production database contract only. Runtime persistence, RLS allow policies, production authentication, controlled cutover, real ingestion, billing, exports, notes, and deployment remain deferred.
+Phases 6-8 provide read-only synthetic detail, evidence/provenance, methodology, comparison, and deterministic briefs. Phase 9 Batches 1-2 establish the production database and repository contracts only. Live runtime persistence, RLS allow policies, production authentication, controlled cutover, real ingestion, billing, exports, notes, and deployment remain deferred.

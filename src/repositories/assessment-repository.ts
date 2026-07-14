@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { AuthorizationContext } from "@/authorization/context";
 import type { AssessmentId, CapabilityId, OrganizationId } from "@/domain/ids";
 import type { AssessmentManifest } from "@/domain/assessments/manifest";

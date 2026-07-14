@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batch 1 complete; Batches 2-5 pending
+**Status:** Batches 1-2 complete; Batches 3-5 pending
 
 **Depends on:** Phases 0-8
 
@@ -26,7 +26,7 @@ Replace the local-demo-only persistence and identity foundations with a producti
 
 ## Current boundary
 
-Batch 1 adds versioned database architecture and a fail-closed initial migration. It does not install a runtime database client, connect an external project, change the synthetic runtime, add authentication UI, or add RLS allow policies.
+Batches 1-2 add the versioned database architecture, fail-closed initial migration, shared read repository contracts, explicit adapter selection, and an offline-testable Supabase/Postgres gateway boundary. They do not install a Supabase runtime client, connect an external project, change the default synthetic runtime, add authentication UI, add RLS allow policies, or execute SQL.
 
 The initial migration creates an unexposed `institutionlens` schema, revokes all Data API role privileges, and enables and forces RLS without policies. A database created from Batch 1 is intentionally unusable by `anon`, `authenticated`, and `service_role` until later, tested migrations grant a narrow access path.
 
@@ -63,12 +63,15 @@ Compatibility findings:
 
 ### Batch 2 - Repository and adapter boundary
 
-- Production repository interfaces and typed row mapping
-- Supabase/Postgres adapter behind current application contracts
-- Bounded filtering, ordering, pagination, transactional writes, timeouts, and safe errors
-- Per-request dependencies only; no process-global authorization or data cache
-- `production` mode fails closed when database configuration is absent or unhealthy
-- Synthetic adapters remain explicit in local-demo and test modes only
+- Shared server-only read contracts for workspace context, organizations, evidence/provenance, assessment outputs and rule ledgers, portfolios, overlays, saved comparisons, and brief snapshots
+- Existing synthetic implementations composed behind the shared bundle; persistent saved-comparison and brief-snapshot collections are empty in the current local demo
+- Supabase/Postgres adapter structure behind an injected, per-request authenticated gateway; no SDK transport or live RPC exists yet
+- Bounded filtering, allowlisted ordering, page/page-size limits, request timeouts, tenant-response validation, frozen outputs, and constant safe errors
+- Restricted evidence and overlay permissions reasserted; private provenance/overlay notes removed at the production adapter boundary
+- No write repository exists because the current application reads only; the first mutation contract must add a bounded database transaction and audit atomically
+- Per-request dependencies only; no new process-global authorization or data cache
+- `development`, `staging`, and `production` modes fail closed when production configuration or the gateway is absent; they never fall back to synthetic data
+- `local-demo` remains explicit and is rejected by the new provider when `NODE_ENV=production`; the current application runtime remains wired to the pre-existing demo gate until controlled cutover
 
 ### Batch 3 - Real authentication and sessions
 
@@ -95,6 +98,19 @@ Compatibility findings:
 - Full Phase 4-8 product regression through the database adapter
 - Stop before external Supabase project creation or deployment
 
+## Batch 2 acceptance criteria
+
+1. All current read domains have typed server-only contracts and an explicit repository bundle.
+2. Synthetic repositories satisfy those contracts without changing the application's default adapter wiring.
+3. Production-like modes require consistent server-only Supabase configuration and an injected user-scoped gateway.
+4. Missing, malformed, mixed, public, or privileged user-path configuration fails closed without printing values.
+5. Repository queries cap pages at 10,000 and page size at 50 (or a stricter configured maximum), and accept only named sort fields.
+6. Every production operation reasserts authorization, carries tenant/principal context, times out, freezes output, and rejects cross-tenant response data.
+7. Production adapters consume persisted assessment results and never import or invoke Phase 4 assessment generation.
+8. Restricted evidence, overlays, private notes, raw IDs, and repository configuration do not cross unauthorized or rendered boundaries.
+9. No Supabase project, client SDK, privileged credential, direct database connection, migration execution, deployment, or runtime cutover is introduced.
+10. Live PostgreSQL migration, row decoding, RPC implementation, RLS policy/attack tests, query plans, and rollback rehearsal remain mandatory later gates.
+
 ## Batch 1 acceptance criteria
 
 1. All requested production entities have documented and migrated schemas.
@@ -120,6 +136,17 @@ Batch 1 verification on 2026-07-13:
 - full `npm run verify`: 43 files / 280 tests, all validators/scans, and production build passed;
 - no browser run: Batch 1 changes no UI, routes, or runtime behavior;
 - no SQL execution: Docker-compatible runtime and Supabase CLI are not installed.
+
+Batch 2 focused verification on 2026-07-13:
+
+- repository/configuration contracts: 6 files / 38 tests passed;
+- security/privacy suite: 18 files / 100 tests passed;
+- Phase 4 assessment regression: 9 files / 56 tests passed;
+- full `npm run verify`: 47 files / 305 tests, all validators/scans, and the production build passed with the documented local-demo process environment;
+- typecheck and lint passed;
+- full verification evidence is recorded in `PHASE_9_REQUIREMENTS_TRACEABILITY.md`;
+- no browser run: Batch 2 changes no UI, route output, or default runtime wiring;
+- no live adapter claim: the Supabase/Postgres gateway is exercised only with typed fakes.
 
 ## Stop gates
 

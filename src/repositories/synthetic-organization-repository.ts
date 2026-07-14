@@ -21,6 +21,11 @@ import {
   type OrganizationSortField,
 } from "@/domain/schemas/query";
 import { assertOrganizationFitUnassessed } from "@/domain/invariants";
+import {
+  OrganizationPublicRefSchema,
+  organizationPublicRefFor,
+  type OrganizationPublicRef,
+} from "@/domain/organization-public-ref";
 import { resolveAdapter } from "@/verticals/registry";
 import type { OrganizationRepository, PagedResult } from "@/repositories/organization-repository";
 
@@ -189,6 +194,25 @@ export class SyntheticOrganizationRepository implements OrganizationRepository {
     return cloneFrozen(found);
   }
 
+  async getByPublicRef(
+    context: AuthorizationContext,
+    organizationRef: OrganizationPublicRef,
+  ): Promise<Organization> {
+    assertPermission(context, "organization:read");
+    const parsed = OrganizationPublicRefSchema.safeParse(organizationRef);
+    if (!parsed.success) {
+      throw new NotFoundError("Resource not found.");
+    }
+
+    const found = this.scopedOrganizations(context).find(
+      (organization) => organizationPublicRefFor(organization.id) === parsed.data,
+    );
+    if (!found) {
+      throw new NotFoundError("Resource not found.");
+    }
+    return cloneFrozen(found);
+  }
+
   async list(
     context: AuthorizationContext,
     rawQuery: OrganizationQueryInput,
@@ -220,6 +244,12 @@ export class SyntheticOrganizationRepository implements OrganizationRepository {
     let items = this.store.evidence.filter(
       (item) => item.organizationId === organizationId && item.tenantId === context.tenant.id,
     );
+    if (!context.permissions.includes("evidence:restricted_read")) {
+      items = items.filter(
+        (item) =>
+          item.publicationEligibility !== "restricted" && item.dataClassification !== "restricted",
+      );
+    }
     if (query.freshness) {
       items = items.filter((item) => item.freshness === query.freshness);
     }
@@ -240,6 +270,12 @@ export class SyntheticOrganizationRepository implements OrganizationRepository {
     }
     const found = this.store.provenance.find((item) => item.id === id);
     if (!found || found.tenantId !== context.tenant.id) {
+      throw new NotFoundError("Resource not found.");
+    }
+    if (
+      found.accessClassification === "restricted" &&
+      !context.permissions.includes("evidence:restricted_read")
+    ) {
       throw new NotFoundError("Resource not found.");
     }
     return cloneFrozen(found);

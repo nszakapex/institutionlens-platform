@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { AuthorizationContext } from "@/authorization/context";
 import type { Organization } from "@/domain/schemas/organization";
 import type { EvidenceRecord } from "@/domain/schemas/evidence";
@@ -9,6 +11,7 @@ import type {
   OrganizationQueryInput,
 } from "@/domain/schemas/query";
 import type { OrganizationId, ProvenanceId } from "@/domain/ids";
+import type { OrganizationPublicRef } from "@/domain/organization-public-ref";
 
 export type PagedResult<T> = {
   items: readonly T[];
@@ -23,6 +26,10 @@ export type PagedResult<T> = {
  */
 export interface OrganizationRepository {
   getById(context: AuthorizationContext, organizationId: OrganizationId): Promise<Organization>;
+  getByPublicRef(
+    context: AuthorizationContext,
+    organizationRef: OrganizationPublicRef,
+  ): Promise<Organization>;
   list(
     context: AuthorizationContext,
     query: OrganizationQueryInput,

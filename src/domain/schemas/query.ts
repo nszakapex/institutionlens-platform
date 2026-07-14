@@ -4,6 +4,7 @@ import { LifecycleStatusSchema } from "@/domain/schemas/common";
 import { FreshnessStatusSchema } from "@/domain/schemas/assessment";
 
 export const DEFAULT_PAGE_SIZE = 12;
+export const MAX_PAGE = 10_000;
 export const MAX_PAGE_SIZE = 50;
 
 export const OrganizationSortFieldSchema = z.enum([
@@ -25,7 +26,7 @@ export const OrganizationQuerySchema = z
     lifecycleStatus: LifecycleStatusSchema.optional(),
     tags: z.array(z.string().min(1).max(40)).max(8).optional(),
     synthetic: z.literal(true).optional(),
-    page: z.number().int().min(1).default(1),
+    page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
     sortField: OrganizationSortFieldSchema.default("displayName"),
     sortDirection: SortDirectionSchema.default("asc"),
@@ -39,7 +40,7 @@ export type OrganizationQuery = z.output<typeof OrganizationQuerySchema>;
 
 export const EvidenceQuerySchema = z
   .object({
-    page: z.number().int().min(1).default(1),
+    page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
     freshness: FreshnessStatusSchema.optional(),
   })
@@ -51,7 +52,7 @@ export type EvidenceQuery = z.output<typeof EvidenceQuerySchema>;
 export const CapabilityQuerySchema = z
   .object({
     verticalId: VerticalIdSchema.optional(),
-    page: z.number().int().min(1).default(1),
+    page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   })
   .strict();
@@ -63,7 +64,7 @@ export const AssessmentListQuerySchema = z
   .object({
     organizationId: z.string().min(1).max(64).optional(),
     capabilityId: z.string().min(1).max(64).optional(),
-    page: z.number().int().min(1).default(1),
+    page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   })
   .strict();
@@ -73,7 +74,7 @@ export type AssessmentListQuery = z.output<typeof AssessmentListQuerySchema>;
 
 export const PortfolioListQuerySchema = z
   .object({
-    page: z.number().int().min(1).default(1),
+    page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   })
   .strict();
@@ -84,7 +85,7 @@ export type PortfolioListQuery = z.output<typeof PortfolioListQuerySchema>;
 export const OverlayListQuerySchema = z
   .object({
     organizationId: z.string().min(1).max(64).optional(),
-    page: z.number().int().min(1).default(1),
+    page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   })
   .strict();

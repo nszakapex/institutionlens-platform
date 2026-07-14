@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { AuthorizationContext } from "@/authorization/context";
 import type { PortfolioId } from "@/domain/ids";
 import type { CapabilityPortfolio } from "@/domain/portfolios/schemas";

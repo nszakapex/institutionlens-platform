@@ -2,7 +2,7 @@
 
 **Phase:** Project Phase 9
 
-**Status:** Batch 1 schema contract; no connected database
+**Status:** Batch 2 repository/configuration boundary; no connected database
 
 **Migration:** `supabase/migrations/20260713190000_phase9_initial_schema.sql`
 
@@ -23,6 +23,59 @@ The `institutionlens` schema is not exposed through the Data API in Batch 1. Cor
 Batch 4 may add a separate exposed API schema containing narrowly granted operations. Callers may receive only opaque references and publication-safe projections. Core-table grants alone do not make the core schema an approved Data API surface.
 
 Customer reads use the authenticated user's identity and membership. Controlled ingestion or maintenance may use a backend-only privileged path, but each operation must have an explicit authorization policy, bounded input, audit event, and server-only credential. A privileged key is never a substitute for RLS tests and is never shipped to the browser.
+
+## Repository boundary
+
+Batch 2 defines a server-only `RepositoryBundle` for the data the application already reads:
+
+- current workspace/tenant context;
+- organizations plus tenant-scoped opaque-reference resolution;
+- organization evidence and provenance;
+- persisted capability and portfolio assessments, manifests, complete rule ledgers, and opportunity context;
+- capability portfolios and tenant-private overlays;
+- saved comparison records and brief snapshot records where persistence exists.
+
+The existing synthetic organization, assessment, portfolio, and overlay repositories remain the local-demo implementations. New synthetic workspace/saved-record implementations use the same contracts; saved comparisons and brief snapshots are empty because Phases 7-8 are transient/generated and do not persist them. This does not change route or application-service wiring.
+
+The production structure is:
+
+```text
+per-request authorization context
+  -> repository provider (explicit mode)
+    -> production repository adapters
+      -> injected authenticated Supabase/Postgres gateway
+        -> narrow RLS-backed RPCs (mandatory Batch 4 work; not implemented)
+```
+
+The gateway operation map is typed and is tested with offline fakes. It is not a Supabase SDK client, SQL executor, live row decoder, or database-integration claim. Batch 3 must bind an authenticated user session; Batch 4 must implement the narrow RPC surface and RLS policies; Batch 5 must run adapter parity against PostgreSQL.
+
+Every production adapter call reasserts the required application permission, carries tenant and principal context, enforces a request timeout, rejects a mismatched `tenantId` anywhere in a response, validates page response bounds, deep-freezes returned data, and maps unknown failures to constant safe errors without logging upstream values. The adapter never imports the assessment generator: database results are persisted Phase 4 outputs, not recalculated scores.
+
+Restricted evidence reaching a caller without `evidence:restricted_read` is treated as an invalid gateway response. Overlay operations require `overlay:read`. Provenance and overlay note fields are removed by the production adapter, and brief snapshot content containing private-note or internal-ID field names is rejected.
+
+No write method is reachable in Batch 2. The first write repository must define a bounded transaction that atomically applies the domain change, lineage updates, and audit event; it must not retrofit unbounded generic writes into this read gateway.
+
+## Adapter selection and environment
+
+`createRepositoryBundle` has no implicit mode and creates a fresh bundle per invocation. Selection rules are:
+
+| `IL_APP_MODE`                          | Result                                                                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| absent or unknown                      | Fail closed                                                                                                                                |
+| `local-demo`                           | Synthetic bundle only when demo tenant/principal configuration is valid, production variables are absent, and `NODE_ENV` is not production |
+| `development`, `staging`, `production` | Production adapter only when all production variables are valid and an authenticated gateway is injected; never synthetic fallback         |
+
+Required production-like variables are server-only:
+
+| Variable                           | Validation                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `IL_SUPABASE_URL`                  | HTTPS origin only; no user info, path, query, or fragment; host must match the project reference |
+| `IL_SUPABASE_PROJECT_REF`          | Exactly 20 lowercase alphanumeric characters                                                     |
+| `IL_SUPABASE_PUBLISHABLE_KEY`      | Non-empty bounded publishable key; retained only in the server-only config object                |
+| `IL_REPOSITORY_REQUEST_TIMEOUT_MS` | Optional integer 100-30,000; defaults to 5,000                                                   |
+| `IL_REPOSITORY_MAX_PAGE_SIZE`      | Optional integer 1-50; defaults to 50                                                            |
+
+`NEXT_PUBLIC_SUPABASE*` names, mixed demo/production settings, direct user-path database URLs, and privileged Supabase credentials are rejected. Errors contain stable issue codes only and never values. The publishable key and URL are not exposed to client components even though the provider may classify a publishable key as non-secret.
 
 ## Schema catalog
 
@@ -98,7 +151,7 @@ Any adapter parity test must compare database projections to the existing synthe
 
 Indexes cover tenant-leading membership, organization, import, provenance, evidence, assessment, overlay, comparison, brief, and audit access paths. Publication-safe evidence text has a partial full-text index that excludes restricted rows. Tags use a separate GIN index; repository queries must also provide an explicit tenant predicate.
 
-All list operations remain bounded and use stable tie-breakers. Exact page/cursor contracts and query timeouts are Batch 2 work. Representative data, `EXPLAIN` plans, and payload limits are required before production claims.
+All list operations remain bounded and use stable tie-breakers. Batch 2 caps pages at 10,000, page size at 50 or a stricter configured maximum, text at the existing 80-character limit, and sort fields by resource allowlist. Representative data, cursor/keyset evaluation, `EXPLAIN` plans, RPC payload limits, and timeout measurement are required before production claims.
 
 ## Migration strategy
 
@@ -111,7 +164,7 @@ All list operations remain bounded and use stable tie-breakers. Exact page/curso
 7. Apply with `supabase db push` only after local and staging checks pass.
 8. Production migrations use expand/migrate/contract changes; destructive contract steps require a separate approved maintenance change.
 
-No remote project is linked and no migration has been applied in Batch 1.
+No remote project is linked and no migration has been applied in Batches 1-2.
 
 ## Rollback strategy
 
@@ -156,4 +209,6 @@ No automated deletion, scheduled job, storage bucket, or backup-retention claim 
 
 ## Current verification limit
 
-Static tests verify table presence, tenant columns, composite foreign keys, RLS enable/force statements, lack of allow policies, revoked roles, bounds, and rollback labeling. They do not parse or execute PostgreSQL. SQL execution, RLS policy behavior, query plans, migration timing, and rollback are explicitly pending a local Supabase stack.
+Static schema tests verify table presence, tenant columns, composite foreign keys, RLS enable/force statements, lack of allow policies, revoked roles, bounds, and rollback labeling. Repository tests use synthetic adapters and typed gateway fakes. Neither suite parses database rows from, connects to, or executes PostgreSQL.
+
+The mandatory live gate remains: execute the migration on a clean approved local stack; introspect constraints, indexes, privileges, and forced RLS; implement reviewed allow policies and narrow RPCs; run direct two-tenant/three-role reference and restricted-data attacks; verify adapter parity against Phase 4-8 golden outputs; inspect query plans; and rehearse the destructive disposable rollback plus the non-destructive recovery plan. No production readiness or tenant-isolation claim may precede that gate.

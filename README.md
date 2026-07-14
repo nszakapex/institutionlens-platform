@@ -4,12 +4,13 @@ Configurable **institutional-fit intelligence** for specialized B2B companies.
 
 This repository is the **authenticated application foundation** only. It is a clean-room product. It is **not** the InstitutionLens marketing website, and it must not import from Coverage or any AD&Co-specific prototype.
 
-## Current status (Phase 9 Batch 1)
+## Current status (Phase 9 Batch 2)
 
 - Synthetic demo product through deterministic institutional briefs (Phase 8)
 - Versioned, fail-closed Supabase/Postgres schema contract (Phase 9 Batch 1)
+- Server-only repository/configuration boundary with synthetic parity and an offline fake-gateway adapter (Phase 9 Batch 2)
 - No real organization data
-- No connected PostgreSQL/Supabase project and no runtime database adapter
+- No connected PostgreSQL/Supabase project, authenticated database transport, live RPC, migration execution, or runtime cutover
 - Explicit **local-demo** principal and tenant context (server-side, non-production)
 - **No production deployment** while demo authentication is in place
 - Brand tokens and self-hosted fonts loaded for product surfaces
@@ -91,7 +92,7 @@ curl -s http://localhost:3000/api/health
 
 ## Explicitly deferred
 
-Runtime database adapter, real auth, RLS allow policies and attack tests, external Supabase/Vercel configuration, production deployment, real data ingestion, billing, automated retention deletion, downloadable export, AI narrative generation, and analytics.
+Authenticated Supabase transport, live database row mapping, real auth, RLS allow policies and attack tests, external Supabase/Vercel configuration, production deployment, real data ingestion, billing, automated retention deletion, downloadable export, AI narrative generation, and analytics.
 
 ## License / ownership
 

@@ -54,7 +54,7 @@ export class SyntheticOverlayRepository implements OverlayRepository {
   }
 
   async getById(context: AuthorizationContext, overlayId: OverlayId): Promise<OrganizationOverlay> {
-    assertPermission(context, "assessment:read");
+    assertPermission(context, "overlay:read");
     let id: OverlayId;
     try {
       id = OverlayIdSchema.parse(overlayId);
@@ -73,7 +73,7 @@ export class SyntheticOverlayRepository implements OverlayRepository {
     context: AuthorizationContext,
     organizationId: OrganizationId,
   ): Promise<OrganizationOverlay> {
-    assertPermission(context, "assessment:read");
+    assertPermission(context, "overlay:read");
     let orgId: OrganizationId;
     try {
       orgId = OrganizationIdSchema.parse(organizationId);
@@ -92,7 +92,7 @@ export class SyntheticOverlayRepository implements OverlayRepository {
     context: AuthorizationContext,
     rawQuery: OverlayListQueryInput,
   ): Promise<PagedResult<OrganizationOverlay>> {
-    assertPermission(context, "assessment:read");
+    assertPermission(context, "overlay:read");
     const query = OverlayListQuerySchema.parse(rawQuery);
     if (query.pageSize > MAX_PAGE_SIZE) {
       throw new ValidationError(`pageSize must be <= ${MAX_PAGE_SIZE}.`);
