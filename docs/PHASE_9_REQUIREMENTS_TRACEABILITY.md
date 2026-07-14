@@ -1,10 +1,10 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2 - production schema plus repository/configuration boundary
+**Scope:** Batches 1-2 plus Batch 3 live-migration preparation
 
-**Status:** Batches 1-2 complete for static/offline scope
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete
 
-**External infrastructure:** None created or connected
+**External infrastructure:** One owner-approved staging/development Supabase project exists; repository unlinked, migration unapplied, no deployment
 
 ## Batch 1 requirements
 
@@ -21,7 +21,7 @@
 | P9B1-09 | Define migration and rollback strategy                                               | Implemented    | `PRODUCTION_DATA_FOUNDATION.md`; destructive rollback file                                            | Execution/rehearsal blocked by missing local stack       |
 | P9B1-10 | Define proposed data-retention policy without enforcing deletion                     | Implemented    | Retention table and nullable expiry fields                                                            | Legal/customer approval and purge jobs deferred          |
 | P9B1-11 | Preserve synthetic offline runtime and Phase 4 methodology                           | Implemented    | Default route wiring unchanged; production adapter has no generator imports; full regression passes   | Live production runtime remains unavailable by design    |
-| P9B1-12 | Do not create external services or deploy                                            | Implemented    | Git-only SQL/docs/tests; no Supabase/Vercel command                                                   | External setup remains approval-gated                    |
+| P9B1-12 | Do not create external services or deploy                                            | Implemented    | Batch 1 was Git-only SQL/docs/tests; no Supabase/Vercel command                                       | Staging project was created later with owner approval    |
 
 ## Batch 2 requirements
 
@@ -41,6 +41,18 @@
 | P9B2-12 | Avoid new global mutable caches                                              | Implemented    | Per-invocation provider/runner; production boundary static contract                                                                   | Existing pre-Batch-2 synthetic assessment cache remains unchanged |
 | P9B2-13 | Make no external, deployment, migration, or default-runtime change           | Implemented    | No dependency/lockfile, runtime route, migration, Vercel, or external service changes                                                 | All external configuration remains approval-gated                 |
 | P9B2-14 | Record live PostgreSQL gates honestly                                        | Implemented    | `PRODUCTION_DATA_FOUNDATION.md`, Phase 9 plan, and this matrix require migration/RPC/RLS/attack/parity/query-plan/rollback validation | Mandatory before production claim                                 |
+
+## Batch 3 live-migration preparation requirements
+
+| ID       | Requirement                                                               | Classification | Evidence                                                                                                       | Remaining limitation                                   |
+| -------- | ------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| P9B3P-01 | Add canonical local Supabase CLI configuration without credentials        | Implemented    | `supabase/config.toml`; generated files reviewed; `.temp` and local environment metadata ignored               | Repository remains intentionally unlinked              |
+| P9B3P-02 | Prevent accidental seed execution                                         | Implemented    | No `[db.seed]` configuration or seed file; local metadata ignored                                              | Demo/staging seed isolation remains Batch 5            |
+| P9B3P-03 | Add a SELECT-only live schema verifier                                    | Implemented    | `scripts/phase-9-live-schema-verify.sql`; one CTE-backed SELECT with bounded summary output                    | Not executed against PostgreSQL yet                    |
+| P9B3P-04 | Verify exact tables, FKs, lineage, indexes, RLS, policies, and privileges | Implemented    | Catalog CTEs over namespace/class/constraint/index/policy/default-ACL catalogs plus effective privilege checks | Live catalog results require separately approved link  |
+| P9B3P-05 | Verify staging contains no application rows or unexpected migration rows  | Implemented    | Exact `EXISTS` probes for all 18 tables; migration history requires only version `20260713190000`              | Valid only immediately after the approved initial push |
+| P9B3P-06 | Keep verifier aligned with the committed migration and non-mutating       | Implemented    | Contract derives migration version/object sets/FK shapes/count and checks exact lineage columns; 18 tests      | Static validation cannot prove PostgreSQL execution    |
+| P9B3P-07 | Make no remote, Auth, runtime, environment, deployment, or Vercel change  | Implemented    | No link metadata, password access, SQL execution, Auth/app config, Vercel action, deployment, push, or runtime | Remote migration remains separately approval-gated     |
 
 ## Batch 1 verification evidence
 
@@ -62,7 +74,7 @@ Recorded on 2026-07-13:
 
 ## Batch 2 verification evidence
 
-Recorded on 2026-07-13:
+Strictly reviewed on 2026-07-14:
 
 | Check                                | Result                                                                                                                    |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
@@ -79,15 +91,35 @@ Recorded on 2026-07-13:
 | Supabase/PostgreSQL integration      | Not run or claimed - gateway tests use typed fakes only                                                                   |
 | External infrastructure / deployment | None created, connected, changed, or triggered                                                                            |
 
+## Batch 3 live-migration preparation evidence
+
+Recorded on 2026-07-13:
+
+| Check                            | Result                                                                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Supabase CLI                     | Temporary pinned `npx --yes supabase@2.109.1`; generated config minimized after review; no global/package install |
+| `npm run test:database`          | Pass - 2 files / 25 tests; original migration plus SELECT-only live-verifier/configuration contracts              |
+| `npm run validate:database`      | Pass - 18-table migration contract plus SELECT-only live verifier                                                 |
+| `npm run test:security`          | Pass - 19 files / 118 tests, including the live-verifier security contract                                        |
+| Phase 4 regression               | Pass - 9 files / 56 tests; methodology and assessment validators unchanged                                        |
+| Format/lint/typecheck/build      | Pass                                                                                                              |
+| Secrets / clean-room             | Pass - no credential, customer-data, or source-material finding                                                   |
+| Local Supabase configuration     | Local-only project namespace; PostgreSQL 17; no seed/Auth/provider config; local credential/link metadata ignored |
+| Live PostgreSQL execution        | Not run or claimed - repository remains unlinked and migration unapplied                                          |
+| Auth/runtime/deployment boundary | No Auth provider, app environment, runtime route, Vercel, deployment, or push change                              |
+| Full `npm run verify`            | Pass - 48 files / 323 tests; all validators/scans and production build                                            |
+
+After one approved successful initial `supabase db push`, `supabase_migrations.schema_migrations` must contain exactly the single repository version `20260713190000`; the SELECT-only verifier requires that exact state and zero application rows. Live migration execution, RLS allow-policy validation, two-tenant/cross-tenant attack tests, and rollback rehearsal remain mandatory later gates and are not claimed by static verification.
+
 ## Deferred Phase 9 requirements
 
-| Area                                                           | Batch                                          |
-| -------------------------------------------------------------- | ---------------------------------------------- |
-| Authenticated Supabase SDK transport and session binding       | 3                                              |
-| Narrow RPC implementation and live row decoders                | 4                                              |
-| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation |
-| Supabase Auth, SSR sessions, invites/recovery, role resolution | 3                                              |
-| RLS policies, narrow grants/API surface, direct attack tests   | 4                                              |
-| Environment cutover, health/readiness, demo-seed isolation     | 5                                              |
-| Local/staging migration and rollback rehearsal                 | 5                                              |
-| External Supabase project creation or remote migration         | Owner approval after Phase 9 code verification |
+| Area                                                           | Batch                                                     |
+| -------------------------------------------------------------- | --------------------------------------------------------- |
+| Authenticated Supabase SDK transport and session binding       | 3                                                         |
+| Narrow RPC implementation and live row decoders                | 4                                                         |
+| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation            |
+| Supabase Auth, SSR sessions, invites/recovery, role resolution | 3                                                         |
+| RLS policies, narrow grants/API surface, direct attack tests   | 4                                                         |
+| Environment cutover, health/readiness, demo-seed isolation     | 5                                                         |
+| Local/staging migration and rollback rehearsal                 | 5                                                         |
+| Remote staging migration application                           | Separate owner approval after dry-run and verifier review |

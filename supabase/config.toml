@@ -1,0 +1,16 @@
+# LOCAL-ONLY Phase 9 migration configuration. Do not run `supabase config push`.
+# `project_id` is a local CLI namespace, not a hosted Supabase project reference.
+project_id = "institutionlens-platform"
+
+[api]
+enabled = true
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []

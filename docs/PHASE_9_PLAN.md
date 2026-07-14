@@ -1,10 +1,10 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batches 3-5 pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; authentication work pending
 
 **Depends on:** Phases 0-8
 
-**Does not include:** external Supabase infrastructure, deployment, real customer data, ingestion, billing
+**Does not include:** production deployment, real customer data, ingestion, billing
 
 Authoritative production-data design: `docs/PRODUCTION_DATA_FOUNDATION.md`
 
@@ -28,6 +28,8 @@ Replace the local-demo-only persistence and identity foundations with a producti
 
 Batches 1-2 add the versioned database architecture, fail-closed initial migration, shared read repository contracts, explicit adapter selection, and an offline-testable Supabase/Postgres gateway boundary. They do not install a Supabase runtime client, connect an external project, change the default synthetic runtime, add authentication UI, add RLS allow policies, or execute SQL.
 
+After separate owner approval, one staging/development Supabase project was created and verified healthy. The repository remains unlinked, the migration remains unapplied, no credentials or remote references are stored in Git, and the application runtime remains unchanged. Batch 3 preparation adds only canonical local CLI configuration plus a SELECT-only live catalog verifier.
+
 The initial migration creates an unexposed `institutionlens` schema, revokes all Data API role privileges, and enables and forces RLS without policies. A database created from Batch 1 is intentionally unusable by `anon`, `authenticated`, and `service_role` until later, tested migrations grant a narrow access path.
 
 ## Official guidance review
@@ -47,7 +49,7 @@ Compatibility findings:
 
 - The repository's Node.js 22+ requirement satisfies the Supabase CLI's Node.js 20+ requirement.
 - Next.js App Router is supported through `@supabase/ssr`, but that package's API is documented as unstable. Its exact pinned version and cookie integration belong to Batch 3.
-- A local Supabase stack requires a Docker-compatible runtime. Neither Docker nor the Supabase CLI is installed on the current machine, so Batch 1 uses static SQL contract verification and does not claim migration execution.
+- A local Supabase stack requires a Docker-compatible runtime. Docker is not installed. CLI work uses the temporary pinned `npx --yes supabase@2.109.1` invocation rather than a global installation.
 - Core tables stay outside the Data API surface. A later narrow API/RPC schema may expose only redacted, tenant-safe operations.
 
 ## Batches
@@ -75,6 +77,9 @@ Compatibility findings:
 
 ### Batch 3 - Real authentication and sessions
 
+- Preparation checkpoint: minimal local Supabase config, with no seed/Auth/provider configuration or seed file and with local credential/link metadata ignored
+- Preparation checkpoint: SELECT-only live catalog verifier for schema/table/index/FK/RLS/policy/privilege/empty-data/migration-history gates
+- Preparation checkpoint: offline contract tests that keep the verifier aligned to the committed migration and reject mutating SQL
 - Supabase Auth signup/invite, login, logout, and recovery flows
 - Owner, analyst, and viewer membership resolution
 - Secure SSR cookie handling, safe redirects, disabled-user handling, and rate limits
@@ -96,7 +101,18 @@ Compatibility findings:
 - Demo-seed isolation
 - Local/staging migration and rollback rehearsal
 - Full Phase 4-8 product regression through the database adapter
-- Stop before external Supabase project creation or deployment
+- Stop before production deployment or runtime cutover
+
+## Batch 3 live-migration preparation acceptance criteria
+
+1. `supabase/config.toml` is canonical local configuration only and contains no project ref, password, token, key, or connection string.
+2. No seed configuration or seed file is present.
+3. Supabase `.temp`, branch, dotenvx, and local environment metadata remain ignored.
+4. The live verifier contains one CTE-backed `SELECT` statement and returns only check names, pass/fail state, and aggregate expected/actual summaries.
+5. Expected tables, explicit indexes, tenant-composite domain foreign keys, and same-organization lineage constraints match the committed migration.
+6. Live catalog checks cover RLS enable/force flags, zero policies, API-role privilege revocation, exact zero-row probes, and the single expected migration-history version.
+7. Static tests reject mutation keywords; missing or extra tables, indexes, and foreign keys; lineage-column drift; permissive policy or privilege checks; nonzero application rows; missing zero-row probes; and migration-history drift.
+8. No repository link, password access, remote SQL, Auth configuration, application environment, Vercel action, deployment, push, or runtime change occurs.
 
 ## Batch 2 acceptance criteria
 
@@ -148,11 +164,25 @@ Batch 2 focused verification on 2026-07-13:
 - no browser run: Batch 2 changes no UI, route output, or default runtime wiring;
 - no live adapter claim: the Supabase/Postgres gateway is exercised only with typed fakes.
 
+Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
+
+- temporary Supabase CLI pinned to `2.109.1`; no global install or package dependency;
+- generated CLI config reduced after review to the minimal local project namespace, API defaults, PostgreSQL major version, and migration settings; no seed, Auth, provider, project-reference, credential, or remote-push authorization configuration remains;
+- focused database contracts: 2 files / 25 tests passed before full verification;
+- `validate:database` confirms the original migration/rollback contract plus the SELECT-only live verifier;
+- security/privacy suite: 19 files / 118 tests passed;
+- Phase 4 assessment regression: 9 files / 56 tests plus methodology and assessment validators passed;
+- format, lint, typecheck, secret/privacy scans, and production build passed;
+- full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
+- no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
+
+Immediately after one approved, successful initial `supabase db push`, CLI migration history must contain exactly one repository migration row with version `20260713190000`. The verifier is an immediate post-migration, pre-seed gate: live SQL execution, later RLS allow-policy validation, two-tenant attack tests, and rollback rehearsal remain mandatory and cannot be inferred from these static tests.
+
 ## Stop gates
 
 Stop for owner approval before:
 
-- creating or linking a Supabase project;
+- creating any additional Supabase project or linking the repository;
 - adding billable Supabase resources;
 - applying migrations to a remote database;
 - using real or customer data;
