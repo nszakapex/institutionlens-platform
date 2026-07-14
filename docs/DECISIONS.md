@@ -266,6 +266,44 @@ Database/Supabase/RLS, production authentication, billing, real customer data, s
 
 See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_REQUIREMENTS_TRACEABILITY.md`.
 
+## D-021 - Phase 9 production data and authentication foundation
+
+**Status:** Approved for Phase 9 implementation; external infrastructure remains approval-gated
+
+- Supabase Postgres and Supabase Auth are the production foundation.
+- The current single-repository Next.js architecture remains in place.
+- Synthetic repositories and fixtures remain explicit offline test/local-demo adapters.
+- Production mode must fail closed when database or authentication configuration is missing; it must never fall back to synthetic data.
+- Supabase client, SSR, and CLI dependencies are pinned only in the batch that uses them after current compatibility review.
+- No external Supabase project, paid resource, remote migration, real data, or deployment is allowed without owner approval.
+
+## D-022 - Core database schema and access boundary
+
+**Status:** Approved for Phase 9 Batch 1 architecture; allow policies deferred to Batch 4
+
+- Store core application tables in a dedicated `institutionlens` schema, not in the default public Data API surface.
+- Use raw UUIDs only for server-side database joins. Use tenant-scoped opaque references at presentation and audit boundaries.
+- Put `tenant_id` on every tenant-owned table and use tenant-composite foreign keys for tenant-owned relationships.
+- Enable and force RLS on every core table from the initial migration.
+- Batch 1 revokes `anon`, `authenticated`, and `service_role` access and defines no allow policies. This is intentionally fail closed.
+- Batch 4 may introduce a separate narrow API/RPC schema. It must omit raw IDs and private fields, use minimal grants, and preserve RLS.
+- Customer reads use authenticated membership identity. Privileged ingestion/maintenance paths remain server-only, bounded, authorized, and audited.
+- Restricted evidence carries a direct access classification, and restricted content is excluded from publication-safe search.
+- Overlay private notes, provenance private notes, and source references never enter application view models, search, exports, logs, or client state.
+
+## D-023 - Database migration, rollback, and retention posture
+
+**Status:** Approved as implementation posture; retention values remain proposed defaults
+
+- Version forward SQL migrations under `supabase/migrations` and verify them on a clean local stack before any remote application.
+- Use expand/migrate/contract changes once non-disposable data exists. Prefer forward fixes over destructive down migrations.
+- The initial schema rollback script is destructive and permitted only on approved disposable local/staging databases.
+- Remote rollback requires a verified backup or point-in-time recovery plan, migration-state capture, and full security/regression verification before reopening writes.
+- Preserve D-009 proposed defaults: draft briefs 30 days, approved internal briefs 90 days, audit/security events 180 days, exports 7 days, and temporary files deleted after completion.
+- Propose tenant-scoped research data for active-contract lifetime plus a 30-day deletion grace; this requires legal/customer approval.
+- Retention expiry columns do not authorize automated deletion. No purge job is implemented in Phase 9 Batch 1.
+- See `docs/PRODUCTION_DATA_FOUNDATION.md` for the schema, migration, rollback, and retention controls.
+
 ## Current phase boundary
 
-Phases 0–8 are complete through D-020 for synthetic local-demo scope. Mutable brief workflow, exports, notes, production authentication, database/RLS, billing, and production hosting remain deferred.
+Phases 0-8 are complete for synthetic local-demo scope. Phase 9 Batch 1 establishes a fail-closed production database contract only. Runtime persistence, RLS allow policies, production authentication, external infrastructure, real data, billing, and hosting remain deferred.

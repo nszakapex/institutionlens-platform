@@ -17,7 +17,7 @@ institutionlens-platform/
     authorization/            # Server-only authz context
     components/               # UI (overview/, explorer/, detail/, evidence/, methodology/)
     domain/                   # Schemas, invariants, ids
-    repositories/             # Synthetic repositories (server-only)
+    repositories/             # Tenant-scoped contracts + synthetic implementations
     verticals/                # Vertical adapters + synthetic fixtures
     lib/                      # Env, demo tenant, navigation, security
     styles/                   # Tokens + component + research-surface CSS
@@ -50,13 +50,27 @@ Full lineage is:
 
 The complete rule ledgers are authoritative. The detail diagram presents one representative awarded chain plus capability summaries.
 
-## Future PostgreSQL implications (not implemented)
+## Phase 9 production data foundation
+
+Phase 9 Batch 1 adds a versioned Supabase/Postgres schema migration under `supabase/migrations` without changing the runtime adapter. The core schema is named `institutionlens`, is not an approved Data API surface, and contains only server-side raw UUID join keys.
+
+Every tenant-owned relationship uses a tenant-composite foreign key. All core tables have RLS enabled and forced. Batch 1 deliberately grants no API role and creates no allow policy, so database access remains closed until the separately tested Phase 9 RLS batch.
+
+Future customer data flow is:
+
+`authenticated request -> Next.js application service -> narrow API/RPC operation -> core RLS tables`
+
+Only existing frozen/redacted application view models may reach UI. A later API/RPC schema must expose opaque references, never raw database IDs or private fields. Production configuration must fail closed and must never silently select synthetic repositories.
+
+Schema, migration, rollback, and retention details are in `docs/PRODUCTION_DATA_FOUNDATION.md`. Phase 9 Batch 1 does not connect Supabase, install runtime clients, execute migrations, add authentication, or deploy.
+
+## PostgreSQL query implications
 
 Explorer filters map cleanly to indexed columns on `organizations` (tenant_id, type, lifecycle, tags GIN) plus assessment summary tables (status, band, confidence, freshness, coverage weights). Prefer a tenant-scoped materialized read model or denormalized summary row per organization rather than joining full ledgers for list pages.
 
 Detail and lineage reads will need tenant-keyed indexes across public organization refs, evidence, provenance, assessment runs, ledger/evidence joins, capabilities, portfolios, and overlays. Catalog text search must index publication-safe fields separately from restricted content. Query-level projection, stable pagination, section/payload limits, RLS-aware composite joins, and measured explain plans are required before production use.
 
-The current in-memory implementation scans/materializes fixed synthetic arrays. Its bounded fixture behavior is not a latency, throughput, payload, or production-scale claim.
+The current in-memory implementation still scans/materializes fixed synthetic arrays. Its bounded fixture behavior is not a latency, throughput, payload, or production-scale claim. Database query plans and adapter parity remain Phase 9 Batch 2/5 verification work.
 
 ## Runtime principles
 
@@ -77,7 +91,7 @@ The current in-memory implementation scans/materializes fixed synthetic arrays. 
 - Explicit local-demo principal + tenant context, constructed server-side.
 - Labeled non-production; fail closed if missing/invalid or if `IL_APP_MODE` is not `local-demo`.
 - No fake production login page.
-- Interfaces should remain compatible with a future Supabase Auth + PostgreSQL RLS design.
+- Supabase Auth is the approved Phase 9 direction, but no provider integration exists in Batch 1.
 - **No protected production deployment** while demo authentication is in place.
 
 ## Scoring concepts (product invariant)
@@ -104,8 +118,8 @@ Keep `src/lib/` boundaries clear enough that workers or shared packages can be e
 
 ## Hosting (future only)
 
-Preferred later: Vercel (Next.js) + Supabase (Postgres/Auth). Neither is configured in this phase. No analytics or telemetry.
+Preferred later: Vercel (Next.js) + Supabase (Postgres/Auth). Neither is connected for Phase 9 Batch 1. No analytics or telemetry.
 
 ## Phase boundary
 
-Phase 6 provides read-only synthetic organization detail, evidence/provenance, methodology, lineage, and private-context UI. Project Phase 7 delivers read-only comparison of up to three organizations (`docs/PHASE_7_PLAN.md`, `docs/ORGANIZATION_COMPARISON.md`, D-019). Project Phase 8 delivers deterministic institutional briefs (`docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, D-020), including inbound Brief links from Overview shortlist, Explorer results, organization detail, and Compare columns. Real ingestion, database persistence/RLS, production authentication, exports, notes, mutations, and production deployment remain deferred.
+Phases 6-8 provide read-only synthetic detail, evidence/provenance, methodology, comparison, and deterministic briefs. Phase 9 Batch 1 establishes the production database contract only. Runtime persistence, RLS allow policies, production authentication, controlled cutover, real ingestion, billing, exports, notes, and deployment remain deferred.
