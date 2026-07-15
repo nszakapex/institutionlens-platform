@@ -17,5 +17,5 @@ if (findings.length > 0) {
 }
 
 console.log(
-  "Phase 9 schema contracts passed: 18 tables, RLS forced, corrective default-privilege migration, authenticated read RLS, narrow read API/RPC preparation, SELECT-only live verifier.",
+  "Phase 9 schema contracts passed: 18 tables, RLS forced, corrective default-privilege migration, authenticated read RLS, narrow read API/RPC, SELECT-only live verifier.",
 );

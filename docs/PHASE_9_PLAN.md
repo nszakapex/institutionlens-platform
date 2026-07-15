@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS migrations applied on staging; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; narrow read API/RPC + live-row decoders prepared (unapplied); Auth/session binding, RPC apply/transport, and runtime cutover pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS + narrow read API/RPC migrations applied on staging; live verifier includes `api_rpc_privileges`; staging RLS attack-test gate 17/17 passed and cleaned; Auth/session binding, SDK transport, and runtime cutover pending
 
 **Depends on:** Phases 0-8
 
@@ -91,12 +91,12 @@ Compatibility findings:
 - Applied forward migration `20260715200000_phase9_authenticated_read_rls.sql` with fail-closed rollback artifact retained
 - `auth.uid()` → active membership tenant binding; authenticated **column-only** SELECT grants; anon/PUBLIC/service_role remain denied
 - Withheld `private_notes`, provenance `source_reference`, and `memberships.user_id`; self-only memberships/comparisons; viewer publication-eligible gates
-- Static RLS policy contracts + live verifier expectations for 18 SELECT policies, withheld-column proofs, and three-migration history
-- Staging attack gate: disposable Auth/fixture harness `scripts/phase-9-rls-attack-harness.mjs` executed 17/17 and cleaned to empty; live verifier 12/12
+- Static RLS policy contracts + live verifier expectations for 18 SELECT policies, withheld-column proofs, and four-migration history
+- Staging attack gate: disposable Auth/fixture harness `scripts/phase-9-rls-attack-harness.mjs` executed 17/17 and cleaned to empty
 - Policy model and attack plan: `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`, `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`
-- Prepared (unapplied): narrow `institutionlens_api` read RPCs + server-only live-row decoders for organizations, evidence, comparisons, and briefs (`docs/PHASE_9_BATCH_4_API_RPC.md`)
-- Narrow read API/RPC + tenant-bound decoders prepared locally (unapplied): 9 RPCs require `p_tenant_public_ref`; unsupported ops fail closed with `UNSUPPORTED_OPERATION`
-- Remaining Batch 4 work: apply/verify API RPC migration; authenticated SDK transport; remaining read RPCs (workspace/assessments/overlays/provenance/capabilities/portfolios)
+- Applied: narrow `institutionlens_api` read RPCs + server-only live-row decoders for organizations, evidence, comparisons, and briefs (`docs/PHASE_9_BATCH_4_API_RPC.md`)
+- Narrow read API/RPC: 9 RPCs require `p_tenant_public_ref`; unsupported ops fail closed with `UNSUPPORTED_OPERATION`; live verifier 13/13 including `api_rpc_privileges`
+- Remaining Batch 4 work: authenticated SDK transport; remaining read RPCs (workspace/assessments/overlays/provenance/capabilities/portfolios)
 
 ### Batch 5 - Controlled cutover
 
@@ -180,7 +180,7 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-Corrective migration `20260715181000` and Batch 4 RLS migration `20260715200000` are applied on staging. History currently contains exactly those three versions. Staging RLS attack-test gate is complete (17/17 + cleanup + verifier 12/12). Narrow read API/RPC migration `20260715210000` and live-row decoders are prepared locally and unapplied.
+Corrective migration `20260715181000`, Batch 4 RLS migration `20260715200000`, and narrow read API/RPC migration `20260715210000` are applied on staging. History currently contains exactly those four versions. Staging RLS attack-test gate is complete (17/17 + cleanup). Live-row decoders and fail-closed partial coverage are in the repository; authenticated SDK transport remains deferred.
 
 ## Stop gates
 

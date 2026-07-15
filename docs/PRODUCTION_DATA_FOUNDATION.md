@@ -2,14 +2,14 @@
 
 **Phase:** Project Phase 9
 
-**Status:** Staging schema applied through Batch 4 authenticated read RLS; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; narrow read API/RPC + live-row decoders prepared (unapplied); application runtime still synthetic local-demo
+**Status:** Staging schema applied through Batch 4 authenticated read RLS + narrow read API/RPC; live verifier 13/13 including `api_rpc_privileges`; staging RLS attack-test gate 17/17 passed and cleaned; application runtime still synthetic local-demo
 
 **Migrations:**
 
 - `supabase/migrations/20260713190000_phase9_initial_schema.sql` (applied)
 - `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` (applied)
 - `supabase/migrations/20260715200000_phase9_authenticated_read_rls.sql` (applied on staging)
-- `supabase/migrations/20260715210000_phase9_narrow_read_api_rpc.sql` (prepared; not applied)
+- `supabase/migrations/20260715210000_phase9_narrow_read_api_rpc.sql` (applied on staging)
 
 ## Architecture
 

@@ -1,6 +1,6 @@
 # Phase 9 Batch 4 narrow read API/RPC surface
 
-**Status:** Prepared and unapplied. Migration `20260715210000_phase9_narrow_read_api_rpc.sql` is repository-only until a separate apply gate. Synthetic local-demo remains the active application runtime.
+**Status:** Applied on staging (`qzidcqtaabubvtycstwy`). Migration `20260715210000_phase9_narrow_read_api_rpc.sql` is live; authenticated SDK transport and app cutover remain deferred. Synthetic local-demo remains the active application runtime.
 
 **Depends on:** Applied core schema + authenticated read RLS (`20260713190000`, `20260715181000`, `20260715200000`).
 
@@ -59,9 +59,9 @@ Server-only decoders in `src/repositories/supabase-postgres/live-row-decoders.ts
 - Security contract: `src/repositories/supabase-postgres/narrow-read-security.contract.test.ts`
 - Rollback artifact: `supabase/rollback/20260715210000_phase9_narrow_read_api_rpc.sql`
 
-## Later live-validation plan
+## Live-validation status
 
-1. Apply `20260715210000` on disposable staging after owner approval.
-2. Extend the SELECT-only live verifier for API schema USAGE/EXECUTE posture (authenticated-only; anon/service_role denied).
-3. Bind an authenticated gateway transport (Batch 3 remainder) and replay repository contract tests against staging with disposable fixtures.
-4. Re-run privacy/security suites; keep synthetic local-demo as the default app path until Batch 5 cutover.
+1. Applied `20260715210000` on disposable staging after owner approval.
+2. SELECT-only live verifier checks API schema USAGE/EXECUTE posture (`api_rpc_privileges`; authenticated-only; anon/service_role denied).
+3. Remaining: bind authenticated gateway transport and replay repository contract tests against staging with disposable fixtures.
+4. Keep synthetic local-demo as the default app path until Batch 5 cutover.

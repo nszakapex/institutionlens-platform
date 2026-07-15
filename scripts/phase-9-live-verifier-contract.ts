@@ -112,6 +112,7 @@ const REQUIRED_CHECK_NAMES = [
   "rls_policy_count",
   "api_roles_exist",
   "api_role_privileges",
+  "api_rpc_privileges",
   "application_row_count",
   "migration_history",
 ] as const;
@@ -335,7 +336,7 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
     checkNames.length !== REQUIRED_CHECK_NAMES.length ||
     !sameSet(checkNames, REQUIRED_CHECK_NAMES)
   ) {
-    findings.push("Live verifier must retain exactly the 12 required checks.");
+    findings.push("Live verifier must retain exactly the 13 required checks.");
   }
 
   for (const token of REQUIRED_CATALOG_TOKENS) {
@@ -512,17 +513,24 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   if (!normalizedSql.includes("expected_migration_versions")) {
     findings.push("Live verifier must declare the exact expected migration-version set.");
   }
-  if (!normalizedSql.includes("total_count = 3 and expected_count = 3 and unexpected_count = 0")) {
+  if (!normalizedSql.includes("total_count = 4 and expected_count = 4 and unexpected_count = 0")) {
     findings.push(
-      "Live verifier must require exactly the three Phase 9 migrations and reject extras.",
+      "Live verifier must require exactly the four Phase 9 migrations and reject extras.",
     );
   }
   if (
     normalizedSql.includes("total_count = 1 and expected_count = 1") ||
     normalizedSql.includes("total_count = 2 and expected_count = 2") ||
+    normalizedSql.includes("total_count = 3 and expected_count = 3") ||
     sql.includes("only 20260713190000")
   ) {
-    findings.push("Live verifier must not accept pre-Batch-4 migration history expectations.");
+    findings.push("Live verifier must not accept pre-API-RPC migration history expectations.");
+  }
+  if (!normalizedSql.includes("api_rpc_privileges")) {
+    findings.push("Live verifier must check institutionlens_api USAGE/EXECUTE posture.");
+  }
+  if (!normalizedSql.includes("expected_api_rpc_functions")) {
+    findings.push("Live verifier must declare the narrow read API RPC function set.");
   }
 
   return findings;

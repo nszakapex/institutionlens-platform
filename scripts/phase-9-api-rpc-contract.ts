@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { PRIVILEGED_API_ROLE } from "./phase-9-schema-contract";
+import {
+  PHASE_9_API_RPC_MIGRATION_VERSION as SCHEMA_PHASE_9_API_RPC_MIGRATION_VERSION,
+  PRIVILEGED_API_ROLE,
+} from "./phase-9-schema-contract";
 
 export const PHASE_9_API_RPC_MIGRATION_FILENAME = "20260715210000_phase9_narrow_read_api_rpc.sql";
 
@@ -18,7 +21,7 @@ export const PHASE_9_API_RPC_ROLLBACK_PATH = path.join(
   PHASE_9_API_RPC_MIGRATION_FILENAME,
 );
 
-export const PHASE_9_API_RPC_MIGRATION_VERSION = "20260715210000";
+export const PHASE_9_API_RPC_MIGRATION_VERSION = SCHEMA_PHASE_9_API_RPC_MIGRATION_VERSION;
 
 export const EXPECTED_API_RPC_FUNCTIONS = [
   "organizations_get_by_public_ref",

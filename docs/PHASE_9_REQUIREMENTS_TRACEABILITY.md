@@ -1,10 +1,10 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging), staging RLS attack-test gate (executed), narrow read API/RPC + tenant-bound live-row decoders (prepared, unapplied)
+**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging), staging RLS attack-test gate (executed), narrow read API/RPC (applied on staging) + tenant-bound live-row decoders
 
-**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective applied; Batch 4 RLS migration applied on staging; staging RLS attack-test gate 17/17 passed and cleaned; narrow read API/RPC + tenant-bound decoders + fail-closed partial coverage prepared locally; Auth/session binding, RPC apply/transport, and cutover pending
+**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective + RLS + narrow read API/RPC applied on staging; staging RLS attack-test gate 17/17 passed and cleaned; live verifier 13/13; Auth/session binding, SDK transport, and cutover pending
 
-**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` + `20260715200000` applied; live verifier 12/12; no residual Auth users or application rows after attack cleanup; API RPC migration unapplied; no deployment
+**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` + `20260715200000` + `20260715210000` applied; live verifier includes API RPC privilege check; no residual Auth users or application rows after attack cleanup; no deployment
 
 ## Batch 1 requirements
 
@@ -57,24 +57,24 @@
 
 ## Batch 4 authenticated read RLS preparation requirements
 
-| ID       | Requirement                                                            | Classification | Evidence                                                                              | Remaining limitation                         |
-| -------- | ---------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------- | -------------------------------------------- |
-| P9B4P-01 | Bind principals via `auth.uid()` → active memberships only             | Implemented    | Helpers + policies in `20260715200000`; staging attack cases 1/3/15/16                | App Auth/session binding still pending       |
-| P9B4P-02 | Authenticated SELECT-only; deny anon/PUBLIC/service_role request paths | Implemented    | Column grants/revokes; live verifier; attack cases 4/5/13/17                          | —                                            |
-| P9B4P-03 | One SELECT policy per core table with tenant + role gates              | Implemented    | 18 policies; live verifier policy count; attack cases 1/2/6/7/9–12/14                 | —                                            |
-| P9B4P-04 | No private-note / source_reference / memberships.user_id; no writes    | Implemented    | Column-only grants + revokes; attack cases 8/10/13/17; API RPCs omit withheld cols    | Remaining read RPCs still deferred           |
-| P9B4P-05 | Static contracts reject missing/cross-tenant/permissive/service grants | Implemented    | `phase-9-rls-policy-contract.ts` + tests; staging attack harness corroboration        | —                                            |
-| P9B4P-06 | Document and execute two-tenant attack-test plan                       | Implemented    | Plan + `phase-9-rls-attack-harness.mjs`; staging 17/17; cleanup empty; verifier 12/12 | Do not leave disposable Auth users behind    |
-| P9B4P-07 | No Auth/runtime/env/Vercel/apply/commit/push in preparation            | Implemented    | Repository-only Batch 4 prep; later apply/attack were separately authorized           | Production cutover remains gated             |
-| P9B4P-08 | Viewer cannot read unpublished research; self-only ownership defaults  | Implemented    | Publication-eligibility + self-only predicates; attack cases 9–12                     | —                                            |
-| P9B4P-09 | Explicit viewer table/column allowlist enforced in static contracts    | Implemented    | `VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST` + denied-table/policy checks; case 9       | —                                            |
-| P9B4P-10 | Separate narrow authenticated read API/RPC schema                      | Prepared       | `20260715210000` + `PHASE_9_BATCH_4_API_RPC.md`; 9 SECURITY INVOKER RPCs              | Unapplied; live EXECUTE proof deferred       |
-| P9B4P-11 | Strict server-only live-row decoders for RPC projections               | Prepared       | `live-row-decoders.ts` + tests; adapter decode on org/evidence/comparison/brief       | Transport not wired; remaining domains later |
-| P9B4P-12 | No generic/dynamic/write/public EXECUTE or client tenant IDs in RPCs   | Prepared       | `phase-9-api-rpc-contract.ts` rejects definer/dynamic/write/broad grants              | Apply gate still required                    |
-| P9B4P-13 | Keep synthetic adapter parity without silent fallback                  | Implemented    | Same repository contracts; local-demo synthetic unchanged; production needs gateway   | App routes still use research-read-model     |
-| P9B4P-14 | Server-bound tenantPublicRef on every RPC + decoder strip/validate     | Prepared       | SQL `p_tenant_public_ref` + `accessible_tenant_ids()`; `LiveTenantBinding` decode     | Live apply/transport still deferred          |
-| P9B4P-15 | Fail closed for unsupported live ops (`UNSUPPORTED_OPERATION`)         | Prepared       | `OperationRunner` + `narrow-read-security.contract.test.ts`; no synthetic fallback    | Remaining RPC domains deferred               |
-| P9B4P-16 | Raw getById/source_key paths remain server-only branded interfaces     | Prepared       | `server-only` repos/gateway/decoders; public-ref RPCs keep opaque-ref semantics       | Client routes must keep using public refs    |
+| ID       | Requirement                                                            | Classification | Evidence                                                                                   | Remaining limitation                         |
+| -------- | ---------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| P9B4P-01 | Bind principals via `auth.uid()` → active memberships only             | Implemented    | Helpers + policies in `20260715200000`; staging attack cases 1/3/15/16                     | App Auth/session binding still pending       |
+| P9B4P-02 | Authenticated SELECT-only; deny anon/PUBLIC/service_role request paths | Implemented    | Column grants/revokes; live verifier; attack cases 4/5/13/17                               | —                                            |
+| P9B4P-03 | One SELECT policy per core table with tenant + role gates              | Implemented    | 18 policies; live verifier policy count; attack cases 1/2/6/7/9–12/14                      | —                                            |
+| P9B4P-04 | No private-note / source_reference / memberships.user_id; no writes    | Implemented    | Column-only grants + revokes; attack cases 8/10/13/17; API RPCs omit withheld cols         | Remaining read RPCs still deferred           |
+| P9B4P-05 | Static contracts reject missing/cross-tenant/permissive/service grants | Implemented    | `phase-9-rls-policy-contract.ts` + tests; staging attack harness corroboration             | —                                            |
+| P9B4P-06 | Document and execute two-tenant attack-test plan                       | Implemented    | Plan + `phase-9-rls-attack-harness.mjs`; staging 17/17; cleanup empty; verifier 12/12      | Do not leave disposable Auth users behind    |
+| P9B4P-07 | No Auth/runtime/env/Vercel/apply/commit/push in preparation            | Implemented    | Repository-only Batch 4 prep; later apply/attack were separately authorized                | Production cutover remains gated             |
+| P9B4P-08 | Viewer cannot read unpublished research; self-only ownership defaults  | Implemented    | Publication-eligibility + self-only predicates; attack cases 9–12                          | —                                            |
+| P9B4P-09 | Explicit viewer table/column allowlist enforced in static contracts    | Implemented    | `VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST` + denied-table/policy checks; case 9            | —                                            |
+| P9B4P-10 | Separate narrow authenticated read API/RPC schema                      | Implemented    | `20260715210000` applied on staging; `PHASE_9_BATCH_4_API_RPC.md`; 9 SECURITY INVOKER RPCs | Live EXECUTE proved via `api_rpc_privileges` |
+| P9B4P-11 | Strict server-only live-row decoders for RPC projections               | Prepared       | `live-row-decoders.ts` + tests; adapter decode on org/evidence/comparison/brief            | Transport not wired; remaining domains later |
+| P9B4P-12 | No generic/dynamic/write/public EXECUTE or client tenant IDs in RPCs   | Implemented    | `phase-9-api-rpc-contract.ts` + staging `api_rpc_privileges` check                         | SDK transport still deferred                 |
+| P9B4P-13 | Keep synthetic adapter parity without silent fallback                  | Implemented    | Same repository contracts; local-demo synthetic unchanged; production needs gateway        | App routes still use research-read-model     |
+| P9B4P-14 | Server-bound tenantPublicRef on every RPC + decoder strip/validate     | Prepared       | SQL `p_tenant_public_ref` + `accessible_tenant_ids()`; `LiveTenantBinding` decode          | Live apply/transport still deferred          |
+| P9B4P-15 | Fail closed for unsupported live ops (`UNSUPPORTED_OPERATION`)         | Prepared       | `OperationRunner` + `narrow-read-security.contract.test.ts`; no synthetic fallback         | Remaining RPC domains deferred               |
+| P9B4P-16 | Raw getById/source_key paths remain server-only branded interfaces     | Prepared       | `server-only` repos/gateway/decoders; public-ref RPCs keep opaque-ref semantics            | Client routes must keep using public refs    |
 
 ## Batch 1 verification evidence
 

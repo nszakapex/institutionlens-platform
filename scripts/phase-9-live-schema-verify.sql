@@ -839,7 +839,8 @@ expected_migration_versions(version) as (
   values
     ('20260713190000'),
     ('20260715181000'),
-    ('20260715200000')
+    ('20260715200000'),
+    ('20260715210000')
 ),
 migration_history as (
   select
@@ -851,6 +852,53 @@ migration_history as (
       where version not in (select version from expected_migration_versions)
     )::bigint as unexpected_count
   from supabase_migrations.schema_migrations
+),
+expected_api_rpc_functions(function_name, arg_types) as (
+  values
+    ('organizations_get_by_public_ref', 'text, text'),
+    ('organizations_get_by_domain_id', 'text, text'),
+    ('organizations_list', 'text, jsonb'),
+    ('organizations_count', 'text, jsonb'),
+    ('evidence_list_by_organization_domain_id', 'text, text, jsonb'),
+    ('comparisons_get_by_public_ref', 'text, text'),
+    ('comparisons_list', 'text, jsonb'),
+    ('brief_snapshots_get_by_public_ref', 'text, text'),
+    ('brief_snapshots_list', 'text, jsonb')
+),
+api_rpc_privilege_violations as (
+  select probe.violation
+  from (values ('schema_missing')) as probe(violation)
+  where not exists (
+    select 1 from pg_catalog.pg_namespace where nspname = 'institutionlens_api'
+  )
+  union all
+  select concat('schema_usage_', expected.role_name) as violation
+  from (
+    values
+      ('authenticated', true),
+      ('anon', false),
+      ('service_role', false)
+  ) as expected(role_name, should_have_usage)
+  where has_schema_privilege(expected.role_name, 'institutionlens_api', 'usage')
+    is distinct from expected.should_have_usage
+  union all
+  select concat('execute_', expected.function_name, '_', role_probe.role_name) as violation
+  from expected_api_rpc_functions expected
+  cross join (
+    values
+      ('authenticated', true),
+      ('anon', false),
+      ('service_role', false)
+  ) as role_probe(role_name, should_execute)
+  where has_function_privilege(
+    role_probe.role_name,
+    format(
+      'institutionlens_api.%I(%s)',
+      expected.function_name,
+      expected.arg_types
+    ),
+    'execute'
+  ) is distinct from role_probe.should_execute
 ),
 expected_select_policies(policy_name) as (
   values
@@ -1000,11 +1048,18 @@ checks(check_name, passed, expected_value, actual_value) as (
   union all
   select
     'migration_history',
-    total_count = 3 and expected_count = 3 and unexpected_count = 0,
-    'exactly 20260713190000, 20260715181000, 20260715200000',
+    total_count = 4 and expected_count = 4 and unexpected_count = 0,
+    'exactly 20260713190000, 20260715181000, 20260715200000, 20260715210000',
     total_count::text || ' total, ' || expected_count::text
       || ' expected, ' || unexpected_count::text || ' unexpected'
   from migration_history
+  union all
+  select
+    'api_rpc_privileges',
+    count(*) = 0,
+    'authenticated-only USAGE/EXECUTE on institutionlens_api RPCs',
+    count(*)::text || ' violations'
+  from api_rpc_privilege_violations
 )
 select check_name, passed, expected_value, actual_value
 from checks
