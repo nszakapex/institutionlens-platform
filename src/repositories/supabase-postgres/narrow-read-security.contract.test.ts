@@ -1,9 +1,17 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { DEMO_TENANT_PUBLIC_REF, getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { createAuthorizationContext } from "@/authorization/context";
+import {
+  DEMO_ANALYST,
+  DEMO_TENANT,
+  DEMO_TENANT_PUBLIC_REF,
+  getDemoAuthorizationContext,
+} from "@/authorization/demo-context";
+import { permissionsForRole } from "@/authorization/policy";
 import { organizationPublicRefFor } from "@/domain/organization-public-ref";
 import type { ProductionRepositoryConfig } from "@/repositories/repository-config";
+import { RepositoryError } from "@/repositories/repository-errors";
 import { loadFinancialInstitutionsStore } from "@/repositories/synthetic-organization-repository";
 import { createSupabasePostgresRepositoryBundle } from "@/repositories/supabase-postgres/adapter";
 import type {
@@ -25,6 +33,15 @@ import {
   readAndValidatePhase9ApiRpc,
 } from "../../../scripts/phase-9-api-rpc-contract";
 import { PRIVILEGED_API_ROLE } from "../../../scripts/phase-9-schema-contract";
+
+function walkTsFiles(directory: string, files: string[] = []): string[] {
+  for (const entry of readdirSync(directory)) {
+    const full = path.join(directory, entry);
+    if (statSync(full).isDirectory()) walkTsFiles(full, files);
+    else if (/\.(ts|tsx)$/.test(entry)) files.push(full);
+  }
+  return files;
+}
 
 type AnyGatewayRequest = {
   [K in RepositoryOperation]: SupabasePostgresGatewayRequest<K>;
@@ -145,6 +162,80 @@ describe("Phase 9 narrow read security contract", () => {
     ).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
   });
 
+  it("1c. p_tenant_public_ref is derived only from server session binding, never client input", async () => {
+    const adapterSource = readFileSync(
+      path.join(ROOT, "src/repositories/supabase-postgres/adapter.ts"),
+      "utf8",
+    );
+    expect(adapterSource).toMatch(
+      /parseLiveTenantBinding\(\{\s*tenantId:\s*context\.tenant\.id,\s*tenantPublicRef:\s*context\.tenantPublicRef,/s,
+    );
+    expect(adapterSource).not.toMatch(/input\.[A-Za-z]*[Tt]enant/);
+    expect(adapterSource).not.toMatch(/searchParams|URLSearchParams|formData/);
+
+    const querySource = readFileSync(path.join(ROOT, "src/domain/schemas/query.ts"), "utf8");
+    expect(querySource).not.toMatch(/tenantPublicRef|tenantId|p_tenant/);
+
+    const appDir = path.join(ROOT, "src/app");
+    for (const file of walkTsFiles(appDir)) {
+      const content = readFileSync(file, "utf8");
+      const relative = path.relative(ROOT, file);
+      expect(content, relative).not.toMatch(
+        /tenantPublicRef|p_tenant_public_ref|institutionlens_api/,
+      );
+      expect(content, relative).not.toMatch(/createAuthorizationContext\s*\(/);
+      if (/searchParams/.test(content)) {
+        expect(content, relative).toMatch(/getDemoAuthorizationContext\(\)/);
+        expect(content, relative).not.toMatch(
+          /getDemoAuthorizationContext\([^)]*searchParams|createAuthorizationContext\([\s\S]*searchParams/,
+        );
+      }
+    }
+
+    const clientFiles = walkTsFiles(path.join(ROOT, "src")).filter((file) =>
+      /^['"]use client['"];/m.test(readFileSync(file, "utf8")),
+    );
+    expect(clientFiles.length).toBeGreaterThan(0);
+    for (const file of clientFiles) {
+      const content = readFileSync(file, "utf8");
+      expect(content, path.relative(ROOT, file)).not.toMatch(
+        /tenantPublicRef|p_tenant_public_ref|institutionlens_api|\.rpc\s*\(/,
+      );
+      expect(content, path.relative(ROOT, file)).not.toMatch(/@\/repositories\//);
+    }
+
+    const unbound = createAuthorizationContext(
+      DEMO_TENANT,
+      DEMO_ANALYST,
+      permissionsForRole("analyst").filter((action) => action === "organization:read"),
+    );
+    expect(unbound.tenantPublicRef).toBeUndefined();
+    const gateway = new FakeGateway(async () => {
+      throw new Error("must not invoke gateway without server tenant binding");
+    });
+    const bundle = createSupabasePostgresRepositoryBundle(CONFIG, gateway);
+    await expect(bundle.organizations.list(unbound, {})).rejects.toMatchObject({
+      code: "MISCONFIGURED",
+    });
+    expect(gateway.requests).toHaveLength(0);
+
+    // Client-forged wire tenant cannot override the already-validated session binding.
+    const organization = loadFinancialInstitutionsStore().organizations[0]!;
+    const forgedGateway = new FakeGateway(async () => ({
+      ...organization,
+      tenantId: undefined,
+      tenantPublicRef: "tref_clientforged00000001",
+      publicRef: organizationPublicRefFor(organization.id),
+    }));
+    const forgedBundle = createSupabasePostgresRepositoryBundle(CONFIG, forgedGateway);
+    await expect(
+      forgedBundle.organizations.getByPublicRef(
+        getDemoAuthorizationContext(),
+        organizationPublicRefFor(organization.id),
+      ),
+    ).rejects.toBeInstanceOf(RepositoryError);
+  });
+
   it("2. raw-ID boundary: getById/source_key paths stay server-only", () => {
     for (const relative of [
       "src/repositories/organization-repository.ts",
@@ -162,6 +253,12 @@ describe("Phase 9 narrow read security contract", () => {
     expect(GATEWAY_OPERATION_TO_RPC["organizations.getById"]).toBe(
       "organizations_get_by_domain_id",
     );
+    expect(migration).toMatch(/organizations_get_by_public_ref/);
+    expect(migration).toMatch(/o\.public_ref\s*=\s*p_public_ref/);
+    // Public-ref RPC projects domain source_key as id, never UUID PKs.
+    expect(migration).toMatch(/'id',\s*p_org\.source_key/);
+    expect(migration).not.toMatch(/'id',\s*p_org\.id\b/);
+    expect(migration).not.toMatch(/o\.id\s*=\s*p_public_ref/);
 
     for (const relative of [
       "src/app/(app)/organizations/page.tsx",
@@ -173,6 +270,39 @@ describe("Phase 9 narrow read security contract", () => {
       expect(content, relative).not.toMatch(/organizations\.getById|getByDomainId|source_key/);
       expect(content, relative).not.toMatch(/@\/repositories\/supabase-postgres/);
     }
+
+    // Direct RPC surface is server-only; no browser SDK transport exists yet.
+    for (const relative of [
+      "src/repositories/supabase-postgres/rpc-surface.ts",
+      "src/repositories/supabase-postgres/gateway.ts",
+      "src/repositories/supabase-postgres/adapter.ts",
+      "src/repositories/supabase-postgres/live-row-decoders.ts",
+    ]) {
+      const content = readFileSync(path.join(ROOT, relative), "utf8");
+      expect(content, relative).toMatch(/^import ["']server-only["'];/m);
+      expect(content, relative).not.toMatch(/createBrowserClient|createClient\(|@supabase\/ssr/);
+    }
+  });
+
+  it("2b. public-ref resolution keeps raw organization IDs out of gateway input", async () => {
+    const organization = loadFinancialInstitutionsStore().organizations[0]!;
+    const publicRef = organizationPublicRefFor(organization.id);
+    const gateway = new FakeGateway(async () => organization);
+    const bundle = createSupabasePostgresRepositoryBundle(CONFIG, gateway);
+    const result = await bundle.organizations.getByPublicRef(
+      getDemoAuthorizationContext(),
+      publicRef,
+    );
+    const request = gateway.requests[0]!;
+    expect(request.operation).toBe("organizations.getByPublicRef");
+    expect(JSON.stringify(request.input)).toBe(JSON.stringify({ organizationRef: publicRef }));
+    expect(JSON.stringify(request.input)).not.toContain(organization.id);
+    expect(JSON.stringify(request.input)).not.toMatch(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i,
+    );
+    // Domain record may carry server-side ids; decoded output must not reintroduce wire tenantPublicRef.
+    expect(result).not.toHaveProperty("tenantPublicRef");
+    expect(result.id).toBe(organization.id);
   });
 
   it("3. RPC safety: authenticated-only EXECUTE, invoker, pinned search_path, no writes", () => {
