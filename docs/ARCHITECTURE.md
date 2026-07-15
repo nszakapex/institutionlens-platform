@@ -64,7 +64,7 @@ Only existing frozen/redacted application view models may reach UI. A later API/
 
 `local-demo` explicitly selects fresh synthetic repository bundles outside production. `development`, `staging`, and `production` require consistent server-only configuration and an injected per-request authenticated gateway; absent configuration or gateway fails closed without a demo fallback. Repository adapters reauthorize every operation, enforce query/page/timeout limits, reject cross-tenant response data, freeze outputs, and classify errors without upstream details. No new global cache is used.
 
-The gateway has typed operations but no SDK transport or live RPC. Schema, repository selection, migration, rollback, and retention details are in `docs/PRODUCTION_DATA_FOUNDATION.md`. Phase 9 Batches 1-2 do not connect Supabase, install runtime clients, execute migrations, add authentication, add RLS allow policies, or deploy.
+The gateway has typed operations and prepared narrow `institutionlens_api` RPCs/decoders for organizations, evidence, comparisons, and briefs, but no SDK transport yet. Schema, repository selection, migration, rollback, and retention details are in `docs/PRODUCTION_DATA_FOUNDATION.md` and `docs/PHASE_9_BATCH_4_API_RPC.md`. Default runtime remains synthetic local-demo.
 
 ## PostgreSQL query implications
 

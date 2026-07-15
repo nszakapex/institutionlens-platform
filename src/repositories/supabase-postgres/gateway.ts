@@ -136,6 +136,8 @@ export type SupabasePostgresGatewayRequest<K extends RepositoryOperation> = Read
   operation: K;
   authorization: Readonly<{
     tenantId: string;
+    /** Opaque tenant public ref from server session binding; never client-supplied. */
+    tenantPublicRef?: string;
     principalId: string;
     permissions: readonly string[];
   }>;
@@ -144,9 +146,11 @@ export type SupabasePostgresGatewayRequest<K extends RepositoryOperation> = Read
 }>;
 
 /**
- * Per-request, authenticated gateway. Batch 3 will bind the user session and
- * Batch 4 will implement the narrow RLS-backed RPCs. Privileged clients are
- * outside this user-request interface.
+ * Per-request, authenticated gateway. Batch 3 binds the user session.
+ * Batch 4 defines narrow SECURITY INVOKER RPCs in `institutionlens_api`
+ * (`rpc-surface.ts` + migration `20260715210000`) and strict live-row decoders.
+ * This interface remains transport-free until an authenticated SDK client is injected.
+ * Privileged clients are outside this user-request interface.
  */
 export interface SupabasePostgresGateway {
   execute<K extends RepositoryOperation>(
@@ -157,6 +161,7 @@ export interface SupabasePostgresGateway {
 export function gatewayAuthorization(context: AuthorizationContext) {
   return Object.freeze({
     tenantId: context.tenant.id,
+    ...(context.tenantPublicRef ? { tenantPublicRef: context.tenantPublicRef } : {}),
     principalId: context.principal.id,
     permissions: Object.freeze([...context.permissions]),
   });

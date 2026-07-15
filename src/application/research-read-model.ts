@@ -4,6 +4,7 @@ import type { AuthorizationContext } from "@/authorization/context";
 import { assertPermission } from "@/authorization/context";
 import type { Organization } from "@/domain/schemas/organization";
 import type { EvidenceRecord } from "@/domain/schemas/evidence";
+import type { DataClassification } from "@/domain/schemas/common";
 import type {
   CapabilityAssessment,
   OpportunityContextStatus,
@@ -48,7 +49,7 @@ export type OrgResearchRecord = {
   organizationType: string;
   lifecycleStatus: string;
   locationLabel: string;
-  dataClassification: "synthetic";
+  dataClassification: DataClassification;
   tags: readonly string[];
   summary: string;
   verticalLabel: string;

@@ -287,7 +287,9 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - Enable and force RLS on every core table from the initial migration.
 - Batch 1 revokes `anon`, `authenticated`, and `service_role` access and defines no allow policies. This is intentionally fail closed.
 - Batch 4 read RLS binds `auth.uid()` to active `memberships.user_id` only; tenant identity must not come from client input or mutable JWT metadata.
-- Batch 4 may later introduce a separate narrow API/RPC schema. It must omit raw IDs and private fields, use minimal grants, and preserve RLS.
+- Batch 4 introduces a separate narrow `institutionlens_api` read RPC schema. It must omit raw UUID PKs and private fields, use authenticated-only EXECUTE, remain SECURITY INVOKER under core RLS, and never accept client tenant IDs.
+- Every public read RPC must take a server-bound `p_tenant_public_ref`, verify it against `accessible_tenant_ids()`, and project that discriminator for decoder validation. Decoders stamp domain `tenantId` only after the wire ref matches the session binding, then strip the wire discriminator.
+- Partial RPC coverage must fail closed (`UNSUPPORTED_OPERATION`) with no production-to-synthetic fallback.
 - Customer reads use authenticated membership identity. Privileged ingestion/maintenance paths remain server-only, bounded, authorized, and audited.
 - Restricted evidence carries a direct access classification, and restricted content is excluded from publication-safe search.
 - Overlay private notes, provenance private notes, and source references never enter application view models, search, exports, logs, or client state.
@@ -331,7 +333,7 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - Enforce bounded pages/page sizes, resource-specific sort allowlists, timeouts, tenant-response checks, frozen outputs, and constant safe error messages at the repository boundary.
 - Read persisted Phase 4 results; do not implement a second assessment calculator in the database adapter.
 - Reassert `evidence:restricted_read` and `overlay:read`; remove private note fields and reject unsafe brief snapshot content before application projection.
-- The typed gateway is an offline seam only. A Supabase client/SSR package, authenticated session binding, narrow RPCs, RLS allow policies, live row decoders, query plans, and PostgreSQL parity remain mandatory later work.
+- The typed gateway is an offline seam only. Narrow org/evidence/comparison/brief RPCs and live-row decoders are prepared; a Supabase client/SSR package, authenticated session binding, RPC apply/transport, remaining domain RPCs, query plans, and PostgreSQL parity remain mandatory later work.
 - No write method is introduced while the application is read-only. The first write repository must use an explicit bounded transaction with audit and lineage updates.
 
 ## Current phase boundary

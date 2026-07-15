@@ -33,6 +33,8 @@ describe("production repository security boundary", () => {
     for (const relative of [
       "src/repositories/supabase-postgres/gateway.ts",
       "src/repositories/supabase-postgres/adapter.ts",
+      "src/repositories/supabase-postgres/rpc-surface.ts",
+      "src/repositories/supabase-postgres/live-row-decoders.ts",
       "src/repositories/repository-config.ts",
       "src/repositories/repository-provider.ts",
     ]) {

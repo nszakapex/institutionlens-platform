@@ -11,6 +11,12 @@ export type AuthorizationContext = {
   >;
   principal: Readonly<Principal>;
   permissions: readonly Action[];
+  /**
+   * Opaque tenant public ref (`tref_…`) for live RPC row binding.
+   * Set only by server session binding — never from client input.
+   * Required for production live-row decode; absent in synthetic demo.
+   */
+  tenantPublicRef?: string;
 };
 
 export function assertPermission(context: AuthorizationContext, action: Action): void {
@@ -32,6 +38,7 @@ export function createAuthorizationContext(
   tenant: Tenant,
   principal: Principal,
   permissions: readonly Action[],
+  options: Readonly<{ tenantPublicRef?: string }> = {},
 ): AuthorizationContext {
   if (principal.tenantId !== tenant.id) {
     throw new AuthorizationError("Principal does not belong to this tenant.", "tenant_mismatch");
@@ -43,5 +50,6 @@ export function createAuthorizationContext(
     }),
     principal: Object.freeze({ ...principal }),
     permissions: Object.freeze([...permissions]),
+    ...(options.tenantPublicRef ? { tenantPublicRef: options.tenantPublicRef } : {}),
   });
 }

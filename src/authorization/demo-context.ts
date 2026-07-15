@@ -9,6 +9,9 @@ import { DEMO_DOMAIN_PRINCIPAL_ID, DEMO_DOMAIN_TENANT_ID } from "@/domain/demo-c
 
 export { DEMO_DOMAIN_PRINCIPAL_ID, DEMO_DOMAIN_TENANT_ID };
 
+/** Deterministic opaque tenant public ref for production-adapter offline tests only. */
+export const DEMO_TENANT_PUBLIC_REF = "tref_0123456789abcdef0123";
+
 export const DEMO_TENANT: Tenant = TenantSchema.parse({
   id: DEMO_DOMAIN_TENANT_ID,
   displayName: "Local demo research workspace",
@@ -43,5 +46,7 @@ export function getDemoAuthorizationContext(): AuthorizationContext {
       action === "overlay:read" ||
       action === "brief:read",
   );
-  return createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, permissions);
+  return createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, permissions, {
+    tenantPublicRef: DEMO_TENANT_PUBLIC_REF,
+  });
 }

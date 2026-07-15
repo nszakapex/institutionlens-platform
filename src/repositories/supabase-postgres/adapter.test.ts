@@ -63,6 +63,7 @@ describe("Supabase/Postgres repository adapter", () => {
     expect(Object.isFrozen(result)).toBe(true);
     expect(request.operation).toBe("organizations.getByPublicRef");
     expect(request.authorization.tenantId).toBe(context.tenant.id);
+    expect(request.authorization.tenantPublicRef).toBe(context.tenantPublicRef);
     expect(request.authorization.principalId).toBe(context.principal.id);
     expect(request.input).toEqual({ organizationRef: publicRef });
     expect(Object.isFrozen(request.input)).toBe(true);
@@ -139,62 +140,28 @@ describe("Supabase/Postgres repository adapter", () => {
     errorSpy.mockRestore();
   });
 
-  it("returns persisted assessment output without recalculation", async () => {
+  it("fails closed for deferred assessment and provenance operations", async () => {
     const context = getDemoAuthorizationContext();
-    const persisted = {
-      id: "assess_syn_fi_001_portfolio",
-      tenantId: context.tenant.id,
-      organizationId: "org_syn_fi_001",
-      portfolioId: "portfolio_syn_fi_demo",
-      verticalId: "financial_institutions",
-      schemaVersion: "1.0.0",
-      status: "insufficient_evidence",
-      portfolioPriorityScore: null,
-      bestObservedCapabilityFit: null,
-      capabilityAssessmentIds: [],
-      contributions: [],
-      coverage: {
-        enabledCapabilityCount: 5,
-        assessedCapabilityCount: 0,
-        insufficientCapabilityCount: 5,
-        enabledPriorityWeight: 25,
-        assessedPriorityWeight: 0,
-        conditionalOnAssessedCapabilities: true,
-      },
-      confidence: "unknown",
-      freshness: "unknown",
-      completeness: "insufficient",
-      publicationEligibility: "review_required",
-      opportunityContexts: [],
-      assessedAt: "2026-01-15T12:00:00.000Z",
-      engineVersion: "1.0.0",
-      aggregationPolicyVersion: "1.0.0",
-      synthetic: true,
-    } as const;
-    const gateway = new FakeGateway(async () => persisted);
+    const gateway = new FakeGateway(async () => {
+      throw new Error("gateway must not run for deferred ops");
+    });
     const bundle = createSupabasePostgresRepositoryBundle(CONFIG, gateway);
 
-    const result = await bundle.assessments.getPortfolioAssessment(context, persisted.id);
-
-    expect(result).toEqual(persisted);
-    expect(gateway.requests).toHaveLength(1);
-    expect(gateway.requests[0]?.operation).toBe("assessments.getPortfolio");
+    await expect(
+      bundle.assessments.getPortfolioAssessment(context, "assess_syn_fi_001_portfolio" as never),
+    ).rejects.toMatchObject({
+      code: "UNSUPPORTED_OPERATION",
+      publicMessage: "This data operation is not available.",
+    });
+    await expect(
+      bundle.organizations.getProvenance(context, "prov_syn_fi_001_profile" as never),
+    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPERATION" });
+    expect(gateway.requests).toHaveLength(0);
   });
 
-  it("removes private-note fields and rejects unsafe snapshot content", async () => {
+  it("rejects unsafe snapshot content on supported brief reads", async () => {
     const context = getDemoAuthorizationContext();
     const store = loadFinancialInstitutionsStore();
-    const provenance = { ...store.provenance[0]!, notes: "private-test-marker" };
-    const provenanceGateway = new FakeGateway(async () => provenance);
-    const provenanceBundle = createSupabasePostgresRepositoryBundle(CONFIG, provenanceGateway);
-
-    const safeProvenance = await provenanceBundle.organizations.getProvenance(
-      context,
-      provenance.id,
-    );
-    expect(safeProvenance).not.toHaveProperty("notes");
-    expect(JSON.stringify(safeProvenance)).not.toContain("private-test-marker");
-
     const unsafeSnapshot = {
       tenantId: context.tenant.id,
       publicRef: "bsref_0123456789abcdef0123",

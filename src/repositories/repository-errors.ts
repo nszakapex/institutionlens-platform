@@ -9,7 +9,8 @@ export type RepositoryErrorCode =
   | "TIMEOUT"
   | "UNAVAILABLE"
   | "MISCONFIGURED"
-  | "INVALID_RESPONSE";
+  | "INVALID_RESPONSE"
+  | "UNSUPPORTED_OPERATION";
 
 const PUBLIC_MESSAGES: Readonly<Record<RepositoryErrorCode, string>> = Object.freeze({
   INVALID_QUERY: "Request validation failed.",
@@ -19,6 +20,7 @@ const PUBLIC_MESSAGES: Readonly<Record<RepositoryErrorCode, string>> = Object.fr
   UNAVAILABLE: "The data service is unavailable.",
   MISCONFIGURED: "The data service is not configured.",
   INVALID_RESPONSE: "The data service returned an invalid response.",
+  UNSUPPORTED_OPERATION: "This data operation is not available.",
 });
 
 export class RepositoryError extends Error {

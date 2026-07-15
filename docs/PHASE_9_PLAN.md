@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS migrations applied on staging; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; Auth/session binding, narrow RPC, and runtime cutover pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS migrations applied on staging; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; narrow read API/RPC + live-row decoders prepared (unapplied); Auth/session binding, RPC apply/transport, and runtime cutover pending
 
 **Depends on:** Phases 0-8
 
@@ -94,7 +94,9 @@ Compatibility findings:
 - Static RLS policy contracts + live verifier expectations for 18 SELECT policies, withheld-column proofs, and three-migration history
 - Staging attack gate: disposable Auth/fixture harness `scripts/phase-9-rls-attack-harness.mjs` executed 17/17 and cleaned to empty; live verifier 12/12
 - Policy model and attack plan: `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`, `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`
-- Remaining Batch 4 work: narrow API/RPC schema that never returns raw internal IDs; live row decoders
+- Prepared (unapplied): narrow `institutionlens_api` read RPCs + server-only live-row decoders for organizations, evidence, comparisons, and briefs (`docs/PHASE_9_BATCH_4_API_RPC.md`)
+- Narrow read API/RPC + tenant-bound decoders prepared locally (unapplied): 9 RPCs require `p_tenant_public_ref`; unsupported ops fail closed with `UNSUPPORTED_OPERATION`
+- Remaining Batch 4 work: apply/verify API RPC migration; authenticated SDK transport; remaining read RPCs (workspace/assessments/overlays/provenance/capabilities/portfolios)
 
 ### Batch 5 - Controlled cutover
 
@@ -178,7 +180,7 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-Corrective migration `20260715181000` and Batch 4 migration `20260715200000` are applied on staging. History must contain exactly `20260713190000`, `20260715181000`, and `20260715200000`, with 18 authenticated SELECT policies and authenticated SELECT-only privileges. Staging RLS attack-test gate is complete (17/17 + cleanup + verifier 12/12). Narrow RPC / live row decoder work remains.
+Corrective migration `20260715181000` and Batch 4 RLS migration `20260715200000` are applied on staging. History currently contains exactly those three versions. Staging RLS attack-test gate is complete (17/17 + cleanup + verifier 12/12). Narrow read API/RPC migration `20260715210000` and live-row decoders are prepared locally and unapplied.
 
 ## Stop gates
 

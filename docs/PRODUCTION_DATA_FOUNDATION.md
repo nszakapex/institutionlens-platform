@@ -2,13 +2,14 @@
 
 **Phase:** Project Phase 9
 
-**Status:** Staging schema applied through Batch 4 authenticated read RLS; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; application runtime still synthetic local-demo
+**Status:** Staging schema applied through Batch 4 authenticated read RLS; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; narrow read API/RPC + live-row decoders prepared (unapplied); application runtime still synthetic local-demo
 
 **Migrations:**
 
 - `supabase/migrations/20260713190000_phase9_initial_schema.sql` (applied)
 - `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` (applied)
 - `supabase/migrations/20260715200000_phase9_authenticated_read_rls.sql` (applied on staging)
+- `supabase/migrations/20260715210000_phase9_narrow_read_api_rpc.sql` (prepared; not applied)
 
 ## Architecture
 
@@ -48,10 +49,10 @@ per-request authorization context
   -> repository provider (explicit mode)
     -> production repository adapters
       -> injected authenticated Supabase/Postgres gateway
-        -> narrow RLS-backed RPCs (mandatory Batch 4 work; not implemented)
+        -> narrow RLS-backed RPCs in institutionlens_api (prepared; unapplied)
 ```
 
-The gateway operation map is typed and is tested with offline fakes. It is not a Supabase SDK client, SQL executor, live row decoder, or database-integration claim. Batch 3 must bind an authenticated user session; Batch 4 must implement the narrow RPC surface and RLS policies; Batch 5 must run adapter parity against PostgreSQL.
+The gateway operation map is typed and is tested with offline fakes. Live-row decoders validate organization/evidence/comparison/brief RPC projections offline, requiring a server-authenticated `tenantPublicRef` binding that is checked then stripped before domain projection. Unsupported live operations fail closed with `UNSUPPORTED_OPERATION` (no synthetic fallback). The gateway is still not a Supabase SDK client or live SQL executor. Batch 3 must bind an authenticated user session; Batch 4 must apply/verify the remaining RPC surface; Batch 5 must run adapter parity against PostgreSQL. See `docs/PHASE_9_BATCH_4_API_RPC.md`.
 
 Every production adapter call reasserts the required application permission, carries tenant and principal context, enforces a request timeout, rejects a mismatched `tenantId` anywhere in a response, validates page response bounds, deep-freezes returned data, and maps unknown failures to constant safe errors without logging upstream values. The adapter never imports the assessment generator: database results are persisted Phase 4 outputs, not recalculated scores.
 

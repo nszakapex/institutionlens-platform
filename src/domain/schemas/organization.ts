@@ -7,6 +7,7 @@ import {
 } from "@/domain/ids";
 import {
   BoundedTagsSchema,
+  DataClassificationSchema,
   ExternalReferenceSchema,
   IsoDateTimeSchema,
   LifecycleStatusSchema,
@@ -33,8 +34,9 @@ export const OrganizationSchema = z
     externalReferences: z.array(ExternalReferenceSchema).max(8),
     createdAt: IsoDateTimeSchema,
     updatedAt: IsoDateTimeSchema,
-    synthetic: z.literal(true),
-    dataClassification: z.literal("synthetic"),
+    /** Live rows may be non-synthetic; Phase 4 fixtures remain synthetic: true. */
+    synthetic: z.boolean(),
+    dataClassification: DataClassificationSchema,
     fit: z.object({ status: z.literal("unassessed") }),
     domainSchemaVersion: z.literal("1.0.0"),
     /** Opaque validated vertical payload — shape enforced by adapter before insert. */

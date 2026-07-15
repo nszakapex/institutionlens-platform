@@ -56,10 +56,8 @@ import { RepositoryError, classifyRepositoryError } from "@/repositories/reposit
 import {
   BriefSnapshotListQuerySchema,
   BriefSnapshotPublicRefSchema,
-  BriefSnapshotRecordSchema,
   SavedComparisonListQuerySchema,
   SavedComparisonPublicRefSchema,
-  SavedComparisonRecordSchema,
   type BriefSnapshotListQueryInput,
   type BriefSnapshotRecord,
   type BriefSnapshotRepository,
@@ -76,6 +74,26 @@ import {
   type RepositoryOperationMap,
   type SupabasePostgresGateway,
 } from "@/repositories/supabase-postgres/gateway";
+import {
+  decodeBriefPage,
+  decodeBriefSnapshotRow,
+  decodeComparisonPage,
+  decodeEvidencePage,
+  decodeOrganizationCount,
+  decodeOrganizationPage,
+  decodeOrganizationRow,
+  decodeSavedComparisonRow,
+  parseLiveTenantBinding,
+  type LiveTenantBinding,
+} from "@/repositories/supabase-postgres/live-row-decoders";
+import { isNarrowReadGatewayOperation } from "@/repositories/supabase-postgres/rpc-surface";
+
+function requireLiveTenantBinding(context: AuthorizationContext): LiveTenantBinding {
+  return parseLiveTenantBinding({
+    tenantId: context.tenant.id,
+    tenantPublicRef: context.tenantPublicRef,
+  });
+}
 
 function deepFreeze<T>(value: T): T {
   if (value === null || typeof value !== "object" || Object.isFrozen(value)) return value;
@@ -140,12 +158,6 @@ function parseInput<T>(schema: z.ZodType<T>, input: unknown): T {
   return parsed.data;
 }
 
-function parseResponse<T>(schema: z.ZodType<T>, input: unknown): T {
-  const parsed = schema.safeParse(input);
-  if (!parsed.success) throw new RepositoryError("INVALID_RESPONSE");
-  return cloneFrozen(parsed.data);
-}
-
 function parseIdentifier<T>(schema: z.ZodType<T>, input: unknown): T {
   const parsed = schema.safeParse(input);
   if (!parsed.success) throw new RepositoryError("INVALID_QUERY");
@@ -163,17 +175,20 @@ function authorize(
   }
 }
 
-function assertTenantScoped(value: unknown, tenantId: string): void {
+function assertTenantScoped(value: unknown, binding: LiveTenantBinding): void {
   if (value === null || typeof value !== "object") return;
+  const record = value as Record<string, unknown>;
+  if (typeof record.tenantId === "string" && record.tenantId !== binding.tenantId) {
+    throw new RepositoryError("INVALID_RESPONSE");
+  }
   if (
-    "tenantId" in value &&
-    typeof (value as { tenantId?: unknown }).tenantId === "string" &&
-    (value as { tenantId: string }).tenantId !== tenantId
+    typeof record.tenantPublicRef === "string" &&
+    record.tenantPublicRef !== binding.tenantPublicRef
   ) {
     throw new RepositoryError("INVALID_RESPONSE");
   }
-  for (const child of Object.values(value as Record<string, unknown>)) {
-    assertTenantScoped(child, tenantId);
+  for (const child of Object.values(record)) {
+    assertTenantScoped(child, binding);
   }
 }
 
@@ -227,6 +242,10 @@ class OperationRunner {
     operation: K,
     input: RepositoryOperationMap[K]["input"],
   ): Promise<RepositoryOperationMap[K]["output"]> {
+    if (!isNarrowReadGatewayOperation(operation)) {
+      throw new RepositoryError("UNSUPPORTED_OPERATION");
+    }
+    const binding = requireLiveTenantBinding(context);
     assertPageBounds(input, this.config.maxPageSize);
     const controller = new AbortController();
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -249,7 +268,7 @@ class OperationRunner {
         ),
         timeoutPromise,
       ]);
-      assertTenantScoped(result, context.tenant.id);
+      assertTenantScoped(result, binding);
       assertPagedResponse(result, this.config.maxPageSize);
       return cloneFrozen(result);
     } catch (error) {
@@ -274,35 +293,45 @@ class ProductionOrganizationRepository implements OrganizationRepository {
 
   async getById(context: AuthorizationContext, organizationId: OrganizationId) {
     authorize(context, "organization:read");
+    const binding = requireLiveTenantBinding(context);
     const id = parseIdentifier(OrganizationIdSchema, organizationId);
-    return this.runner.execute(context, "organizations.getById", { organizationId: id });
+    const raw = await this.runner.execute(context, "organizations.getById", {
+      organizationId: id,
+    });
+    return decodeOrganizationRow(raw, binding);
   }
 
   async getByPublicRef(context: AuthorizationContext, organizationRef: OrganizationPublicRef) {
     authorize(context, "organization:read");
+    const binding = requireLiveTenantBinding(context);
     const parsed = OrganizationPublicRefSchema.safeParse(organizationRef);
     if (!parsed.success) throw new RepositoryError("NOT_FOUND");
-    return this.runner.execute(context, "organizations.getByPublicRef", {
+    const raw = await this.runner.execute(context, "organizations.getByPublicRef", {
       organizationRef: parsed.data,
     });
+    return decodeOrganizationRow(raw, binding);
   }
 
   async list(context: AuthorizationContext, query: OrganizationQueryInput) {
     authorize(context, "organization:read");
-    return this.runner.execute(
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(
       context,
       "organizations.list",
       parseInput(OrganizationQuerySchema, query),
     );
+    return decodeOrganizationPage(raw, binding);
   }
 
   async count(context: AuthorizationContext, query: OrganizationQueryInput) {
     authorize(context, "organization:read");
-    return this.runner.execute(
+    requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(
       context,
       "organizations.count",
       parseInput(OrganizationQuerySchema, query),
     );
+    return decodeOrganizationCount(raw);
   }
 
   async listEvidence(
@@ -311,11 +340,14 @@ class ProductionOrganizationRepository implements OrganizationRepository {
     query: EvidenceQueryInput,
   ): Promise<PagedResult<EvidenceRecord>> {
     authorize(context, "organization:read", "evidence:read");
-    const result = await this.runner.execute(context, "evidence.listByOrganization", {
-      organizationId: parseIdentifier(OrganizationIdSchema, organizationId),
+    const binding = requireLiveTenantBinding(context);
+    const id = parseIdentifier(OrganizationIdSchema, organizationId);
+    const raw = await this.runner.execute(context, "evidence.listByOrganization", {
+      organizationId: id,
       query: parseInput(EvidenceQuerySchema, query),
       sortField: "id",
     });
+    const result = decodeEvidencePage(raw, binding, id);
     if (
       !context.permissions.includes("evidence:restricted_read") &&
       result.items.some(
@@ -502,10 +534,11 @@ class ProductionSavedComparisonRepository implements SavedComparisonRepository {
     authorize(context, "organization:read", "assessment:read");
     const parsed = SavedComparisonPublicRefSchema.safeParse(comparisonRef);
     if (!parsed.success) throw new RepositoryError("NOT_FOUND");
-    const result = await this.runner.execute(context, "comparisons.getByPublicRef", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "comparisons.getByPublicRef", {
       comparisonRef: parsed.data,
     });
-    return parseResponse(SavedComparisonRecordSchema, result);
+    return decodeSavedComparisonRow(raw, binding);
   }
 
   async list(
@@ -513,17 +546,13 @@ class ProductionSavedComparisonRepository implements SavedComparisonRepository {
     query: SavedComparisonListQueryInput,
   ): Promise<PagedResult<SavedComparisonRecord>> {
     authorize(context, "organization:read", "assessment:read");
-    const result = await this.runner.execute(
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(
       context,
       "comparisons.list",
       parseInput(SavedComparisonListQuerySchema, query),
     );
-    return Object.freeze({
-      ...result,
-      items: Object.freeze(
-        result.items.map((item) => parseResponse(SavedComparisonRecordSchema, item)),
-      ),
-    });
+    return decodeComparisonPage(raw, binding);
   }
 }
 
@@ -537,10 +566,11 @@ class ProductionBriefSnapshotRepository implements BriefSnapshotRepository {
     authorize(context, "brief:read");
     const parsed = BriefSnapshotPublicRefSchema.safeParse(briefSnapshotRef);
     if (!parsed.success) throw new RepositoryError("NOT_FOUND");
-    const result = await this.runner.execute(context, "briefSnapshots.getByPublicRef", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "briefSnapshots.getByPublicRef", {
       briefSnapshotRef: parsed.data,
     });
-    const snapshot = parseResponse(BriefSnapshotRecordSchema, result);
+    const snapshot = decodeBriefSnapshotRow(raw, binding);
     assertSafeSnapshotRecord(snapshot);
     return snapshot;
   }
@@ -550,18 +580,15 @@ class ProductionBriefSnapshotRepository implements BriefSnapshotRepository {
     query: BriefSnapshotListQueryInput,
   ): Promise<PagedResult<BriefSnapshotRecord>> {
     authorize(context, "brief:read");
-    const result = await this.runner.execute(
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(
       context,
       "briefSnapshots.list",
       parseInput(BriefSnapshotListQuerySchema, query),
     );
-    for (const item of result.items) assertSafeSnapshotRecord(item);
-    return Object.freeze({
-      ...result,
-      items: Object.freeze(
-        result.items.map((item) => parseResponse(BriefSnapshotRecordSchema, item)),
-      ),
-    });
+    const page = decodeBriefPage(raw, binding);
+    for (const item of page.items) assertSafeSnapshotRecord(item);
+    return page;
   }
 }
 

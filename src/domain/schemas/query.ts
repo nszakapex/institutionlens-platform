@@ -25,7 +25,7 @@ export const OrganizationQuerySchema = z
     verticalId: VerticalIdSchema.optional(),
     lifecycleStatus: LifecycleStatusSchema.optional(),
     tags: z.array(z.string().min(1).max(40)).max(8).optional(),
-    synthetic: z.literal(true).optional(),
+    synthetic: z.boolean().optional(),
     page: z.number().int().min(1).max(MAX_PAGE).default(1),
     pageSize: z.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
     sortField: OrganizationSortFieldSchema.default("displayName"),

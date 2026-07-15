@@ -57,7 +57,8 @@ export const EvidenceRecordSchema = z
     confidence: ConfidenceLevelSchema,
     provenanceId: ProvenanceIdSchema.nullable(),
     publicationEligibility: PublicationEligibilitySchema,
-    synthetic: z.literal(true),
+    /** Live rows may be non-synthetic; Phase 4 fixtures remain synthetic: true. */
+    synthetic: z.boolean(),
     dataClassification: DataClassificationSchema,
     calculatedFromEvidenceIds: z.array(EvidenceIdSchema).max(20).optional(),
     calculationDescriptor: z.string().min(1).max(200).optional(),

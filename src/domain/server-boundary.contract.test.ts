@@ -44,6 +44,8 @@ describe("server-only domain boundary", () => {
       "src/repositories/synthetic-workspace-repository.ts",
       "src/repositories/supabase-postgres/gateway.ts",
       "src/repositories/supabase-postgres/adapter.ts",
+      "src/repositories/supabase-postgres/rpc-surface.ts",
+      "src/repositories/supabase-postgres/live-row-decoders.ts",
       "src/authorization/demo-context.ts",
       "src/verticals/registry.ts",
       "src/verticals/financial-institutions/adapter.ts",
