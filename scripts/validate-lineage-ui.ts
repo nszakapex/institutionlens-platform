@@ -2,9 +2,16 @@ import { getDemoAuthorizationContext } from "@/authorization/demo-context";
 import { buildOrganizationDetailPageView } from "@/application/detail-service";
 import { getTenantResearchReadModel } from "@/application/research-read-model";
 
+function setDemoEnv(): void {
+  process.env.IL_APP_MODE = "local-demo";
+  process.env.IL_DEMO_TENANT_ID = "demo-tenant-local";
+  process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
+}
+
 async function main(): Promise<void> {
+  setDemoEnv();
   const context = getDemoAuthorizationContext();
-  const model = getTenantResearchReadModel(context);
+  const model = await getTenantResearchReadModel(context);
   let awardedRows = 0;
 
   for (const organization of model.organizations) {

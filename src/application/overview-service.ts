@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AuthorizationContext } from "@/authorization/context";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
 import { AuthorizationError } from "@/domain/errors";
 import type { ObservedFitBand } from "@/domain/schemas/assessment";
 import { ObservedFitBandSchema } from "@/domain/schemas/assessment";
@@ -527,9 +528,10 @@ function unauthorizedView(message: string): OverviewPageView {
  */
 export async function buildOverviewPageView(
   context: AuthorizationContext,
+  repositories?: RepositoryBundle,
 ): Promise<OverviewPageView> {
   try {
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
 
     if (model.organizations.length === 0) {
       return {

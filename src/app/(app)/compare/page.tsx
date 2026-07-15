@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildComparePageView } from "@/application/compare-service";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { ComparePage } from "@/components/compare/ComparePage";
 
 export const metadata: Metadata = {
@@ -15,6 +15,7 @@ export default async function CompareRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const view = await buildComparePageView(getDemoAuthorizationContext(), params);
+  const { context, repositories } = await getRequestAccess();
+  const view = await buildComparePageView(context, params, repositories);
   return <ComparePage view={view} />;
 }

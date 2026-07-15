@@ -33,7 +33,9 @@ import {
   type TenantResearchReadModel,
 } from "@/application/research-read-model";
 import { inboundBriefActionFor } from "@/application/inbound-brief-action";
+import { loadTenantEvidenceCatalog } from "@/application/tenant-evidence-access";
 import { AuthorizationError } from "@/domain/errors";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
 import type { OrganizationPublicRef } from "@/domain/organization-public-ref";
 import type { EvidenceRecord } from "@/domain/schemas/evidence";
 import type { ProvenanceRecord } from "@/domain/schemas/provenance";
@@ -46,7 +48,6 @@ import {
   METHODOLOGY_VERSION,
 } from "@/verticals/financial-institutions/assessment/methodology";
 import { SYNTHETIC_FI_PORTFOLIO } from "@/verticals/financial-institutions/assessment/synthetic-portfolio";
-import { loadFinancialInstitutionsStore } from "@/repositories/synthetic-organization-repository";
 import { FINANCIAL_INSTITUTIONS_VOCABULARY } from "@/verticals/financial-institutions/vocabulary";
 
 function deepFreeze<T>(value: T): T {
@@ -555,6 +556,7 @@ function buildDifferences(
 export async function buildComparePageView(
   context: AuthorizationContext,
   searchParams: URLSearchParams | Record<string, string | string[] | undefined>,
+  repositories?: RepositoryBundle,
 ): Promise<ComparePageView> {
   const parsed = parseCompareSearchParams(searchParams);
   if (!parsed.ok) {
@@ -597,7 +599,7 @@ export async function buildComparePageView(
     assertPermission(context, "organization:read");
     assertPermission(context, "assessment:read");
 
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
     if (model.methodologyVersion !== METHODOLOGY_VERSION) {
       return baseView({
         state: "error",
@@ -611,11 +613,10 @@ export async function buildComparePageView(
       });
     }
 
-    const store = loadFinancialInstitutionsStore();
-    const provenanceById = new Map(
-      store.provenance
-        .filter((item) => item.tenantId === context.tenant.id)
-        .map((item) => [item.id, item] as const),
+    const { evidence: tenantEvidence, provenanceById } = await loadTenantEvidenceCatalog(
+      context,
+      model,
+      repositories,
     );
 
     const columns: CompareColumnView[] = [];
@@ -638,8 +639,8 @@ export async function buildComparePageView(
         continue;
       }
 
-      const orgEvidence = store.evidence.filter(
-        (item) => item.tenantId === context.tenant.id && item.organizationId === org.organizationId,
+      const orgEvidence = tenantEvidence.filter(
+        (item) => item.organizationId === org.organizationId,
       );
       const visibleEvidence = visibleEvidenceForOrg(context, org, orgEvidence, provenanceById);
       columns.push(buildColumn(context, model, org, visibleEvidence, provenanceById));

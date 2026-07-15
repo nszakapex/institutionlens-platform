@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildMethodologyPageView } from "@/application/methodology-service";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { MethodologyPage } from "@/components/methodology/MethodologyPage";
 
 export const metadata: Metadata = {
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MethodologyRoute() {
-  const view = await buildMethodologyPageView(getDemoAuthorizationContext());
+  const { context } = await getRequestAccess();
+  const view = await buildMethodologyPageView(context);
   return <MethodologyPage view={view} />;
 }

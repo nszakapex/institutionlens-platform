@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { buildOrganizationDetailPageView } from "@/application/detail-service";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { OrganizationDetailPage } from "@/components/detail/OrganizationDetailPage";
 
 export const metadata: Metadata = {
@@ -16,10 +16,8 @@ export default async function OrganizationDetailRoute({
   params: Promise<{ organizationRef: string }>;
 }) {
   const { organizationRef } = await params;
-  const view = await buildOrganizationDetailPageView(
-    getDemoAuthorizationContext(),
-    organizationRef,
-  );
+  const { context, repositories } = await getRequestAccess();
+  const view = await buildOrganizationDetailPageView(context, organizationRef, repositories);
   if (view.state === "not_found" || view.state === "malformed") notFound();
   return <OrganizationDetailPage view={view} />;
 }

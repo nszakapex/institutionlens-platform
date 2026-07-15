@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { DemoTenantError, getDemoPrincipal } from "@/lib/demo-tenant";
 import { buildHealthPayload } from "@/lib/health";
+import { loadRepositoryConfig } from "@/repositories/repository-config";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,10 +11,23 @@ export const runtime = "nodejs";
  * No database or external-service checks. No paths, versions, env, tenant ids,
  * timestamps, or stack details in the response body.
  */
-export function GET() {
+export async function GET() {
   try {
-    const principal = getDemoPrincipal();
-    const body = buildHealthPayload(principal);
+    const config = loadRepositoryConfig();
+
+    if (config.mode === "local-demo") {
+      const principal = getDemoPrincipal();
+      const body = buildHealthPayload(principal);
+
+      return NextResponse.json(body, {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    const body = buildHealthPayload({ mode: config.mode, synthetic: false });
 
     return NextResponse.json(body, {
       status: 200,

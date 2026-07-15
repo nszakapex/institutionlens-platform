@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildEvidenceCatalogPageView } from "@/application/evidence-catalog-service";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { EvidenceCatalogPage } from "@/components/evidence/EvidenceCatalogPage";
 
 export const metadata: Metadata = {
@@ -16,9 +16,7 @@ export default async function EvidenceRoute({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const view = await buildEvidenceCatalogPageView(
-    getDemoAuthorizationContext(),
-    await searchParams,
-  );
+  const { context, repositories } = await getRequestAccess();
+  const view = await buildEvidenceCatalogPageView(context, await searchParams, repositories);
   return <EvidenceCatalogPage view={view} />;
 }

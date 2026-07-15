@@ -5,7 +5,14 @@ import { getDemoAuthorizationContext } from "@/authorization/demo-context";
 import { buildOverviewPageView } from "@/application/overview-service";
 import { buildExplorerPageView } from "@/application/explorer-service";
 
+function setDemoEnv(): void {
+  process.env.IL_APP_MODE = "local-demo";
+  process.env.IL_DEMO_TENANT_ID = "demo-tenant-local";
+  process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
+}
+
 async function main() {
+  setDemoEnv();
   const context = getDemoAuthorizationContext();
   const overview = await buildOverviewPageView(context);
   if (overview.state !== "ready") {

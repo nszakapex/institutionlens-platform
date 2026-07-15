@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildBriefDocumentPageView } from "@/application/brief-service";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { BriefDocumentPage } from "@/components/briefs/BriefDocumentPage";
 
 export const metadata: Metadata = {
@@ -15,6 +15,7 @@ export default async function BriefDocumentRoute({
   params: Promise<{ briefRef: string }>;
 }) {
   const { briefRef } = await params;
-  const view = await buildBriefDocumentPageView(getDemoAuthorizationContext(), briefRef);
+  const { context, repositories } = await getRequestAccess();
+  const view = await buildBriefDocumentPageView(context, briefRef, repositories);
   return <BriefDocumentPage view={view} />;
 }

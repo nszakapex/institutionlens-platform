@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { buildOverviewPageView } from "@/application/overview-service";
 import { OverviewPage } from "@/components/overview/OverviewPage";
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function OverviewRoute() {
-  const context = getDemoAuthorizationContext();
-  const view = await buildOverviewPageView(context);
+  const { context, repositories } = await getRequestAccess();
+  const view = await buildOverviewPageView(context, repositories);
   return <OverviewPage view={view} />;
 }

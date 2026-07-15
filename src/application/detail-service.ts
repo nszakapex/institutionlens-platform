@@ -47,7 +47,8 @@ import {
   parseOrganizationPublicRef,
   type OrganizationPublicRef,
 } from "@/domain/organization-public-ref";
-import { loadFinancialInstitutionsStore } from "@/repositories/synthetic-organization-repository";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
+import { loadOrganizationEvidenceCatalog } from "@/application/tenant-evidence-access";
 import { FINANCIAL_INSTITUTION_RULE_SETS } from "@/verticals/financial-institutions/assessment/rules";
 import { SYNTHETIC_FI_PORTFOLIO } from "@/verticals/financial-institutions/assessment/synthetic-portfolio";
 import {
@@ -705,19 +706,21 @@ function buildFingerprint(org: OrgResearchRecord) {
   };
 }
 
-export function resolveOrganizationByPublicRef(
+export async function resolveOrganizationByPublicRef(
   context: AuthorizationContext,
   organizationRefParam: string,
-): OrgResearchRecord | null {
+  repositories?: RepositoryBundle,
+): Promise<OrgResearchRecord | null> {
   const ref = parseOrganizationPublicRef(organizationRefParam);
   if (!ref) return null;
-  const model = getTenantResearchReadModel(context);
+  const model = await getTenantResearchReadModel(context, repositories);
   return model.organizations.find((org) => org.publicRef === ref) ?? null;
 }
 
 export async function buildOrganizationDetailPageView(
   context: AuthorizationContext,
   organizationRefParam: string,
+  repositories?: RepositoryBundle,
 ): Promise<OrganizationDetailPageView> {
   const ref: OrganizationPublicRef | null = parseOrganizationPublicRef(organizationRefParam);
   if (!ref) {
@@ -731,7 +734,7 @@ export async function buildOrganizationDetailPageView(
   try {
     assertPermission(context, "organization:read");
     assertPermission(context, "assessment:read");
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
     const org = model.organizations.find((item) => item.publicRef === ref);
     if (!org) {
       return deepFreeze({
@@ -751,21 +754,13 @@ export async function buildOrganizationDetailPageView(
       });
     }
 
-    const store = loadFinancialInstitutionsStore();
-    const evidence = store.evidence
-      .filter(
-        (item) => item.tenantId === context.tenant.id && item.organizationId === org.organizationId,
-      )
-      .sort((a, b) => a.title.localeCompare(b.title, "en"));
+    const { evidence: loadedEvidence, provenanceById } = await loadOrganizationEvidenceCatalog(
+      context,
+      org.organizationId,
+      repositories,
+    );
+    const evidence = [...loadedEvidence].sort((a, b) => a.title.localeCompare(b.title, "en"));
     const evidenceById = new Map(evidence.map((item) => [item.id, item] as const));
-    const provenanceIds = new Set(
-      evidence.map((item) => item.provenanceId).filter((item): item is string => item !== null),
-    );
-    const provenanceById = new Map(
-      store.provenance
-        .filter((item) => item.tenantId === context.tenant.id && provenanceIds.has(item.id))
-        .map((item) => [item.id, item] as const),
-    );
     const evidenceUsage = buildEvidenceUsage(org);
 
     const capabilities = buildCapabilities(context, org, evidenceById);

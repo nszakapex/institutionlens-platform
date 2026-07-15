@@ -39,6 +39,8 @@ import {
 } from "@/verticals/financial-institutions/schema";
 import { FINANCIAL_INSTITUTIONS_VOCABULARY } from "@/verticals/financial-institutions/vocabulary";
 import { AuthorizationError } from "@/domain/errors";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
+import { RepositoryError } from "@/repositories/repository-errors";
 
 export type OrgResearchRecord = {
   /** Internal join key — never expose in client view models. */
@@ -148,6 +150,48 @@ function buildSearchHaystack(org: Organization, payload: FinancialInstitutionPay
   return parts.join(" ").toLowerCase();
 }
 
+function buildOrgRecord(
+  org: Organization,
+  publicRef: string,
+  overlay: OrganizationOverlay | null,
+  portfolio: PortfolioAssessment,
+  capabilityAssessments: readonly CapabilityAssessment[],
+  changeSignals: readonly EvidenceRecord[],
+  fingerprints: readonly string[],
+): OrgResearchRecord {
+  const payload = FinancialInstitutionPayloadSchema.parse(org.verticalPayload);
+  const opportunityContextStatus = deriveOrgOpportunityStatus(
+    overlay,
+    portfolio.opportunityContexts,
+  );
+  return {
+    organizationId: org.id,
+    publicRef,
+    displayName: org.displayName,
+    organizationType: org.organizationType,
+    lifecycleStatus: org.lifecycleStatus,
+    locationLabel:
+      org.primaryLocation.localityLabel ?? vocabularyLabel(org.primaryLocation.regionCode),
+    dataClassification: org.dataClassification,
+    tags: Object.freeze([...org.tags]),
+    summary: org.summary,
+    verticalLabel: "Financial institutions",
+    verticalSummary: buildVerticalSummary(payload),
+    adapterVersion: org.adapterVersion,
+    payload,
+    searchHaystack: buildSearchHaystack(org, payload),
+    overlay,
+    excluded: overlay?.relationshipStatus === "excluded",
+    ambiguousOverlay: overlay?.matchStatus === "ambiguous",
+    opportunityContextStatus,
+    opportunityContextLabel: opportunityReasonLabelFor(opportunityContextStatus),
+    portfolio,
+    capabilityAssessments,
+    assessmentOutputFingerprints: Object.freeze([...fingerprints]),
+    changeSignals,
+  };
+}
+
 function buildModel(context: AuthorizationContext, store: SyntheticStore): TenantResearchReadModel {
   const bundle = generateSyntheticAssessments();
   const byOrg = new Map(bundle.organizations.map((item) => [item.organizationId, item]));
@@ -163,49 +207,23 @@ function buildModel(context: AuthorizationContext, store: SyntheticStore): Tenan
     const assessment = byOrg.get(org.id);
     if (!assessment) continue;
 
-    const payload = FinancialInstitutionPayloadSchema.parse(org.verticalPayload);
-    const overlay = getOverlayForOrg(org.id) ?? null;
-    const opportunityContextStatus = deriveOrgOpportunityStatus(
-      overlay,
-      assessment.portfolioAssessment.opportunityContexts,
-    );
-
-    const changeSignals = store.evidence.filter(
-      (item) =>
-        item.organizationId === org.id &&
-        item.tenantId === context.tenant.id &&
-        item.evidenceType === "public_change_signal" &&
-        item.publicationEligibility !== "restricted",
-    );
-
-    organizations.push({
-      organizationId: org.id,
-      publicRef: organizationPublicRefFor(org.id),
-      displayName: org.displayName,
-      organizationType: org.organizationType,
-      lifecycleStatus: org.lifecycleStatus,
-      locationLabel:
-        org.primaryLocation.localityLabel ?? vocabularyLabel(org.primaryLocation.regionCode),
-      dataClassification: org.dataClassification,
-      tags: Object.freeze([...org.tags]),
-      summary: org.summary,
-      verticalLabel: "Financial institutions",
-      verticalSummary: buildVerticalSummary(payload),
-      adapterVersion: org.adapterVersion,
-      payload,
-      searchHaystack: buildSearchHaystack(org, payload),
-      overlay,
-      excluded: overlay?.relationshipStatus === "excluded",
-      ambiguousOverlay: overlay?.matchStatus === "ambiguous",
-      opportunityContextStatus,
-      opportunityContextLabel: opportunityReasonLabelFor(opportunityContextStatus),
-      portfolio: assessment.portfolioAssessment,
-      capabilityAssessments: assessment.capabilityAssessments,
-      assessmentOutputFingerprints: Object.freeze(
+    organizations.push(
+      buildOrgRecord(
+        org,
+        organizationPublicRefFor(org.id),
+        getOverlayForOrg(org.id) ?? null,
+        assessment.portfolioAssessment,
+        assessment.capabilityAssessments,
+        store.evidence.filter(
+          (item) =>
+            item.organizationId === org.id &&
+            item.tenantId === context.tenant.id &&
+            item.evidenceType === "public_change_signal" &&
+            item.publicationEligibility !== "restricted",
+        ),
         assessment.manifests.map((item) => item.outputFingerprint),
       ),
-      changeSignals,
-    });
+    );
   }
 
   organizations.sort((a, b) => a.displayName.localeCompare(b.displayName, "en"));
@@ -230,17 +248,147 @@ function buildModel(context: AuthorizationContext, store: SyntheticStore): Tenan
   });
 }
 
+async function listAllOrganizations(
+  context: AuthorizationContext,
+  repositories: RepositoryBundle,
+): Promise<Organization[]> {
+  const items: Organization[] = [];
+  let page = 1;
+  for (;;) {
+    const result = await repositories.organizations.list(context, {
+      page,
+      pageSize: 50,
+      sortField: "displayName",
+      sortDirection: "asc",
+    });
+    items.push(...result.items);
+    if (items.length >= result.total || result.items.length === 0) break;
+    page += 1;
+    if (page > 200) throw new RepositoryError("INVALID_RESPONSE");
+  }
+  return items;
+}
+
+async function buildFromRepositories(
+  context: AuthorizationContext,
+  repositories: RepositoryBundle,
+): Promise<TenantResearchReadModel> {
+  const orgs = await listAllOrganizations(context, repositories);
+  const organizations: OrgResearchRecord[] = [];
+
+  for (const org of orgs) {
+    if (org.tenantId !== context.tenant.id) {
+      throw new RepositoryError("INVALID_RESPONSE");
+    }
+
+    const portfolios = await repositories.assessments.listPortfolioAssessments(context, {
+      organizationId: org.id,
+      page: 1,
+      pageSize: 1,
+    });
+    const portfolio = portfolios.items[0];
+    if (!portfolio) continue;
+
+    const capabilities = await repositories.assessments.listCapabilityAssessments(context, {
+      organizationId: org.id,
+      page: 1,
+      pageSize: 50,
+    });
+
+    let overlay: OrganizationOverlay | null = null;
+    if (context.permissions.includes("overlay:read")) {
+      try {
+        overlay = await repositories.overlays.getByOrganizationId(context, org.id);
+      } catch (error) {
+        if (!(error instanceof RepositoryError) || error.code !== "NOT_FOUND") throw error;
+      }
+    }
+
+    const evidence = await repositories.organizations.listEvidence(context, org.id, {
+      page: 1,
+      pageSize: 50,
+    });
+    const changeSignals = evidence.items.filter(
+      (item) =>
+        item.evidenceType === "public_change_signal" &&
+        item.publicationEligibility !== "restricted",
+    );
+
+    const fingerprints: string[] = [];
+    try {
+      const manifest = await repositories.assessments.getAssessmentManifest(context, portfolio.id);
+      fingerprints.push(manifest.outputFingerprint);
+    } catch (error) {
+      if (!(error instanceof RepositoryError) || error.code !== "NOT_FOUND") throw error;
+    }
+
+    organizations.push(
+      buildOrgRecord(
+        org,
+        organizationPublicRefFor(org.id),
+        overlay,
+        portfolio,
+        capabilities.items,
+        changeSignals,
+        fingerprints,
+      ),
+    );
+  }
+
+  organizations.sort((a, b) => a.displayName.localeCompare(b.displayName, "en"));
+
+  const priorityByCap = new Map(
+    SYNTHETIC_FI_PORTFOLIO.capabilities.map((c) => [c.capabilityId, c.priority] as const),
+  );
+  const assessedAt =
+    organizations
+      .map((item) => item.portfolio.assessedAt)
+      .sort()
+      .at(-1) ?? ASSESSED_AT;
+
+  return Object.freeze({
+    tenantId: context.tenant.id,
+    verticalLabel: "Financial institutions",
+    methodologyVersion: METHODOLOGY_VERSION,
+    datasetVersion: FINANCIAL_INSTITUTIONS_FIXTURE_VERSION,
+    asAssessedAt: assessedAt,
+    syntheticNotice: "Persisted tenant research data — not a synthetic local demo dataset.",
+    organizations: Object.freeze(organizations),
+    capabilityCatalog: Object.freeze(
+      SYNTHETIC_FI_PORTFOLIO.capabilities
+        .filter((c) => c.status === "enabled")
+        .map((c) => ({
+          capabilityId: c.capabilityId,
+          name: capabilityNameById(c.capabilityId),
+          priority: priorityByCap.get(c.capabilityId) ?? c.priority,
+        })),
+    ),
+  });
+}
+
 /**
  * Build a tenant-scoped normalized research read model.
  * Authorization is checked before any join.
  * No request/global memoization — avoids cross-tenant leakage and authz reuse.
+ * Live mode requires an injected supabase-postgres repository bundle (no silent synthetic fallback).
  */
-export function getTenantResearchReadModel(context: AuthorizationContext): TenantResearchReadModel {
+export async function getTenantResearchReadModel(
+  context: AuthorizationContext,
+  repositories?: RepositoryBundle,
+): Promise<TenantResearchReadModel> {
   assertPermission(context, "organization:read");
   assertPermission(context, "assessment:read");
 
   if (context.tenant.status !== "active" || context.principal.status !== "active") {
     throw new AuthorizationError("Authorization context is not active.");
+  }
+
+  if (repositories?.adapter === "supabase-postgres") {
+    return buildFromRepositories(context, repositories);
+  }
+
+  if (repositories && repositories.adapter !== "synthetic") {
+    throw new RepositoryError("MISCONFIGURED");
   }
 
   const store = loadFinancialInstitutionsStore();

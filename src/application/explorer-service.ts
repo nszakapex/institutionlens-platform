@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AuthorizationContext } from "@/authorization/context";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
 import { AuthorizationError } from "@/domain/errors";
 import { ASSESSMENT_HEURISTIC_DISCLAIMER } from "@/application/assessment-view-models";
 import {
@@ -590,12 +591,13 @@ function sortExplanation(sort: ExplorerSort): string {
 export async function buildExplorerPageView(
   context: AuthorizationContext,
   searchParams: Record<string, string | string[] | undefined>,
+  repositories?: RepositoryBundle,
 ): Promise<ExplorerPageView> {
   const parsed = parseExplorerSearchParams(searchParams);
   const defaults = defaultExplorerQuery();
 
   try {
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
     const facets = buildFacets(model);
 
     if (!parsed.ok) {

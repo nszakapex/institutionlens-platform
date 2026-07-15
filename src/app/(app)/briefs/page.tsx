@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildBriefDirectoryPageView } from "@/application/brief-service";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { BriefsWorkspacePage } from "@/components/briefs/BriefsWorkspacePage";
 
 export const metadata: Metadata = {
@@ -15,6 +15,7 @@ export default async function BriefsDirectoryRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const view = await buildBriefDirectoryPageView(getDemoAuthorizationContext(), params);
+  const { context, repositories } = await getRequestAccess();
+  const view = await buildBriefDirectoryPageView(context, params, repositories);
   return <BriefsWorkspacePage view={view} />;
 }

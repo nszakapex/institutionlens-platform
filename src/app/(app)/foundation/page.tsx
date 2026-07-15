@@ -31,7 +31,7 @@ import {
 } from "@/components/svg";
 import { DomainFoundationStatus } from "@/components/shell/DomainFoundationStatus";
 import { AssessmentFoundationStatus } from "@/components/shell/AssessmentFoundationStatus";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { buildDomainFoundationView } from "@/application/domain-foundation";
 import { buildAssessmentFoundationView } from "@/application/assessment-service";
 
@@ -74,7 +74,7 @@ const SYNTHETIC_ROWS: SyntheticOrg[] = [
 ];
 
 export default async function DesignSystemPage() {
-  const context = getDemoAuthorizationContext();
+  const { context } = await getRequestAccess();
   const domainView = buildDomainFoundationView(context);
   const assessmentView = await buildAssessmentFoundationView(context);
 

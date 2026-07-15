@@ -64,7 +64,7 @@ describe("production repository security boundary", () => {
 
   it("keeps raw IDs and configuration out of rendered view models", async () => {
     const context = getDemoAuthorizationContext();
-    const research = getTenantResearchReadModel(context);
+    const research = await getTenantResearchReadModel(context);
     const first = research.organizations[0]!;
     const second = research.organizations[1]!;
     const outputs = [

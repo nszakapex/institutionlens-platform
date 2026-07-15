@@ -10,7 +10,10 @@ import {
   buildOrganizationDetailPageView,
   resolveOrganizationByPublicRef,
 } from "@/application/detail-service";
-import { getTenantResearchReadModel } from "@/application/research-read-model";
+import {
+  getTenantResearchReadModel,
+  type TenantResearchReadModel,
+} from "@/application/research-read-model";
 import { organizationPublicRefFor } from "@/domain/organization-public-ref";
 
 function withoutPermission(permission: string) {
@@ -44,10 +47,10 @@ function setDemoEnv(): void {
   process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
 }
 
-type OrgRecord = ReturnType<typeof getTenantResearchReadModel>["organizations"][number];
+type OrgRecord = TenantResearchReadModel["organizations"][number];
 
-function firstPublicRefWhere(predicate: (org: OrgRecord) => boolean) {
-  const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+async function firstPublicRefWhere(predicate: (org: OrgRecord) => boolean) {
+  const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
   const org = model.organizations.find(predicate);
   expect(org).toBeTruthy();
   return organizationPublicRefFor(org!.organizationId);
@@ -60,9 +63,9 @@ describe("organization detail service", () => {
 
   it("resolves public refs within the active tenant only", async () => {
     const context = getDemoAuthorizationContext();
-    const ref = firstPublicRefWhere((org) => org.portfolio.status === "assessed");
+    const ref = await firstPublicRefWhere((org) => org.portfolio.status === "assessed");
 
-    expect(resolveOrganizationByPublicRef(context, ref)?.displayName).toBeTruthy();
+    expect((await resolveOrganizationByPublicRef(context, ref))?.displayName).toBeTruthy();
 
     const crossTenant = await buildOrganizationDetailPageView(otherTenantContext(), ref);
     expect(crossTenant.state).toBe("not_found");
@@ -70,7 +73,7 @@ describe("organization detail service", () => {
   });
 
   it("never treats a valid public ref as authorization", async () => {
-    const ref = firstPublicRefWhere((org) => org.portfolio.status === "assessed");
+    const ref = await firstPublicRefWhere((org) => org.portfolio.status === "assessed");
     const view = await buildOrganizationDetailPageView(withoutPermission("organization:read"), ref);
     expect(view.state).toBe("unauthorized");
     expect(JSON.stringify(view)).not.toContain(ref);
@@ -79,7 +82,7 @@ describe("organization detail service", () => {
   });
 
   it("omits Brief inbound action when brief:read is missing", async () => {
-    const ref = firstPublicRefWhere((org) => org.portfolio.status === "assessed");
+    const ref = await firstPublicRefWhere((org) => org.portfolio.status === "assessed");
     const view = await buildOrganizationDetailPageView(withoutPermission("brief:read"), ref);
     expect(view.state).toBe("ok");
     if (view.state !== "ok") return;
@@ -99,8 +102,8 @@ describe("organization detail service", () => {
   });
 
   it("builds complete assessed and insufficient detail views without raw IDs", async () => {
-    const assessedRef = firstPublicRefWhere((org) => org.portfolio.status === "assessed");
-    const insufficientRef = firstPublicRefWhere(
+    const assessedRef = await firstPublicRefWhere((org) => org.portfolio.status === "assessed");
+    const insufficientRef = await firstPublicRefWhere(
       (org) => org.portfolio.status === "insufficient_evidence",
     );
 
@@ -180,7 +183,7 @@ describe("organization detail service", () => {
   });
 
   it("shows overlay fields only with overlay permission and never exposes notes", async () => {
-    const ref = firstPublicRefWhere((org) => org.overlay !== null);
+    const ref = await firstPublicRefWhere((org) => org.overlay !== null);
     const noOverlay = await buildOrganizationDetailPageView(withoutPermission("overlay:read"), ref);
     const withOverlay = await buildOrganizationDetailPageView(getDemoAuthorizationContext(), ref);
 
@@ -202,7 +205,7 @@ describe("organization detail service", () => {
   });
 
   it("treats absent overlay as unknown tenant context", async () => {
-    const ref = firstPublicRefWhere((org) => org.overlay === null);
+    const ref = await firstPublicRefWhere((org) => org.overlay === null);
     const view = await buildOrganizationDetailPageView(getDemoAuthorizationContext(), ref);
     expect(view.state).toBe("ok");
     if (view.state !== "ok") return;
@@ -212,7 +215,7 @@ describe("organization detail service", () => {
   });
 
   it("allows profile assessment without evidence permission but fails evidence closed", async () => {
-    const ref = firstPublicRefWhere((org) => org.portfolio.status === "assessed");
+    const ref = await firstPublicRefWhere((org) => org.portfolio.status === "assessed");
     const view = await buildOrganizationDetailPageView(withoutPermission("evidence:read"), ref);
     expect(view.state).toBe("ok");
     if (view.state !== "ok") return;
@@ -228,7 +231,7 @@ describe("organization detail service", () => {
   });
 
   it("redacts restricted evidence for analysts and reveals safe metadata with restricted permission", async () => {
-    const ref = firstPublicRefWhere((org) =>
+    const ref = await firstPublicRefWhere((org) =>
       org.capabilityAssessments.some((assessment) =>
         assessment.ledger.some((entry) => entry.publicationEligibility === "restricted"),
       ),
@@ -248,7 +251,7 @@ describe("organization detail service", () => {
   });
 
   it("includes awarded lineage and keeps overlay independent from fit", async () => {
-    const ref = firstPublicRefWhere(
+    const ref = await firstPublicRefWhere(
       (org) =>
         org.overlay !== null &&
         org.capabilityAssessments.some((cap) =>
@@ -270,7 +273,7 @@ describe("organization detail service", () => {
   });
 
   it("preserves evidence semantics, provenance safety, and chronological signals", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const details = await Promise.all(
       model.organizations.map((org) =>
         buildOrganizationDetailPageView(getDemoAuthorizationContext(), org.publicRef),

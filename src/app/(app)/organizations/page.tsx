@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getDemoAuthorizationContext } from "@/authorization/demo-context";
+import { getRequestAccess } from "@/authorization/request-access";
 import { buildExplorerPageView } from "@/application/explorer-service";
 import { ExplorerPage } from "@/components/explorer/ExplorerPage";
 
@@ -15,8 +15,8 @@ export default async function OrganizationsRoute({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const context = getDemoAuthorizationContext();
+  const { context, repositories } = await getRequestAccess();
   const params = await searchParams;
-  const view = await buildExplorerPageView(context, params);
+  const view = await buildExplorerPageView(context, params, repositories);
   return <ExplorerPage view={view} />;
 }

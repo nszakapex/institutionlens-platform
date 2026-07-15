@@ -33,12 +33,13 @@ import {
   reasonSummaryFromCodes,
   type OrgResearchRecord,
 } from "@/application/research-read-model";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
 import { AuthorizationError } from "@/domain/errors";
 import { briefPublicRefFor } from "@/domain/brief-public-ref";
 import type { OrganizationPublicRef } from "@/domain/organization-public-ref";
 import type { EvidenceRecord } from "@/domain/schemas/evidence";
 import type { ProvenanceRecord } from "@/domain/schemas/provenance";
-import { loadFinancialInstitutionsStore } from "@/repositories/synthetic-organization-repository";
+import { loadOrganizationEvidenceCatalog } from "@/application/tenant-evidence-access";
 import { FINANCIAL_INSTITUTIONS_FIXTURE_VERSION } from "@/verticals/financial-institutions/schema";
 import {
   ASSESSED_AT,
@@ -390,7 +391,9 @@ function buildProvenanceSummaries(
       label: provenance.sourceName,
       licenseStatusLabel: label(provenance.licenseStatus),
       accessClassificationLabel: label(provenance.accessClassification),
-      sourceReferenceLabel: safeSourceReferenceLabel(provenance.sourceReference),
+      sourceReferenceLabel: provenance.sourceReference
+        ? safeSourceReferenceLabel(provenance.sourceReference)
+        : null,
     });
   }
   return Object.freeze(rows.sort((a, b) => a.label.localeCompare(b.label, "en")));
@@ -784,17 +787,18 @@ function buildSections(input: {
   return Object.freeze(sections);
 }
 
-function projectBriefDocument(
+async function projectBriefDocument(
   context: AuthorizationContext,
   org: OrgResearchRecord,
   briefRef: ReturnType<typeof briefPublicRefFor>,
-): BriefDocumentPageView {
+  repositories?: RepositoryBundle,
+): Promise<BriefDocumentPageView> {
   const { state, stateMessage } = resolveDocumentState(org);
-  const store = loadFinancialInstitutionsStore();
-  const evidence = store.evidence.filter(
-    (item) => item.tenantId === context.tenant.id && item.organizationId === org.organizationId,
+  const { evidence, provenanceById } = await loadOrganizationEvidenceCatalog(
+    context,
+    org.organizationId,
+    repositories,
   );
-  const provenanceById = new Map(store.provenance.map((item) => [item.id, item] as const));
   const permitted = visibleEvidence(context, org, evidence, provenanceById);
   const canReadEvidence = hasPermission(context, "evidence:read");
   const evidenceCoverage = buildEvidenceCoverage(permitted.length, canReadEvidence);
@@ -839,6 +843,7 @@ function projectBriefDocument(
 export async function buildBriefDirectoryPageView(
   context: AuthorizationContext,
   searchParams: URLSearchParams | Record<string, string | string[] | undefined>,
+  repositories?: RepositoryBundle,
 ): Promise<BriefDirectoryPageView> {
   try {
     requireBriefReadAccess(context);
@@ -874,7 +879,7 @@ export async function buildBriefDirectoryPageView(
   }
 
   try {
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
     const selected = parsed.query.orgRef;
     const candidates: BriefDirectoryCandidateView[] = [...model.organizations]
       .sort((a, b) => a.displayName.localeCompare(b.displayName, "en"))
@@ -969,6 +974,7 @@ export async function buildBriefDirectoryPageView(
 export async function buildBriefDocumentPageView(
   context: AuthorizationContext,
   briefRefParam: string,
+  repositories?: RepositoryBundle,
 ): Promise<BriefDocumentPageView> {
   const directoryHref = briefDirectoryHref();
 
@@ -1004,7 +1010,7 @@ export async function buildBriefDocumentPageView(
   }
 
   try {
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
     const org = model.organizations.find(
       (item) => briefPublicRefFor(context.tenant.id, item.organizationId) === briefRef,
     );
@@ -1034,7 +1040,7 @@ export async function buildBriefDocumentPageView(
       );
     }
 
-    const projected = projectBriefDocument(context, org, briefRef);
+    const projected = await projectBriefDocument(context, org, briefRef, repositories);
     return finalizeBriefView(context, projected);
   } catch (error) {
     if (error instanceof AuthorizationError) {

@@ -20,8 +20,10 @@ import type {
 import {
   getTenantResearchReadModel,
   type OrgResearchRecord,
+  type TenantResearchReadModel,
 } from "@/application/research-read-model";
-import { loadFinancialInstitutionsStore } from "@/repositories/synthetic-organization-repository";
+import { loadTenantEvidenceCatalog } from "@/application/tenant-evidence-access";
+import type { RepositoryBundle } from "@/repositories/repository-contracts";
 import { DATASET_DECLARATION } from "@/verticals/financial-institutions/schema";
 import { FINANCIAL_INSTITUTIONS_VOCABULARY } from "@/verticals/financial-institutions/vocabulary";
 
@@ -160,9 +162,7 @@ function activeFilters(query: EvidenceCatalogQuery): EvidenceCatalogPageView["ac
   return Object.freeze(rows);
 }
 
-function orgById(
-  model: ReturnType<typeof getTenantResearchReadModel>,
-): Map<string, OrgResearchRecord> {
+function orgById(model: TenantResearchReadModel): Map<string, OrgResearchRecord> {
   return new Map(model.organizations.map((org) => [org.organizationId, org] as const));
 }
 
@@ -180,7 +180,7 @@ type EvidenceAssociations = {
 };
 
 function evidenceAssociations(
-  model: ReturnType<typeof getTenantResearchReadModel>,
+  model: TenantResearchReadModel,
 ): ReadonlyMap<string, EvidenceAssociations> {
   const mutable = new Map<string, { capabilities: Set<string>; outcomes: Set<string> }>();
   for (const org of model.organizations) {
@@ -326,13 +326,14 @@ function provenanceRow(item: ProvenanceRecord): ProvenanceCatalogRowView {
 export async function buildEvidenceCatalogPageView(
   context: AuthorizationContext,
   searchParams: Record<string, string | string[] | undefined>,
+  repositories?: RepositoryBundle,
 ): Promise<EvidenceCatalogPageView> {
   const parsed = parseEvidenceCatalogSearchParams(searchParams);
   const defaults = parsed.ok ? parsed.query : parsed.defaults;
 
   try {
     assertPermission(context, "evidence:read");
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context, repositories);
 
     if (!parsed.ok) {
       return deepFreeze({
@@ -356,10 +357,13 @@ export async function buildEvidenceCatalogPageView(
     }
 
     const query = parsed.query;
-    const store = loadFinancialInstitutionsStore();
+    const { evidence: tenantEvidence, provenanceById } = await loadTenantEvidenceCatalog(
+      context,
+      model,
+      repositories,
+    );
     const orgs = orgById(model);
     const associations = evidenceAssociations(model);
-    const tenantEvidence = store.evidence.filter((item) => item.tenantId === context.tenant.id);
     const filteredEvidence = filterEvidence(
       tenantEvidence,
       query,
@@ -375,11 +379,6 @@ export async function buildEvidenceCatalogPageView(
         a.evidenceType.localeCompare(b.evidenceType, "en")
       );
     });
-    const provenanceById = new Map(
-      store.provenance
-        .filter((item) => item.tenantId === context.tenant.id)
-        .map((item) => [item.id, item] as const),
-    );
 
     const rows =
       query.view === "evidence"

@@ -31,13 +31,13 @@ function setDemoEnv(): void {
   process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
 }
 
-function publicRefs(count: number) {
-  const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+async function publicRefs(count: number) {
+  const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
   return model.organizations.slice(0, count).map((org) => org.publicRef);
 }
 
-function refsWithMixedAssessmentStates() {
-  const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+async function refsWithMixedAssessmentStates() {
+  const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
   const assessed = model.organizations.find((org) => org.portfolio.status === "assessed");
   const insufficient = model.organizations.find(
     (org) => org.portfolio.status === "insufficient_evidence",
@@ -58,10 +58,14 @@ describe("buildComparePageView Batch 2 projections", () => {
 
   it("returns empty, partial, and ready states for 0/1/2/3 organizations", async () => {
     const empty = await buildComparePageView(getDemoAuthorizationContext(), {});
-    const [one] = publicRefs(1);
+    const [one] = await publicRefs(1);
     const partial = await buildComparePageView(getDemoAuthorizationContext(), { org: one });
-    const two = await buildComparePageView(getDemoAuthorizationContext(), { org: publicRefs(2) });
-    const three = await buildComparePageView(getDemoAuthorizationContext(), { org: publicRefs(3) });
+    const two = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: await publicRefs(2),
+    });
+    const three = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: await publicRefs(3),
+    });
     expect(empty.state).toBe("empty");
     expect(partial.state).toBe("partial");
     expect(two.state).toBe("ready");
@@ -73,7 +77,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("exposes redacted candidates for selection without raw IDs", async () => {
-    const [one] = publicRefs(1);
+    const [one] = await publicRefs(1);
     const empty = await buildComparePageView(getDemoAuthorizationContext(), {});
     const partial = await buildComparePageView(getDemoAuthorizationContext(), { org: one });
     expect(empty.candidates.length).toBeGreaterThan(2);
@@ -89,7 +93,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("keeps column order as URL selection order without ranking by score", async () => {
-    const refs = publicRefs(3);
+    const refs = await publicRefs(3);
     const reversed = [...refs].reverse();
     const forward = await buildComparePageView(getDemoAuthorizationContext(), { org: refs });
     const backward = await buildComparePageView(getDemoAuthorizationContext(), { org: reversed });
@@ -113,7 +117,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("canonicalizes add, remove, replace, duplicate, and max-three selections", async () => {
-    const refs = publicRefs(4);
+    const refs = await publicRefs(4);
     expect(refs).toHaveLength(4);
     const [a, b, c, d] = refs as [string, string, string, string];
     const two = await buildComparePageView(getDemoAuthorizationContext(), { org: [a, b] });
@@ -162,7 +166,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("projects mixed assessment states without declaring a winner", async () => {
-    const refs = refsWithMixedAssessmentStates();
+    const refs = await refsWithMixedAssessmentStates();
     const view = await buildComparePageView(getDemoAuthorizationContext(), { org: [...refs] });
     expect(view.state).toBe("ready");
     const statuses = view.columns.map((column) => column.assessmentStatusLabel).sort();
@@ -181,7 +185,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("marks insufficient-evidence gaps without treating missing evidence as a missing capability", async () => {
-    const refs = refsWithMixedAssessmentStates();
+    const refs = await refsWithMixedAssessmentStates();
     const view = await buildComparePageView(getDemoAuthorizationContext(), { org: [...refs] });
     const insufficient = view.columns.find(
       (column) => column.assessmentStatusLabel === "Insufficient evidence",
@@ -198,7 +202,9 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("emits same and different difference states with fixed labels and stable ordering", async () => {
-    const view = await buildComparePageView(getDemoAuthorizationContext(), { org: publicRefs(3) });
+    const view = await buildComparePageView(getDemoAuthorizationContext(), {
+      org: await publicRefs(3),
+    });
     expect(view.differences.length).toBeGreaterThan(3);
     const keys = view.differences.map((row) => row.dimensionKey);
     expect(keys).toEqual([...keys].sort((a, b) => a.localeCompare(b, "en")));
@@ -213,7 +219,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("withholds overlay details without revealing existence when overlay:read is denied", async () => {
-    const refs = publicRefs(2);
+    const refs = await publicRefs(2);
     const denied = await buildComparePageView(withoutPermission("overlay:read"), { org: refs });
     const allowed = await buildComparePageView(getDemoAuthorizationContext(), { org: refs });
     expect(denied.columns.every((column) => column.overlay.access === "restricted")).toBe(true);
@@ -227,7 +233,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("does not leak restricted evidence counts or titles without evidence:restricted_read", async () => {
-    const refs = publicRefs(2);
+    const refs = await publicRefs(2);
     const analyst = await buildComparePageView(getDemoAuthorizationContext(), { org: refs });
     const admin = await buildComparePageView(adminContext(), { org: refs });
     const analystCounts = analyst.columns.map((column) =>
@@ -243,7 +249,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("keeps serialized views free of raw IDs and private notes", async () => {
-    const view = await buildComparePageView(adminContext(), { org: publicRefs(3) });
+    const view = await buildComparePageView(adminContext(), { org: await publicRefs(3) });
     const serialized = JSON.stringify(view);
     expect(serialized).not.toMatch(FORBIDDEN);
     expect(serialized).not.toMatch(/"organizationId"|"capabilityId"|"evidenceId"|"provenanceId"/);
@@ -251,7 +257,7 @@ describe("buildComparePageView Batch 2 projections", () => {
   });
 
   it("fails closed without organization or assessment read permission", async () => {
-    const refs = publicRefs(2);
+    const refs = await publicRefs(2);
     const missingOrg = await buildComparePageView(withoutPermission("organization:read"), {
       org: refs,
     });

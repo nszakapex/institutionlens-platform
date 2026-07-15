@@ -26,8 +26,8 @@ function adminWithRestrictedEvidence() {
   ]);
 }
 
-function firstOrgRef() {
-  const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+async function firstOrgRef() {
+  const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
   return organizationPublicRefFor(model.organizations[0]!.organizationId);
 }
 
@@ -108,7 +108,7 @@ describe("evidence catalog service", () => {
   });
 
   it("filters by org ref and multi-select values while ignoring tenant override params", async () => {
-    const orgRef = firstOrgRef();
+    const orgRef = await firstOrgRef();
     const view = await buildEvidenceCatalogPageView(getDemoAuthorizationContext(), {
       orgRef,
       evidenceType: ["organization_profile", "public_change_signal"],
@@ -128,7 +128,7 @@ describe("evidence catalog service", () => {
   });
 
   it("does not let cross-tenant org refs broaden catalog results", async () => {
-    const orgRef = firstOrgRef();
+    const orgRef = await firstOrgRef();
     const tenant = { ...DEMO_TENANT, id: "tenant_other_demo" };
     const principal = {
       ...DEMO_ANALYST,

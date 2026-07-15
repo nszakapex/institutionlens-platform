@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { loadRepositoryConfig } from "@/repositories/repository-config";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
@@ -35,10 +36,11 @@ export default async function RootLayout({
 }>) {
   const headerStore = await headers();
   const nonce = headerStore.get("x-nonce") ?? undefined;
+  const appMode = loadRepositoryConfig().mode;
 
   return (
     <html lang="en">
-      <body data-app-mode="local-demo" data-nonce={nonce ? "present" : "absent"}>
+      <body data-app-mode={appMode} data-nonce={nonce ? "present" : "absent"}>
         <a className="skip-link" href="#main">
           Skip to content
         </a>

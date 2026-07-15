@@ -52,7 +52,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("projects an available brief with stable sections and dataset as-of", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const assessed = model.organizations.find(
       (org) =>
         org.portfolio.status === "assessed" &&
@@ -91,7 +91,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("keeps output deterministic and section order stable", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const assessed = model.organizations.find((org) => org.portfolio.status === "assessed");
     if (!assessed) throw new Error("Expected assessed organization");
     const briefRef = tenantBriefRef(assessed.organizationId);
@@ -105,7 +105,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("maps insufficient_evidence without capability-absence or suppressed numeric claims", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const insufficient = model.organizations.find(
       (org) => org.portfolio.status === "insufficient_evidence",
     );
@@ -127,7 +127,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("maps not_published without exposing suppressed assessment details", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const withheld = model.organizations.find(
       (org) =>
         org.portfolio.status === "assessed" &&
@@ -150,7 +150,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("handles mixed capability publication states without inventing numeric fit", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const mixed = model.organizations.find((org) =>
       org.capabilityAssessments.some(
         (assessment) =>
@@ -174,7 +174,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("links evidence-backed observations to permitted provenance labels", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const assessed = model.organizations.find((org) => org.portfolio.status === "assessed");
     if (!assessed) throw new Error("Expected assessed organization");
     const view = await buildBriefDocumentPageView(
@@ -198,7 +198,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("filters restricted evidence before counts without revealing withheld existence", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const withRestricted = model.organizations.find((org) => org.portfolio.status === "assessed");
     if (!withRestricted) throw new Error("Expected assessed organization");
     const briefRef = tenantBriefRef(withRestricted.organizationId);
@@ -219,7 +219,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("requires evidence classification rows to carry permitted supporting titles", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const assessed = model.organizations.find((org) => org.portfolio.status === "assessed");
     if (!assessed) throw new Error("Expected assessed organization");
     const view = await buildBriefDocumentPageView(
@@ -242,7 +242,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("exposes only overlay access state when overlay:read is denied", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const withOverlay = model.organizations.find((org) => org.overlay !== null);
     if (!withOverlay) throw new Error("Expected organization with overlay");
     const denied = await buildBriefDocumentPageView(
@@ -293,7 +293,7 @@ describe("brief service Batch 2 projections", () => {
         return base.permissions;
       },
     } as typeof base;
-    const model = getTenantResearchReadModel(base);
+    const model = await getTenantResearchReadModel(base);
     const org = model.organizations[0];
     if (!org) throw new Error("Expected organization");
     permissionReads = 0;
@@ -315,7 +315,7 @@ describe("brief service Batch 2 projections", () => {
   });
 
   it("does not recalculate Phase 4 scores relative to the research read model", async () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     const assessed = model.organizations.find(
       (org) =>
         org.portfolio.status === "assessed" &&

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createAuthorizationContext } from "@/authorization/context";
 import {
   DEMO_ANALYST,
@@ -9,15 +9,21 @@ import { getTenantResearchReadModel } from "@/application/research-read-model";
 import { TenantSchema, PrincipalSchema } from "@/domain/schemas/tenant";
 
 describe("research read model isolation", () => {
-  it("scopes organizations to the authorized tenant", () => {
-    const model = getTenantResearchReadModel(getDemoAuthorizationContext());
+  beforeEach(() => {
+    process.env.IL_APP_MODE = "local-demo";
+    process.env.IL_DEMO_TENANT_ID = "demo-tenant-local";
+    process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
+  });
+
+  it("scopes organizations to the authorized tenant", async () => {
+    const model = await getTenantResearchReadModel(getDemoAuthorizationContext());
     expect(model.tenantId).toBe(DEMO_TENANT.id);
     expect(model.organizations).toHaveLength(24);
     expect(Object.isFrozen(model)).toBe(true);
     expect(Object.isFrozen(model.organizations)).toBe(true);
   });
 
-  it("fails closed for a different tenant without data leakage", () => {
+  it("fails closed for a different tenant without data leakage", async () => {
     const otherTenant = TenantSchema.parse({
       ...DEMO_TENANT,
       id: "tenant_other_research",
@@ -32,13 +38,13 @@ describe("research read model isolation", () => {
       "organization:read",
       "assessment:read",
     ]);
-    const model = getTenantResearchReadModel(context);
+    const model = await getTenantResearchReadModel(context);
     expect(model.tenantId).toBe(otherTenant.id);
     expect(model.organizations).toHaveLength(0);
   });
 
-  it("does not reuse authorization across missing permissions", () => {
+  it("does not reuse authorization across missing permissions", async () => {
     const context = createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, ["organization:read"]);
-    expect(() => getTenantResearchReadModel(context)).toThrow();
+    await expect(getTenantResearchReadModel(context)).rejects.toThrow();
   });
 });
