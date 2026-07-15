@@ -1,10 +1,10 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS preparation (unapplied)
+**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging)
 
-**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective applied; Batch 4 RLS preparation complete and unapplied
+**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective applied; Batch 4 RLS migration applied on staging; Auth attack tests pending
 
-**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` applied; `20260715200000` not applied; no Auth users; no deployment
+**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` + `20260715200000` applied; live verifier 12/12; no Auth users; no deployment
 
 ## Batch 1 requirements
 

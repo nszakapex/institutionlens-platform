@@ -288,6 +288,88 @@ export const VIEWER_PUBLICATION_GATED_TABLES = [
 
 export const SELF_ONLY_TABLES = ["memberships", "saved_comparisons"] as const;
 
+/** Exact authenticated column-grant matrix for every core table (column-only SELECT). */
+export const AUTHENTICATED_COLUMN_GRANT_MATRIX: Readonly<Record<string, readonly string[]>> = {
+  ...VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST,
+  import_runs: [
+    "id",
+    "tenant_id",
+    "public_ref",
+    "initiated_by_membership_id",
+    "source_key",
+    "idempotency_key",
+    "input_checksum",
+    "contract_version",
+    "source_policy_version",
+    "status",
+    "dry_run",
+    "record_counts",
+    "safe_error_summary",
+    "queued_at",
+    "started_at",
+    "finished_at",
+    "cleanup_after",
+    "created_at",
+  ],
+  provenance_records: [
+    "id",
+    "tenant_id",
+    "import_run_id",
+    "source_key",
+    "source_type",
+    "source_name",
+    "retrieved_at",
+    "published_at",
+    "reporting_period_start",
+    "reporting_period_end",
+    "checksum",
+    "license_status",
+    "access_classification",
+    "validation_status",
+    "synthetic",
+    "data_classification",
+    "created_at",
+    "updated_at",
+  ],
+  organization_overlays: [
+    "id",
+    "tenant_id",
+    "organization_id",
+    "schema_version",
+    "relationship_status",
+    "capability_usage",
+    "match_status",
+    "review_status",
+    "source_classification",
+    "effective_at",
+    "created_at",
+    "updated_at",
+  ],
+  audit_events: [
+    "id",
+    "tenant_id",
+    "event_ref",
+    "actor_membership_ref",
+    "request_id",
+    "event_type",
+    "outcome",
+    "target_type",
+    "target_opaque_ref",
+    "redacted_metadata",
+    "occurred_at",
+    "retention_expires_at",
+  ],
+};
+
+export function authenticatedColumnGrantPairs(): readonly {
+  table: string;
+  column: string;
+}[] {
+  return Object.entries(AUTHENTICATED_COLUMN_GRANT_MATRIX).flatMap(([table, columns]) =>
+    columns.map((column) => ({ table, column })),
+  );
+}
+
 function normalizeSql(sql: string): string {
   return sql
     .replace(/--[^\r\n]*/g, " ")
@@ -343,6 +425,50 @@ function countMatches(value: string, pattern: RegExp): number {
   return [...value.matchAll(pattern)].length;
 }
 
+export function validateAuthenticatedColumnGrantMatrix(sql: string): string[] {
+  const findings: string[] = [];
+  const normalized = normalizeSql(sql);
+  const grants = parseColumnGrants(normalized);
+  const matrixTables = Object.keys(AUTHENTICATED_COLUMN_GRANT_MATRIX).sort();
+  const coreSorted = [...CORE_TABLES].sort();
+  if (!sortedEqual(matrixTables, coreSorted)) {
+    findings.push(
+      "Authenticated column-grant matrix must cover every InstitutionLens core table exactly once.",
+    );
+  }
+
+  for (const table of CORE_TABLES) {
+    const granted = grants.get(table);
+    const expected = [...(AUTHENTICATED_COLUMN_GRANT_MATRIX[table] ?? [])].sort();
+    if (!granted) {
+      findings.push(`Missing required column SELECT grants for ${table}.`);
+      continue;
+    }
+    if (!sortedEqual(granted, expected)) {
+      findings.push(
+        `Authenticated column-grant matrix mismatch for ${table}: missing or extra column grants are not acceptable.`,
+      );
+    }
+  }
+
+  for (const withheld of WITHHELD_COLUMNS) {
+    const granted = grants.get(withheld.table) ?? [];
+    if (granted.includes(withheld.column)) {
+      findings.push(
+        `Authenticated grants must not expose withheld column ${withheld.table}.${withheld.column}.`,
+      );
+    }
+    const matrixColumns = AUTHENTICATED_COLUMN_GRANT_MATRIX[withheld.table] ?? [];
+    if (matrixColumns.includes(withheld.column)) {
+      findings.push(
+        `Authenticated column-grant matrix must not include withheld column ${withheld.table}.${withheld.column}.`,
+      );
+    }
+  }
+
+  return findings;
+}
+
 export function validateViewerPublicationSafeAllowlist(sql: string): string[] {
   const findings: string[] = [];
   const normalized = normalizeSql(sql);
@@ -356,6 +482,8 @@ export function validateViewerPublicationSafeAllowlist(sql: string): string[] {
       "Viewer allowlist plus denied tables must cover every InstitutionLens core table exactly once.",
     );
   }
+
+  findings.push(...validateAuthenticatedColumnGrantMatrix(sql));
 
   for (const [table, allowedColumns] of Object.entries(VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST)) {
     const granted = grants.get(table);

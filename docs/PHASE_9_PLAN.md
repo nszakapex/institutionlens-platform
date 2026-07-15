@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective migrations applied; Batch 4 authenticated read RLS preparation complete (unapplied); Auth/session binding and runtime cutover pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS migrations applied on staging; live verifier 12/12; Auth/session binding, attack tests, and runtime cutover pending
 
 **Depends on:** Phases 0-8
 

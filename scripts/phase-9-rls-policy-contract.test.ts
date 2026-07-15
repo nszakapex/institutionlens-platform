@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  AUTHENTICATED_COLUMN_GRANT_MATRIX,
   EXPECTED_SELECT_POLICIES,
   PHASE_9_RLS_MIGRATION_PATH,
   PHASE_9_RLS_MIGRATION_VERSION,
@@ -9,10 +10,12 @@ import {
   VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST,
   parseColumnGrants,
   readAndValidatePhase9RlsPolicies,
+  validateAuthenticatedColumnGrantMatrix,
   validatePhase9RlsMigration,
   validatePhase9RlsRollback,
   validateViewerPublicationSafeAllowlist,
 } from "./phase-9-rls-policy-contract";
+import { CORE_TABLES } from "./phase-9-schema-contract";
 import {
   PHASE_9_CORRECTIVE_MIGRATION_VERSION,
   PRIVILEGED_API_ROLE,
@@ -30,17 +33,23 @@ describe("Phase 9 authenticated read RLS policy contract", () => {
 
   it("enforces an explicit viewer publication-safe table/column allowlist", () => {
     expect(validateViewerPublicationSafeAllowlist(migration)).toEqual([]);
+    expect(validateAuthenticatedColumnGrantMatrix(migration)).toEqual([]);
+    expect(Object.keys(AUTHENTICATED_COLUMN_GRANT_MATRIX).sort()).toEqual([...CORE_TABLES].sort());
     const grants = parseColumnGrants(
       migration
         .replace(/--[^\r\n]*/g, " ")
         .replace(/\s+/g, " ")
         .toLowerCase(),
     );
+    for (const [table, columns] of Object.entries(AUTHENTICATED_COLUMN_GRANT_MATRIX)) {
+      expect(grants.get(table)).toEqual([...columns].sort());
+    }
     for (const [table, columns] of Object.entries(VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST)) {
       expect(grants.get(table)).toEqual([...columns].sort());
     }
     for (const table of VIEWER_DENIED_TABLES) {
       expect(VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST[table]).toBeUndefined();
+      expect(AUTHENTICATED_COLUMN_GRANT_MATRIX[table]?.length).toBeGreaterThan(0);
     }
 
     const extraColumn = migration.replace(

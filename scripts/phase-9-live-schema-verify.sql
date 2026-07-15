@@ -321,6 +321,315 @@ allowed_helper_functions(function_name) as (
     ('own_membership_ids'),
     ('active_member_has_roles')
 ),
+-- BEGIN_AUTHENTICATED_COLUMN_GRANT_MATRIX
+expected_column_grants(table_name, column_name) as (
+  values
+    ('assessment_results', 'assessed_at'),
+    ('assessment_results', 'assessment_run_id'),
+    ('assessment_results', 'completeness'),
+    ('assessment_results', 'confidence'),
+    ('assessment_results', 'coverage'),
+    ('assessment_results', 'created_at'),
+    ('assessment_results', 'fit_status'),
+    ('assessment_results', 'freshness'),
+    ('assessment_results', 'id'),
+    ('assessment_results', 'observed_fit_band'),
+    ('assessment_results', 'opportunity_contexts'),
+    ('assessment_results', 'organization_id'),
+    ('assessment_results', 'points_awarded'),
+    ('assessment_results', 'points_possible'),
+    ('assessment_results', 'publication_eligibility'),
+    ('assessment_results', 'tenant_id'),
+    ('assessment_runs', 'adapter_version'),
+    ('assessment_runs', 'completed_at'),
+    ('assessment_runs', 'created_at'),
+    ('assessment_runs', 'domain_schema_version'),
+    ('assessment_runs', 'engine_version'),
+    ('assessment_runs', 'evidence_fingerprint'),
+    ('assessment_runs', 'failure_code'),
+    ('assessment_runs', 'id'),
+    ('assessment_runs', 'manifest'),
+    ('assessment_runs', 'methodology_version'),
+    ('assessment_runs', 'organization_id'),
+    ('assessment_runs', 'output_fingerprint'),
+    ('assessment_runs', 'portfolio_ref'),
+    ('assessment_runs', 'portfolio_version'),
+    ('assessment_runs', 'public_ref'),
+    ('assessment_runs', 'publication_eligibility'),
+    ('assessment_runs', 'published_at'),
+    ('assessment_runs', 'requested_at'),
+    ('assessment_runs', 'started_at'),
+    ('assessment_runs', 'status'),
+    ('assessment_runs', 'synthetic'),
+    ('assessment_runs', 'tenant_id'),
+    ('assessment_runs', 'vertical_id'),
+    ('audit_events', 'actor_membership_ref'),
+    ('audit_events', 'event_ref'),
+    ('audit_events', 'event_type'),
+    ('audit_events', 'id'),
+    ('audit_events', 'occurred_at'),
+    ('audit_events', 'outcome'),
+    ('audit_events', 'redacted_metadata'),
+    ('audit_events', 'request_id'),
+    ('audit_events', 'retention_expires_at'),
+    ('audit_events', 'target_opaque_ref'),
+    ('audit_events', 'target_type'),
+    ('audit_events', 'tenant_id'),
+    ('brief_snapshots', 'approved_at'),
+    ('brief_snapshots', 'approved_by_membership_id'),
+    ('brief_snapshots', 'assessment_run_id'),
+    ('brief_snapshots', 'content'),
+    ('brief_snapshots', 'content_fingerprint'),
+    ('brief_snapshots', 'created_at'),
+    ('brief_snapshots', 'created_by_membership_id'),
+    ('brief_snapshots', 'id'),
+    ('brief_snapshots', 'organization_id'),
+    ('brief_snapshots', 'public_ref'),
+    ('brief_snapshots', 'publication_eligibility'),
+    ('brief_snapshots', 'retention_expires_at'),
+    ('brief_snapshots', 'source_manifest'),
+    ('brief_snapshots', 'state'),
+    ('brief_snapshots', 'template_version'),
+    ('brief_snapshots', 'tenant_id'),
+    ('brief_snapshots', 'updated_at'),
+    ('capability_results', 'assessed_at'),
+    ('capability_results', 'assessment_result_id'),
+    ('capability_results', 'assessment_run_id'),
+    ('capability_results', 'capability_ref'),
+    ('capability_results', 'completeness'),
+    ('capability_results', 'confidence'),
+    ('capability_results', 'created_at'),
+    ('capability_results', 'fit_status'),
+    ('capability_results', 'freshness'),
+    ('capability_results', 'id'),
+    ('capability_results', 'observed_fit_band'),
+    ('capability_results', 'organization_id'),
+    ('capability_results', 'points_awarded'),
+    ('capability_results', 'points_possible'),
+    ('capability_results', 'publication_eligibility'),
+    ('capability_results', 'rule_set_ref'),
+    ('capability_results', 'rule_set_version'),
+    ('capability_results', 'tenant_id'),
+    ('evidence_dependencies', 'created_at'),
+    ('evidence_dependencies', 'evidence_id'),
+    ('evidence_dependencies', 'id'),
+    ('evidence_dependencies', 'input_evidence_id'),
+    ('evidence_dependencies', 'organization_id'),
+    ('evidence_dependencies', 'tenant_id'),
+    ('evidence_records', 'access_classification'),
+    ('evidence_records', 'adapter_version'),
+    ('evidence_records', 'calculation_descriptor'),
+    ('evidence_records', 'confidence'),
+    ('evidence_records', 'created_at'),
+    ('evidence_records', 'data_classification'),
+    ('evidence_records', 'domain_schema_version'),
+    ('evidence_records', 'effective_period_end'),
+    ('evidence_records', 'effective_period_start'),
+    ('evidence_records', 'epistemic_status'),
+    ('evidence_records', 'evidence_type'),
+    ('evidence_records', 'freshness'),
+    ('evidence_records', 'id'),
+    ('evidence_records', 'import_run_id'),
+    ('evidence_records', 'observation'),
+    ('evidence_records', 'observed_at'),
+    ('evidence_records', 'organization_id'),
+    ('evidence_records', 'provenance_id'),
+    ('evidence_records', 'publication_eligibility'),
+    ('evidence_records', 'rule_set_ref'),
+    ('evidence_records', 'safe_search_text'),
+    ('evidence_records', 'source_key'),
+    ('evidence_records', 'staleness_reason'),
+    ('evidence_records', 'summary'),
+    ('evidence_records', 'superseded_at'),
+    ('evidence_records', 'synthetic'),
+    ('evidence_records', 'tenant_id'),
+    ('evidence_records', 'title'),
+    ('evidence_records', 'updated_at'),
+    ('evidence_records', 'vertical_id'),
+    ('import_runs', 'cleanup_after'),
+    ('import_runs', 'contract_version'),
+    ('import_runs', 'created_at'),
+    ('import_runs', 'dry_run'),
+    ('import_runs', 'finished_at'),
+    ('import_runs', 'id'),
+    ('import_runs', 'idempotency_key'),
+    ('import_runs', 'initiated_by_membership_id'),
+    ('import_runs', 'input_checksum'),
+    ('import_runs', 'public_ref'),
+    ('import_runs', 'queued_at'),
+    ('import_runs', 'record_counts'),
+    ('import_runs', 'safe_error_summary'),
+    ('import_runs', 'source_key'),
+    ('import_runs', 'source_policy_version'),
+    ('import_runs', 'started_at'),
+    ('import_runs', 'status'),
+    ('import_runs', 'tenant_id'),
+    ('memberships', 'created_at'),
+    ('memberships', 'id'),
+    ('memberships', 'invited_at'),
+    ('memberships', 'invited_by_membership_id'),
+    ('memberships', 'joined_at'),
+    ('memberships', 'public_ref'),
+    ('memberships', 'removed_at'),
+    ('memberships', 'role'),
+    ('memberships', 'status'),
+    ('memberships', 'suspended_at'),
+    ('memberships', 'tenant_id'),
+    ('memberships', 'updated_at'),
+    ('organization_overlays', 'capability_usage'),
+    ('organization_overlays', 'created_at'),
+    ('organization_overlays', 'effective_at'),
+    ('organization_overlays', 'id'),
+    ('organization_overlays', 'match_status'),
+    ('organization_overlays', 'organization_id'),
+    ('organization_overlays', 'relationship_status'),
+    ('organization_overlays', 'review_status'),
+    ('organization_overlays', 'schema_version'),
+    ('organization_overlays', 'source_classification'),
+    ('organization_overlays', 'tenant_id'),
+    ('organization_overlays', 'updated_at'),
+    ('organizations', 'adapter_version'),
+    ('organizations', 'archived_at'),
+    ('organizations', 'created_at'),
+    ('organizations', 'data_classification'),
+    ('organizations', 'display_name'),
+    ('organizations', 'domain_schema_version'),
+    ('organizations', 'external_references'),
+    ('organizations', 'id'),
+    ('organizations', 'legal_name'),
+    ('organizations', 'lifecycle_status'),
+    ('organizations', 'organization_type'),
+    ('organizations', 'primary_location'),
+    ('organizations', 'public_ref'),
+    ('organizations', 'source_key'),
+    ('organizations', 'summary'),
+    ('organizations', 'synthetic'),
+    ('organizations', 'tags'),
+    ('organizations', 'tenant_id'),
+    ('organizations', 'updated_at'),
+    ('organizations', 'vertical_id'),
+    ('organizations', 'vertical_payload'),
+    ('provenance_records', 'access_classification'),
+    ('provenance_records', 'checksum'),
+    ('provenance_records', 'created_at'),
+    ('provenance_records', 'data_classification'),
+    ('provenance_records', 'id'),
+    ('provenance_records', 'import_run_id'),
+    ('provenance_records', 'license_status'),
+    ('provenance_records', 'published_at'),
+    ('provenance_records', 'reporting_period_end'),
+    ('provenance_records', 'reporting_period_start'),
+    ('provenance_records', 'retrieved_at'),
+    ('provenance_records', 'source_key'),
+    ('provenance_records', 'source_name'),
+    ('provenance_records', 'source_type'),
+    ('provenance_records', 'synthetic'),
+    ('provenance_records', 'tenant_id'),
+    ('provenance_records', 'updated_at'),
+    ('provenance_records', 'validation_status'),
+    ('rule_result_evidence', 'created_at'),
+    ('rule_result_evidence', 'evidence_id'),
+    ('rule_result_evidence', 'id'),
+    ('rule_result_evidence', 'organization_id'),
+    ('rule_result_evidence', 'rule_result_id'),
+    ('rule_result_evidence', 'tenant_id'),
+    ('rule_results', 'assessment_run_id'),
+    ('rule_results', 'capability_result_id'),
+    ('rule_results', 'created_at'),
+    ('rule_results', 'engine_version'),
+    ('rule_results', 'epistemic_states'),
+    ('rule_results', 'evaluated_at'),
+    ('rule_results', 'factor_category'),
+    ('rule_results', 'freshness_states'),
+    ('rule_results', 'id'),
+    ('rule_results', 'maximum_points'),
+    ('rule_results', 'organization_id'),
+    ('rule_results', 'outcome'),
+    ('rule_results', 'points_awarded'),
+    ('rule_results', 'publication_eligibility'),
+    ('rule_results', 'reason'),
+    ('rule_results', 'reason_code'),
+    ('rule_results', 'rule_ref'),
+    ('rule_results', 'rule_set_version'),
+    ('rule_results', 'synthetic'),
+    ('rule_results', 'tenant_id'),
+    ('saved_comparison_organizations', 'created_at'),
+    ('saved_comparison_organizations', 'id'),
+    ('saved_comparison_organizations', 'organization_id'),
+    ('saved_comparison_organizations', 'position'),
+    ('saved_comparison_organizations', 'saved_comparison_id'),
+    ('saved_comparison_organizations', 'tenant_id'),
+    ('saved_comparisons', 'archived_at'),
+    ('saved_comparisons', 'created_at'),
+    ('saved_comparisons', 'created_by_membership_id'),
+    ('saved_comparisons', 'id'),
+    ('saved_comparisons', 'name'),
+    ('saved_comparisons', 'public_ref'),
+    ('saved_comparisons', 'status'),
+    ('saved_comparisons', 'tenant_id'),
+    ('saved_comparisons', 'updated_at'),
+    ('tenant_verticals', 'adapter_version'),
+    ('tenant_verticals', 'created_at'),
+    ('tenant_verticals', 'id'),
+    ('tenant_verticals', 'status'),
+    ('tenant_verticals', 'tenant_id'),
+    ('tenant_verticals', 'updated_at'),
+    ('tenant_verticals', 'vertical_id'),
+    ('tenants', 'created_at'),
+    ('tenants', 'data_classification'),
+    ('tenants', 'deletion_requested_at'),
+    ('tenants', 'demo'),
+    ('tenants', 'display_name'),
+    ('tenants', 'id'),
+    ('tenants', 'public_ref'),
+    ('tenants', 'status'),
+    ('tenants', 'suspended_at'),
+    ('tenants', 'updated_at')
+),
+live_column_grants as (
+  select
+    column_privileges.table_name::text as table_name,
+    column_privileges.column_name::text as column_name
+  from information_schema.column_privileges
+  where column_privileges.grantee = 'authenticated'
+    and column_privileges.table_schema = 'institutionlens'
+    and column_privileges.privilege_type = 'SELECT'
+),
+column_grant_matrix_violations as (
+  select expected.table_name || '.' || expected.column_name as grant_ref
+  from expected_column_grants expected
+  left join live_column_grants live
+    on live.table_name = expected.table_name
+   and live.column_name = expected.column_name
+  where live.column_name is null
+  union all
+  select live.table_name || '.' || live.column_name as grant_ref
+  from live_column_grants live
+  left join expected_column_grants expected
+    on expected.table_name = live.table_name
+   and expected.column_name = live.column_name
+  where expected.column_name is null
+),
+table_level_select_violations as (
+  select expected.table_name
+  from expected_tables expected
+  where has_table_privilege(
+    'authenticated',
+    format('institutionlens.%I', expected.table_name),
+    'select'
+  )
+),
+required_helper_execute_violations as (
+  select helper.function_name
+  from (
+    values
+      ('accessible_tenant_ids', 'institutionlens.accessible_tenant_ids()'),
+      ('own_membership_ids', 'institutionlens.own_membership_ids()'),
+      ('active_member_has_roles', 'institutionlens.active_member_has_roles(uuid,text[])')
+  ) helper(function_name, signature)
+  where not has_function_privilege('authenticated', helper.signature, 'execute')
+),
+-- END_AUTHENTICATED_COLUMN_GRANT_MATRIX
 withheld_columns(table_name, column_name) as (
   values
     ('provenance_records', 'private_notes'),
@@ -436,6 +745,9 @@ default_acl_violations as (
      or grantee_role.rolname in (select role_name from expected_api_roles)
 ),
 effective_role_privilege_violations as (
+  -- Denied roles must have neither table-level nor column-level access.
+  -- Authenticated SELECT is intentionally column-only, so effective read
+  -- presence is proven with has_any_column_privilege rather than table SELECT.
   select role_name
   from denied_api_roles
   where has_schema_privilege(role_name, 'institutionlens', 'usage')
@@ -443,9 +755,17 @@ effective_role_privilege_violations as (
      or exists (
        select 1
        from expected_tables
+       where has_any_column_privilege(
+         role_name,
+         format('institutionlens.%I', table_name),
+         'select'
+       )
+     )
+     or exists (
+       select 1
+       from expected_tables
        cross join (
          values
-           ('select'),
            ('insert'),
            ('update'),
            ('delete'),
@@ -485,7 +805,7 @@ effective_role_privilege_violations as (
      or exists (
        select 1
        from expected_tables
-       where not has_table_privilege(
+       where not has_any_column_privilege(
          role_name,
          format('institutionlens.%I', table_name),
          'select'
@@ -655,6 +975,9 @@ checks(check_name, passed, expected_value, actual_value) as (
       (select count(*) from schema_acl_violations)
       + (select count(*) from relation_acl_violations)
       + (select count(*) from withheld_column_privilege_violations)
+      + (select count(*) from column_grant_matrix_violations)
+      + (select count(*) from table_level_select_violations)
+      + (select count(*) from required_helper_execute_violations)
       + (select count(*) from function_acl_violations)
       + (select count(*) from default_acl_violations)
       + (select count(*) from effective_role_privilege_violations)
@@ -664,6 +987,9 @@ checks(check_name, passed, expected_value, actual_value) as (
       (select count(*) from schema_acl_violations)
       + (select count(*) from relation_acl_violations)
       + (select count(*) from withheld_column_privilege_violations)
+      + (select count(*) from column_grant_matrix_violations)
+      + (select count(*) from table_level_select_violations)
+      + (select count(*) from required_helper_execute_violations)
       + (select count(*) from function_acl_violations)
       + (select count(*) from default_acl_violations)
       + (select count(*) from effective_role_privilege_violations)

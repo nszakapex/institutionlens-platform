@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { authenticatedColumnGrantPairs, WITHHELD_COLUMNS } from "./phase-9-rls-policy-contract";
 import {
   CORE_TABLES,
   PHASE_9_CORRECTIVE_MIGRATION_PATH,
@@ -127,6 +128,7 @@ const REQUIRED_CATALOG_TOKENS = [
   "aclexplode(",
   "has_schema_privilege(",
   "has_table_privilege(",
+  "has_any_column_privilege(",
   "supabase_migrations.schema_migrations",
 ] as const;
 
@@ -395,6 +397,9 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
     "schema_acl_violations",
     "relation_acl_violations",
     "withheld_column_privilege_violations",
+    "column_grant_matrix_violations",
+    "table_level_select_violations",
+    "required_helper_execute_violations",
     "function_acl_violations",
     "default_acl_violations",
     "effective_role_privilege_violations",
@@ -417,8 +422,59 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
       "Live verifier must prove withheld columns are unreachable for authenticated and denied roles.",
     );
   }
+  const matrixSection = normalizedSql.match(
+    /expected_column_grants\(table_name,column_name\) as \(values ([\s\S]*?)\),live_column_grants/,
+  )?.[1];
+  if (!matrixSection) {
+    findings.push(
+      "Live verifier must declare expected_column_grants values for matrix comparison.",
+    );
+  } else {
+    for (const withheld of WITHHELD_COLUMNS) {
+      if (matrixSection.includes(`('${withheld.table}','${withheld.column}')`)) {
+        findings.push(
+          `Live verifier column-grant matrix must not include withheld ${withheld.table}.${withheld.column}.`,
+        );
+      }
+    }
+  }
+  if (
+    !normalizedSql.includes("column_grant_matrix_violations") ||
+    !normalizedSql.includes("expected_column_grants") ||
+    !normalizedSql.includes("live_column_grants") ||
+    !normalizedSql.includes("information_schema.column_privileges")
+  ) {
+    findings.push(
+      "Live verifier must enforce the exact authenticated column-grant matrix (missing and extra grants fail).",
+    );
+  }
+  for (const pair of authenticatedColumnGrantPairs()) {
+    if (!sql.includes(`('${pair.table}', '${pair.column}')`)) {
+      findings.push(
+        `Live verifier column-grant matrix missing required grant ${pair.table}.${pair.column}.`,
+      );
+    }
+  }
+  if (
+    !normalizedSql.includes("table_level_select_violations") ||
+    !normalizedSql.includes(
+      "has_table_privilege('authenticated',format('institutionlens.%i',expected.table_name),'select')",
+    )
+  ) {
+    findings.push(
+      "Live verifier must reject table-level SELECT for authenticated on every core table.",
+    );
+  }
   if (!normalizedSql.includes("own_membership_ids")) {
     findings.push("Live verifier must allow only the reviewed membership helper functions.");
+  }
+  if (
+    !normalizedSql.includes("required_helper_execute_violations") ||
+    !normalizedSql.includes("has_function_privilege('authenticated'")
+  ) {
+    findings.push(
+      "Live verifier must require EXECUTE on exactly the three reviewed membership helpers.",
+    );
   }
   if (
     !normalizedSql.includes("or grantee_role.rolname = 'authenticated'") ||
@@ -426,6 +482,14 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   ) {
     findings.push(
       "Live verifier must reject table-level authenticated relation ACLs (column grants only).",
+    );
+  }
+  if (
+    normalizedSql.includes("has_any_column_privilege") &&
+    !normalizedSql.includes("column_grant_matrix_violations")
+  ) {
+    findings.push(
+      "Live verifier must not treat partial column grants as sufficient without the exact matrix check.",
     );
   }
   if (!normalizedSql.includes("select 'application_row_count',not value,'0 rows'")) {

@@ -125,6 +125,25 @@ describe("Phase 9 live schema verifier contract", () => {
     );
   });
 
+  it("rejects dropping the exact column-grant matrix or treating partial grants as enough", () => {
+    const withoutMatrix = verifier
+      .replace(/column_grant_matrix_violations/g, "relation_acl_violations")
+      .replace("expected_column_grants", "expected_column_grants_removed");
+    expect(validatePhase9LiveVerifier(withoutMatrix, migration)).toEqual(
+      expect.arrayContaining([
+        "Live verifier must enforce the exact authenticated column-grant matrix (missing and extra grants fail).",
+      ]),
+    );
+
+    const withWithheld = verifier.replace(
+      "('provenance_records', 'source_name')",
+      "('provenance_records', 'source_name'),\n    ('provenance_records', 'private_notes')",
+    );
+    expect(validatePhase9LiveVerifier(withWithheld, migration)).toContain(
+      "Live verifier column-grant matrix must not include withheld provenance_records.private_notes.",
+    );
+  });
+
   it("rejects an omitted API role", () => {
     const weakened = verifier.replace(
       /values \('anon'\), \('authenticated'\), \('service_[a-z]+'\)/,

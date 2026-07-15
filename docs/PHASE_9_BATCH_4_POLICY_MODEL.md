@@ -1,6 +1,6 @@
 # Phase 9 Batch 4 authenticated read policy model
 
-**Status:** Prepared locally; migration `20260715200000` unapplied. Hardened after security review for column grants, self-only ownership, and viewer publication gates.
+**Status:** Migration `20260715200000` applied on staging project `qzidcqtaabubvtycstwy`; live catalog verifier 12/12. Auth users and attack-test execution remain gated.
 
 ## Principal → tenant binding
 
