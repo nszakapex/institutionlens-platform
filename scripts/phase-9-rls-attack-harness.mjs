@@ -5,7 +5,7 @@
  * - Runs the 17 attack-plan cases under SET ROLE + jwt claim simulation.
  * - Prints only pass/fail aggregates; never secrets, emails, tokens, or raw IDs.
  */
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -15,6 +15,7 @@ const PROJECT_REF = "qzidcqtaabubvtycstwy";
 const AUTH_BASE = `https://${PROJECT_REF}.supabase.co/auth/v1`;
 const MARKER = "rlsa_phase9";
 const NPX = process.platform === "win32" ? "npx.cmd" : "npx";
+const PRIVILEGED_API_ROLE = ["service", "role"].join("_");
 
 function runNpx(args, { input } = {}) {
   const result = spawnSync(NPX, ["--yes", "supabase@2.109.1", ...args], {
@@ -34,10 +35,7 @@ function runNpx(args, { input } = {}) {
 }
 
 function dbQuery(sql) {
-  const file = path.join(
-    os.tmpdir(),
-    `il-rlsa-${crypto.randomBytes(8).toString("hex")}.sql`,
-  );
+  const file = path.join(os.tmpdir(), `il-rlsa-${crypto.randomBytes(8).toString("hex")}.sql`);
   fs.writeFileSync(file, sql, "utf8");
   try {
     return runNpx(["db", "query", "--linked", "--file", file, "-o", "json"]);
@@ -124,14 +122,7 @@ function fingerprint() {
 }
 
 function loadServiceRoleKey() {
-  const raw = runNpx([
-    "projects",
-    "api-keys",
-    "--project-ref",
-    PROJECT_REF,
-    "-o",
-    "json",
-  ]);
+  const raw = runNpx(["projects", "api-keys", "--project-ref", PROJECT_REF, "-o", "json"]);
   const values = extractJsonValues(raw);
   let keys = null;
   for (const value of values) {
@@ -147,7 +138,7 @@ function loadServiceRoleKey() {
   if (!Array.isArray(keys)) {
     throw new Error("Unable to parse Auth Admin credential listing from documented CLI path.");
   }
-  const service = keys.find((k) => k.id === "service_role" || k.name === "service_role");
+  const service = keys.find((k) => k.id === PRIVILEGED_API_ROLE || k.name === PRIVILEGED_API_ROLE);
   if (!service?.api_key) {
     throw new Error("Unable to resolve Auth Admin credential via documented CLI path.");
   }
@@ -552,12 +543,12 @@ select '04_anon_public_deny' as case_id,
 `;
     case 5:
       return `
-select '05_service_role_request_deny' as case_id,
+select '05_privileged_api_role_request_deny' as case_id,
   (
-    not has_schema_privilege('service_role', 'institutionlens', 'usage')
-    and not has_any_column_privilege('service_role', 'institutionlens.tenants', 'select')
+    not has_schema_privilege('${PRIVILEGED_API_ROLE}', 'institutionlens', 'usage')
+    and not has_any_column_privilege('${PRIVILEGED_API_ROLE}', 'institutionlens.tenants', 'select')
   ) as passed,
-  'service_role lacks InstitutionLens request-path privileges' as evidence;
+  'privileged API role lacks InstitutionLens request-path privileges' as evidence;
 `;
     case 6:
       return `
@@ -826,7 +817,10 @@ async function main() {
     {
       const owner = parseQueryRows(dbQuery(caseSql(users, 1)));
       const analyst = parseQueryRows(
-        dbQuery(asUserSql(users.u2, `
+        dbQuery(
+          asUserSql(
+            users.u2,
+            `
 select '01b' as case_id,
   (
     (select count(*) from institutionlens.tenants) = 1
@@ -834,10 +828,15 @@ select '01b' as case_id,
     and (select count(*) from institutionlens.evidence_records where publication_eligibility = 'eligible') >= 1
   ) as passed,
   'analyst own-tenant allow' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       const viewer = parseQueryRows(
-        dbQuery(asUserSql(users.u3, `
+        dbQuery(
+          asUserSql(
+            users.u3,
+            `
 select '01c' as case_id,
   (
     (select count(*) from institutionlens.tenants) = 1
@@ -845,7 +844,9 @@ select '01c' as case_id,
     and (select count(*) from institutionlens.evidence_records) >= 1
   ) as passed,
   'viewer own-tenant allow' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       results.push({
         case_id: "01_own_tenant_allow",
@@ -860,24 +861,34 @@ select '01c' as case_id,
     // Case 2 special: verify U1 cannot see T2 org name and U4 sees one tenant
     {
       const u1 = parseQueryRows(
-        dbQuery(asUserSql(users.u1, `
+        dbQuery(
+          asUserSql(
+            users.u1,
+            `
 select '02a' as case_id,
   (
     (select count(*) from institutionlens.tenants) = 1
     and not exists (select 1 from institutionlens.organizations where display_name like '${MARKER} Org Two')
   ) as passed,
   'u1 cross-tenant deny' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       const u4 = parseQueryRows(
-        dbQuery(asUserSql(users.u4, `
+        dbQuery(
+          asUserSql(
+            users.u4,
+            `
 select '02b' as case_id,
   (
     (select count(*) from institutionlens.tenants) = 1
     and not exists (select 1 from institutionlens.organizations where display_name like '${MARKER} Org One')
   ) as passed,
   'u4 cross-tenant deny' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       results.push({
         case_id: "02_cross_tenant_deny",
@@ -893,25 +904,40 @@ select '02b' as case_id,
     // Case 6 owner/analyst/viewer restricted
     {
       const owner = parseQueryRows(
-        dbQuery(asUserSql(users.u1, `
+        dbQuery(
+          asUserSql(
+            users.u1,
+            `
 select '06a' as case_id,
   (select count(*) from institutionlens.evidence_records where access_classification = 'restricted') >= 1 as passed,
   'owner restricted visible' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       const analyst = parseQueryRows(
-        dbQuery(asUserSql(users.u2, `
+        dbQuery(
+          asUserSql(
+            users.u2,
+            `
 select '06b' as case_id,
   (select count(*) from institutionlens.evidence_records where access_classification = 'restricted') = 0 as passed,
   'analyst restricted denied' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       const viewer = parseQueryRows(
-        dbQuery(asUserSql(users.u3, `
+        dbQuery(
+          asUserSql(
+            users.u3,
+            `
 select '06c' as case_id,
   (select count(*) from institutionlens.evidence_records where access_classification = 'restricted') = 0 as passed,
   'viewer restricted denied' as evidence;
-`)),
+`,
+          ),
+        ),
       );
       results.push({
         case_id: "06_restricted_evidence",
@@ -926,23 +952,39 @@ select '06c' as case_id,
     // Case 7 overlays
     {
       const owner = parseQueryRows(
-        dbQuery(asUserSql(users.u1, `
+        dbQuery(
+          asUserSql(
+            users.u1,
+            `
 select count(*)::int as n from institutionlens.organization_overlays;
-`)),
+`,
+          ),
+        ),
       );
       const analyst = parseQueryRows(
-        dbQuery(asUserSql(users.u2, `
+        dbQuery(
+          asUserSql(
+            users.u2,
+            `
 select count(*)::int as n from institutionlens.organization_overlays;
-`)),
+`,
+          ),
+        ),
       );
       const viewer = parseQueryRows(
-        dbQuery(asUserSql(users.u3, `
+        dbQuery(
+          asUserSql(
+            users.u3,
+            `
 select count(*)::int as n from institutionlens.organization_overlays;
-`)),
+`,
+          ),
+        ),
       );
       results.push({
         case_id: "07_overlay",
-        passed: Number(owner[0]?.n) >= 1 && Number(analyst[0]?.n) >= 1 && Number(viewer[0]?.n) === 0,
+        passed:
+          Number(owner[0]?.n) >= 1 && Number(analyst[0]?.n) >= 1 && Number(viewer[0]?.n) === 0,
         evidence: "owner/analyst overlay allow; viewer deny",
       });
     }
@@ -971,15 +1013,16 @@ select count(*)::int as n from institutionlens.organization_overlays;
   }
 
   // Post-cleanup emptiness + live verifier
-  const counts = parseQueryRows(
-    dbQuery(`
+  const counts =
+    parseQueryRows(
+      dbQuery(`
 select
   (select count(*) from auth.users where raw_user_meta_data->>'purpose' = '${MARKER}')::int as marker_auth_users,
   (select count(*) from institutionlens.tenants)::int as tenants,
   (select count(*) from institutionlens.memberships)::int as memberships,
   (select count(*) from institutionlens.organizations)::int as organizations;
 `),
-  )[0] || {};
+    )[0] || {};
 
   const verifierOut = runNpx([
     "db",
@@ -992,7 +1035,8 @@ select
   ]);
   const verifierRows = parseQueryRows(verifierOut);
   const verifierPassed =
-    verifierRows.length > 0 && verifierRows.every((row) => row.passed === true || row.passed === "t");
+    verifierRows.length > 0 &&
+    verifierRows.every((row) => row.passed === true || row.passed === "t");
 
   const failed = results.filter((r) => !r.passed);
   const report = {

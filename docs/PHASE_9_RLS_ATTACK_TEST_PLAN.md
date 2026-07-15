@@ -58,9 +58,9 @@ Seed minimal rows in both tenants: organizations; evidence with `eligible`, `int
 
 ## Staging execution record
 
-| Item | Result |
-| ---- | ------ |
-| Cases | 17/17 passed |
-| Cleanup | marker Auth users = 0; application tables empty |
-| Live verifier | 12/12 passed |
-| Repro | `node scripts/phase-9-rls-attack-harness.mjs` against linked staging only |
+| Item          | Result                                                                    |
+| ------------- | ------------------------------------------------------------------------- |
+| Cases         | 17/17 passed                                                              |
+| Cleanup       | marker Auth users = 0; application tables empty                           |
+| Live verifier | 12/12 passed                                                              |
+| Repro         | `node scripts/phase-9-rls-attack-harness.mjs` against linked staging only |
