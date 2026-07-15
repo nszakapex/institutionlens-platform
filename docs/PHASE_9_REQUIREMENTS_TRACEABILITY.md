@@ -1,8 +1,8 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging), staging RLS attack-test gate (executed), narrow read API/RPC (applied on staging) + tenant-bound live-row decoders
+**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging), staging RLS attack-test gate (executed), narrow read API/RPC (applied on staging) + tenant-bound live-row decoders, Batch 5 remaining read RPC (prepared, unapplied) + cutover docs
 
-**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective + RLS + narrow read API/RPC applied on staging; staging RLS attack-test gate 17/17 passed and cleaned; live verifier 13/13; Auth/session binding, SDK transport, and cutover pending
+**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective + RLS + narrow read API/RPC applied on staging; staging RLS attack-test gate 17/17 passed and cleaned; live verifier 13/13; Auth session binding + gateway transport + remaining RPC migration prepared (unapplied); Batch 5 cutover/rollback docs; runtime cutover pending
 
 **External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` + `20260715200000` + `20260715210000` applied; live verifier includes API RPC privilege check; no residual Auth users or application rows after attack cleanup; no deployment
 
@@ -75,6 +75,18 @@
 | P9B4P-14 | Server-bound tenantPublicRef on every RPC + decoder strip/validate     | Prepared       | SQL `p_tenant_public_ref` + `accessible_tenant_ids()`; `LiveTenantBinding` decode          | Live apply/transport still deferred          |
 | P9B4P-15 | Fail closed for unsupported live ops (`UNSUPPORTED_OPERATION`)         | Prepared       | `OperationRunner` + `narrow-read-security.contract.test.ts`; no synthetic fallback         | Remaining RPC domains deferred               |
 | P9B4P-16 | Raw getById/source_key paths remain server-only branded interfaces     | Prepared       | `server-only` repos/gateway/decoders; public-ref RPCs keep opaque-ref semantics            | Client routes must keep using public refs    |
+
+## Batch 5 cutover preparation requirements
+
+| ID       | Requirement                                                            | Classification | Evidence                                                                             | Remaining limitation                                                  |
+| -------- | ---------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| P9B5P-01 | Server-only Supabase Auth session binding (no client tenant selection) | Prepared       | `src/authorization/session-context.ts`; `session_tenant_public_ref()` RPC contract   | Migration `20260715220000` unapplied on staging                       |
+| P9B5P-02 | Authenticated gateway transport for full read RPC surface              | Prepared       | `src/repositories/supabase-postgres/gateway.ts`; `rpc-surface.ts`; adapter tests     | App routes still default to synthetic bundle                          |
+| P9B5P-03 | Remaining read RPC migration + offline contract                        | Prepared       | `20260715220000` migration/rollback; `phase-9-remaining-api-rpc-contract.ts` + tests | Not in `PHASE_9_EXPECTED_MIGRATION_VERSIONS`; external apply required |
+| P9B5P-04 | Explicit demo vs live modes; no silent fallback                        | Prepared       | `repository-config.ts`; `.env.example`; D-026; cutover runbook                       | Runtime cutover not executed                                          |
+| P9B5P-05 | Cutover and rollback runbooks                                          | Prepared       | `docs/PHASE_9_BATCH_5_CUTOVER.md`; `docs/PHASE_9_BATCH_5_ROLLBACK.md`                | Deployment/rehearsal owner-gated                                      |
+| P9B5P-06 | Publishable-only server configuration                                  | Prepared       | `repository-config.ts`; `.env.example`; rejects privileged/public Supabase env names | Real project values require owner approval                            |
+| P9B5P-07 | Auth users/memberships external to repository                          | Documented     | Cutover runbook; no seed Auth in repo                                                | Operational provisioning required                                     |
 
 ## Batch 1 verification evidence
 
@@ -149,13 +161,13 @@ After the corrective migration is approved and applied, `supabase_migrations.sch
 
 ## Deferred Phase 9 requirements
 
-| Area                                                           | Batch                                          |
-| -------------------------------------------------------------- | ---------------------------------------------- |
-| Authenticated Supabase SDK transport and session binding       | 3                                              |
-| Narrow RPC implementation and live row decoders                | 4                                              |
-| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation |
-| Supabase Auth, SSR sessions, invites/recovery, role resolution | 3                                              |
-| Apply/verify `institutionlens_api` RPC migration               | Separate owner approval                        |
-| Authenticated SDK transport + remaining read RPCs              | Remaining Batch 4 work                         |
-| Environment cutover, health/readiness, demo-seed isolation     | 5                                              |
-| Local/staging migration and rollback rehearsal                 | 5                                              |
+| Area                                                           | Batch                                            |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| Authenticated Supabase SDK transport and session binding       | 5 (prepared; cutover pending)                    |
+| Narrow RPC implementation and live row decoders                | 4 (Batch 4 applied); 5 (remaining RPC unapplied) |
+| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation   |
+| Supabase Auth, SSR sessions, invites/recovery, role resolution | 3 (operational); 5 (binding prepared)            |
+| Apply/verify `institutionlens_api` narrow RPC migration        | Applied on staging (`20260715210000`)            |
+| Apply remaining read RPC migration `20260715220000`            | Separate owner approval (prepared, unapplied)    |
+| Environment cutover, health/readiness, demo-seed isolation     | 5 (docs prepared; execution pending)             |
+| Local/staging migration and rollback rehearsal                 | 5 (rollback SQL prepared; rehearsal pending)     |

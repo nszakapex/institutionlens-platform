@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-const appModeSchema = z.enum(["local-demo"]);
+const appModeSchema = z.enum(["local-demo", "development", "staging", "production"]);
 
-const envSchema = z.object({
-  IL_APP_MODE: appModeSchema,
+const demoEnvSchema = z.object({
+  IL_APP_MODE: z.literal("local-demo"),
   IL_DEMO_TENANT_ID: z
     .string()
     .min(3)
@@ -17,7 +17,19 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
 });
 
-export type AppEnv = z.infer<typeof envSchema>;
+const liveEnvSchema = z.object({
+  IL_APP_MODE: z.enum(["development", "staging", "production"]),
+  IL_SUPABASE_URL: z.string().url(),
+  IL_SUPABASE_PROJECT_REF: z.string().regex(/^[a-z0-9]{20}$/),
+  IL_SUPABASE_PUBLISHABLE_KEY: z.string().min(20).max(512),
+  IL_REPOSITORY_REQUEST_TIMEOUT_MS: z.string().optional(),
+  IL_REPOSITORY_MAX_PAGE_SIZE: z.string().optional(),
+  NODE_ENV: z.enum(["development", "test", "production"]).optional(),
+});
+
+export type AppEnv =
+  | z.infer<typeof demoEnvSchema>
+  | (z.infer<typeof liveEnvSchema> & { IL_APP_MODE: "development" | "staging" | "production" });
 
 export class EnvValidationError extends Error {
   constructor(message: string) {
@@ -27,18 +39,51 @@ export class EnvValidationError extends Error {
 }
 
 /**
- * Validates process environment for InstitutionLens.
- * Fail closed: only local-demo mode is accepted in Phase 0–1.
- * Never expose demo tenant/principal ids to client bundles.
+ * Validates process environment for InstitutionLens app bootstrap.
+ * Explicit modes only — never silently coerces live → demo.
+ * Repository cutover still uses `loadRepositoryConfig` for full fail-closed rules.
  */
 export function loadServerEnv(source: Record<string, string | undefined> = process.env): AppEnv {
-  const parsed = envSchema.safeParse({
+  const mode = source.IL_APP_MODE;
+  if (!mode || !appModeSchema.safeParse(mode).success) {
+    throw new EnvValidationError(
+      "Invalid environment for InstitutionLens (fail closed). IL_APP_MODE: must be local-demo|development|staging|production",
+    );
+  }
+
+  if (mode === "local-demo") {
+    const parsed = demoEnvSchema.safeParse({
+      IL_APP_MODE: source.IL_APP_MODE,
+      IL_DEMO_TENANT_ID: source.IL_DEMO_TENANT_ID,
+      IL_DEMO_PRINCIPAL_ID: source.IL_DEMO_PRINCIPAL_ID,
+      NODE_ENV: source.NODE_ENV,
+    });
+    if (!parsed.success) {
+      const details = parsed.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join("; ");
+      throw new EnvValidationError(
+        `Invalid environment for InstitutionLens (fail closed). ${details}`,
+      );
+    }
+    return parsed.data;
+  }
+
+  if (source.IL_DEMO_TENANT_ID || source.IL_DEMO_PRINCIPAL_ID) {
+    throw new EnvValidationError(
+      "Invalid environment for InstitutionLens (fail closed). Demo tenant ids must not be set in live modes.",
+    );
+  }
+
+  const parsed = liveEnvSchema.safeParse({
     IL_APP_MODE: source.IL_APP_MODE,
-    IL_DEMO_TENANT_ID: source.IL_DEMO_TENANT_ID,
-    IL_DEMO_PRINCIPAL_ID: source.IL_DEMO_PRINCIPAL_ID,
+    IL_SUPABASE_URL: source.IL_SUPABASE_URL,
+    IL_SUPABASE_PROJECT_REF: source.IL_SUPABASE_PROJECT_REF,
+    IL_SUPABASE_PUBLISHABLE_KEY: source.IL_SUPABASE_PUBLISHABLE_KEY,
+    IL_REPOSITORY_REQUEST_TIMEOUT_MS: source.IL_REPOSITORY_REQUEST_TIMEOUT_MS,
+    IL_REPOSITORY_MAX_PAGE_SIZE: source.IL_REPOSITORY_MAX_PAGE_SIZE,
     NODE_ENV: source.NODE_ENV,
   });
-
   if (!parsed.success) {
     const details = parsed.error.issues
       .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
@@ -47,7 +92,6 @@ export function loadServerEnv(source: Record<string, string | undefined> = proce
       `Invalid environment for InstitutionLens (fail closed). ${details}`,
     );
   }
-
   return parsed.data;
 }
 
@@ -66,4 +110,8 @@ export function assertNoPublicSecrets(
       );
     }
   }
+}
+
+export function isLiveAppMode(mode: AppEnv["IL_APP_MODE"]): boolean {
+  return mode === "development" || mode === "staging" || mode === "production";
 }

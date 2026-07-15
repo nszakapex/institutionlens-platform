@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS + narrow read API/RPC migrations applied on staging; live verifier includes `api_rpc_privileges`; staging RLS attack-test gate 17/17 passed and cleaned; Auth/session binding, SDK transport, and runtime cutover pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS + narrow read API/RPC migrations applied on staging; live verifier includes `api_rpc_privileges`; staging RLS attack-test gate 17/17 passed and cleaned; Batch 4/5 code-side Auth session binding + gateway transport + remaining read RPC migration prepared (unapplied) + Batch 5 cutover/rollback docs; runtime cutover pending
 
 **Depends on:** Phases 0-8
 
@@ -96,11 +96,12 @@ Compatibility findings:
 - Policy model and attack plan: `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`, `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`
 - Applied: narrow `institutionlens_api` read RPCs + server-only live-row decoders for organizations, evidence, comparisons, and briefs (`docs/PHASE_9_BATCH_4_API_RPC.md`)
 - Narrow read API/RPC: 9 RPCs require `p_tenant_public_ref`; unsupported ops fail closed with `UNSUPPORTED_OPERATION`; live verifier 13/13 including `api_rpc_privileges`
-- Remaining Batch 4 work: authenticated SDK transport; remaining read RPCs (workspace/assessments/overlays/provenance/capabilities/portfolios)
+- Code-side (repository): server-only Supabase Auth session binding via `session_tenant_public_ref()`; authenticated gateway transport for full read surface; remaining read RPC migration `20260715220000` + offline contract prepared — **migration unapplied** on staging
 
 ### Batch 5 - Controlled cutover
 
 - Explicit local-demo, development, staging, and production modes
+- Cutover runbook and rollback docs (`docs/PHASE_9_BATCH_5_CUTOVER.md`, `docs/PHASE_9_BATCH_5_ROLLBACK.md`)
 - Health and readiness checks
 - Demo-seed isolation
 - Local/staging migration and rollback rehearsal
@@ -180,7 +181,7 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-Corrective migration `20260715181000`, Batch 4 RLS migration `20260715200000`, and narrow read API/RPC migration `20260715210000` are applied on staging. History currently contains exactly those four versions. Staging RLS attack-test gate is complete (17/17 + cleanup). Live-row decoders and fail-closed partial coverage are in the repository; authenticated SDK transport remains deferred.
+Corrective migration `20260715181000`, Batch 4 RLS migration `20260715200000`, and narrow read API/RPC migration `20260715210000` are applied on staging. History currently contains exactly those four versions. Staging RLS attack-test gate is complete (17/17 + cleanup). Remaining read RPC migration `20260715220000` and Batch 5 cutover docs are prepared in the repository but unapplied. Auth session binding and gateway transport exist in code; runtime cutover remains gated.
 
 ## Stop gates
 

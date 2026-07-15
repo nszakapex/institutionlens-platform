@@ -336,6 +336,18 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - The typed gateway is an offline seam only. Narrow org/evidence/comparison/brief RPCs and live-row decoders are prepared; a Supabase client/SSR package, authenticated session binding, RPC apply/transport, remaining domain RPCs, query plans, and PostgreSQL parity remain mandatory later work.
 - No write method is introduced while the application is read-only. The first write repository must use an explicit bounded transaction with audit and lineage updates.
 
+## D-026 - Server-only Auth session binding and RPC gateway transport
+
+**Status:** Approved for Phase 9 Batch 5 preparation; remaining RPC migration prepared but unapplied; runtime cutover pending
+
+- Bind tenant identity only through server-side Supabase Auth: `auth.getUser()` plus `institutionlens_api.session_tenant_public_ref()` derived from active memberships and RLS — never from client query parameters, JWT custom claims, or user-selected tenant IDs.
+- Pass the session-bound `p_tenant_public_ref` into every public read RPC; decoders validate wire `tenantPublicRef` against the session binding before stamping domain `tenantId`.
+- Use a per-request, server-only authenticated Supabase gateway (`@supabase/ssr` / server client) for RPC transport. Do not instantiate a browser Supabase client or expose publishable keys via `NEXT_PUBLIC_*`.
+- Reject service-role, anon, and direct database credentials on end-user read paths. Privileged credentials remain server-only for approved operational tooling outside the user request path.
+- Keep `IL_APP_MODE=local-demo` explicit for synthetic operation. Production-like modes (`development`, `staging`, `production`) require complete publishable-only configuration and fail closed — no silent fallback to demo fixtures.
+- Partial RPC or route coverage must continue to fail closed with `UNSUPPORTED_OPERATION` rather than mixing synthetic and live data.
+- See `docs/PHASE_9_BATCH_5_CUTOVER.md`, `src/authorization/session-context.ts`, and `scripts/phase-9-remaining-api-rpc-contract.ts`.
+
 ## Current phase boundary
 
 Phases 0-8 are complete for synthetic local-demo scope. Phase 9 Batches 1-2 establish fail-closed production database and repository contracts only. Runtime persistence, RLS allow policies, production authentication, external infrastructure, real data, billing, and hosting remain deferred.

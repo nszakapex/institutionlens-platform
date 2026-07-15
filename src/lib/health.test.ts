@@ -38,4 +38,13 @@ describe("buildHealthPayload", () => {
     const body = buildHealthPayload(demoPrincipal);
     expect(body.productionReady).toBe(false);
   });
+
+  it("reports live modes without claiming productionReady", () => {
+    expect(buildHealthPayload({ mode: "staging", synthetic: false })).toEqual({
+      status: "ok",
+      mode: "staging",
+      synthetic: false,
+      productionReady: false,
+    });
+  });
 });
