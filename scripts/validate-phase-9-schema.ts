@@ -1,4 +1,5 @@
 import { readAndValidatePhase9ApiRpc } from "./phase-9-api-rpc-contract";
+import { readAndValidatePhase9RemainingApiRpc } from "./phase-9-remaining-api-rpc-contract";
 import { readAndValidatePhase9Schema } from "./phase-9-schema-contract";
 import { readAndValidatePhase9LiveVerifier } from "./phase-9-live-verifier-contract";
 import { readAndValidatePhase9RlsPolicies } from "./phase-9-rls-policy-contract";
@@ -8,6 +9,7 @@ const findings = [
   ...readAndValidatePhase9LiveVerifier(),
   ...readAndValidatePhase9RlsPolicies(),
   ...readAndValidatePhase9ApiRpc(),
+  ...readAndValidatePhase9RemainingApiRpc(),
 ];
 
 if (findings.length > 0) {
@@ -17,5 +19,5 @@ if (findings.length > 0) {
 }
 
 console.log(
-  "Phase 9 schema contracts passed: 18 tables, RLS forced, corrective default-privilege migration, authenticated read RLS, narrow read API/RPC, SELECT-only live verifier.",
+  "Phase 9 schema contracts passed: 18 tables, RLS forced, corrective default-privilege migration, authenticated read RLS, narrow read API/RPC, remaining read API/RPC (offline), SELECT-only live verifier.",
 );
