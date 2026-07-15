@@ -1,10 +1,10 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging)
+**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS (applied on staging), staging RLS attack-test gate (executed)
 
-**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective applied; Batch 4 RLS migration applied on staging; Auth attack tests pending
+**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective applied; Batch 4 RLS migration applied on staging; staging RLS attack-test gate 17/17 passed and cleaned; Auth/session binding and narrow RPC pending
 
-**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` + `20260715200000` applied; live verifier 12/12; no Auth users; no deployment
+**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` + `20260715200000` applied; live verifier 12/12; no residual Auth users or application rows after attack cleanup; no deployment
 
 ## Batch 1 requirements
 
@@ -15,7 +15,7 @@
 | P9B1-03 | Define organization, provenance, evidence, and lineage schema                        | Implemented    | Migration tables plus `PRODUCTION_DATA_FOUNDATION.md` catalog                                         | No real data or source approval                          |
 | P9B1-04 | Define assessment run/result and capability/rule result schema                       | Implemented    | `assessment_runs`, `assessment_results`, `capability_results`, `rule_results`, `rule_result_evidence` | Live database parity deferred to Batch 5                 |
 | P9B1-05 | Define overlay, saved comparison, brief snapshot, import-run, and audit-event schema | Implemented    | Migration tables and bounds                                                                           | Mutations/workflows remain deferred                      |
-| P9B1-06 | Enforce tenant ownership and cross-tenant foreign references                         | Implemented    | Tenant-composite unique keys and foreign keys; schema contract tests                                  | Live two-tenant DB attack tests deferred to Batch 4      |
+| P9B1-06 | Enforce tenant ownership and cross-tenant foreign references                         | Implemented    | Tenant-composite unique keys and foreign keys; schema contract tests; staging attack cases 2/16       | App Auth/session binding still Batch 3 remainder         |
 | P9B1-07 | Add safe constraints, indexes, and opaque refs                                       | Implemented    | Named SQL checks/indexes; static contract validator                                                   | Query plans require representative staging data          |
 | P9B1-08 | Fail closed before RLS policies are approved                                         | Implemented    | API role revokes; RLS enabled/forced; no `CREATE POLICY`                                              | Narrow grants/policies intentionally deferred to Batch 4 |
 | P9B1-09 | Define migration and rollback strategy                                               | Implemented    | `PRODUCTION_DATA_FOUNDATION.md`; destructive rollback file                                            | Execution/rehearsal blocked by missing local stack       |
@@ -33,9 +33,9 @@
 | P9B2-04 | Validate production configuration without exposing values                    | Implemented    | `repository-config.ts`; valid/missing/malformed/mixed/secret-safety tests                                                             | Real project values require owner approval                        |
 | P9B2-05 | Prevent production-like fallback to demo                                     | Implemented    | Explicit provider mode selection; production missing-gateway test proves synthetic factory is not called                              | Application cutover remains Batch 5                               |
 | P9B2-06 | Bound queries, sorts, pagination, and timeouts                               | Implemented    | Zod allowlists; page <=10,000; page size <=50/config cap; operation runner timeout; focused tests                                     | Keyset pagination and measured query plans remain live work       |
-| P9B2-07 | Keep reference resolution tenant-scoped and fail closed                      | Implemented    | `getByPublicRef` contract/synthetic implementation; gateway authorization envelope; recursive tenant-response rejection; tests        | Direct RLS attack tests remain Batch 4                            |
+| P9B2-07 | Keep reference resolution tenant-scoped and fail closed                      | Implemented    | `getByPublicRef` contract/synthetic implementation; gateway authorization envelope; recursive tenant-response rejection; tests; staging RLS attack 17/17 | Narrow RPC/live row decoders remain Batch 4                       |
 | P9B2-08 | Classify repository failures safely                                          | Implemented    | Constant `RepositoryError` messages; upstream/configuration value and no-log tests                                                    | Error telemetry remains Phase 12                                  |
-| P9B2-09 | Preserve restricted-evidence, overlay, and private-note boundaries           | Implemented    | Restricted response guard, `overlay:read` repository checks, private-note stripping, unsafe snapshot-content rejection                | RLS policy enforcement remains Batch 4                            |
+| P9B2-09 | Preserve restricted-evidence, overlay, and private-note boundaries           | Implemented    | Restricted response guard, `overlay:read` repository checks, private-note stripping, unsafe snapshot-content rejection; staging cases 6–8 | Narrow RPC projection surface remains Batch 4                     |
 | P9B2-10 | Keep production configuration and repository internals out of client modules | Implemented    | `server-only` imports; static client-boundary scan; actual rendered-view-model privacy test                                           | Browser network/RSC inspection repeats at cutover                 |
 | P9B2-11 | Consume persisted Phase 4 results without recalculation                      | Implemented    | Production adapter/gateway have no generator/fixture imports; fake persisted-output pass-through test; Phase 4 regression suite       | Live DB parity remains Batch 5                                    |
 | P9B2-12 | Avoid new global mutable caches                                              | Implemented    | Per-invocation provider/runner; production boundary static contract                                                                   | Existing pre-Batch-2 synthetic assessment cache remains unchanged |
@@ -59,15 +59,15 @@
 
 | ID       | Requirement                                                            | Classification | Evidence                                                                        | Remaining limitation                        |
 | -------- | ---------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
-| P9B4P-01 | Bind principals via `auth.uid()` → active memberships only             | Prepared       | Helpers + policies in `20260715200000`; `PHASE_9_BATCH_4_POLICY_MODEL.md`       | Auth users / session binding not configured |
-| P9B4P-02 | Authenticated SELECT-only; deny anon/PUBLIC/service_role request paths | Prepared       | Column grants/revokes + live verifier denied-role privilege model               | Unapplied; live privilege proof deferred    |
-| P9B4P-03 | One SELECT policy per core table with tenant + role gates              | Prepared       | 18 `*_select_authenticated` policies; restricted/overlay/viewer/self-only gates | Live attack tests not run                   |
-| P9B4P-04 | No private-note / source_reference / memberships.user_id; no writes    | Prepared       | Column-only grants + explicit revokes; contract rejects table-level SELECT      | RPC projection surface still deferred       |
-| P9B4P-05 | Static contracts reject missing/cross-tenant/permissive/service grants | Prepared       | `phase-9-rls-policy-contract.ts` + tests (viewer/self-only/withheld columns)    | Cannot prove PostgreSQL enforcement offline |
-| P9B4P-06 | Document two-tenant attack-test plan for later external gate           | Prepared       | `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md` (17 cases incl. identity/publication)    | Requires Auth fixtures and approved apply   |
-| P9B4P-07 | No Auth/runtime/env/Vercel/apply/commit/push in preparation            | Implemented    | Repository-only Batch 4 prep                                                    | Apply + Auth remain approval-gated          |
-| P9B4P-08 | Viewer cannot read unpublished research; self-only ownership defaults  | Prepared       | Publication-eligibility predicates; memberships/comparisons self-only           | Live attack tests not run                   |
-| P9B4P-09 | Explicit viewer table/column allowlist enforced in static contracts    | Prepared       | `VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST` + denied-table/policy checks         | Live attack tests not run                   |
+| P9B4P-01 | Bind principals via `auth.uid()` → active memberships only             | Implemented    | Helpers + policies in `20260715200000`; staging attack cases 1/3/15/16          | App Auth/session binding still pending      |
+| P9B4P-02 | Authenticated SELECT-only; deny anon/PUBLIC/service_role request paths | Implemented    | Column grants/revokes; live verifier; attack cases 4/5/13/17                    | —                                           |
+| P9B4P-03 | One SELECT policy per core table with tenant + role gates              | Implemented    | 18 policies; live verifier policy count; attack cases 1/2/6/7/9–12/14          | —                                           |
+| P9B4P-04 | No private-note / source_reference / memberships.user_id; no writes    | Implemented    | Column-only grants + revokes; attack cases 8/10/13/17                           | RPC projection surface still deferred       |
+| P9B4P-05 | Static contracts reject missing/cross-tenant/permissive/service grants | Implemented    | `phase-9-rls-policy-contract.ts` + tests; staging attack harness corroboration  | —                                           |
+| P9B4P-06 | Document and execute two-tenant attack-test plan                       | Implemented    | Plan + `phase-9-rls-attack-harness.mjs`; staging 17/17; cleanup empty; verifier 12/12 | Do not leave disposable Auth users behind |
+| P9B4P-07 | No Auth/runtime/env/Vercel/apply/commit/push in preparation            | Implemented    | Repository-only Batch 4 prep; later apply/attack were separately authorized     | Production cutover remains gated            |
+| P9B4P-08 | Viewer cannot read unpublished research; self-only ownership defaults  | Implemented    | Publication-eligibility + self-only predicates; attack cases 9–12               | —                                           |
+| P9B4P-09 | Explicit viewer table/column allowlist enforced in static contracts    | Implemented    | `VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST` + denied-table/policy checks; case 9 | —                                           |
 
 ## Batch 1 verification evidence
 
@@ -148,8 +148,6 @@ After the corrective migration is approved and applied, `supabase_migrations.sch
 | Narrow RPC implementation and live row decoders                | 4                                              |
 | First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation |
 | Supabase Auth, SSR sessions, invites/recovery, role resolution | 3                                              |
-| Apply prepared read RLS migration + live 12/12 verifier        | Separate owner approval                        |
-| Execute two-tenant RLS attack-test plan                        | After Auth users + memberships exist           |
 | Narrow API/RPC schema and live row decoders                    | Remaining Batch 4 work                         |
 | Environment cutover, health/readiness, demo-seed isolation     | 5                                              |
 | Local/staging migration and rollback rehearsal                 | 5                                              |

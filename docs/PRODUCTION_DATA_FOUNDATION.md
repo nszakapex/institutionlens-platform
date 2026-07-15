@@ -2,13 +2,13 @@
 
 **Phase:** Project Phase 9
 
-**Status:** Staging schema applied through corrective default privileges; Batch 4 authenticated read RLS prepared and unapplied; application runtime still synthetic local-demo
+**Status:** Staging schema applied through Batch 4 authenticated read RLS; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; application runtime still synthetic local-demo
 
 **Migrations:**
 
 - `supabase/migrations/20260713190000_phase9_initial_schema.sql` (applied)
 - `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` (applied)
-- `supabase/migrations/20260715200000_phase9_authenticated_read_rls.sql` (prepared; not applied)
+- `supabase/migrations/20260715200000_phase9_authenticated_read_rls.sql` (applied on staging)
 
 ## Architecture
 
@@ -115,7 +115,7 @@ All application tables use UUID primary keys for internal joins. Those UUIDs mus
 - Tables that reference memberships use tenant-composite keys.
 - `memberships.user_id` is the only application-schema reference to Supabase-managed `auth.users`; it references the primary key as recommended by Supabase.
 - Auth-user deletion nulls `memberships.user_id` while retaining the membership tombstone for historical references. A membership without a user cannot resolve an authenticated session.
-- RLS is enabled and forced on all 18 core tables (17 tenant-owned child tables plus `tenants`). Batch 1 defined no policies (fail closed). Batch 4 prepares authenticated SELECT policies in `20260715200000` (unapplied): column-only grants (no table-level SELECT), withheld private notes / source references / membership Auth UUIDs, self-only ownership defaults, and viewer publication-eligible row gates. See `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`.
+- RLS is enabled and forced on all 18 core tables (17 tenant-owned child tables plus `tenants`). Batch 1 defined no policies (fail closed). Batch 4 applies authenticated SELECT policies in `20260715200000`: column-only grants (no table-level SELECT), withheld private notes / source references / membership Auth UUIDs, self-only ownership defaults, and viewer publication-eligible row gates. Staging attack-test gate recorded in `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`. See `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`.
 
 RLS is necessary but not sufficient. Application authorization, tenant filters, frozen/redacted view models, opaque refs, safe errors, and privacy tests remain mandatory.
 

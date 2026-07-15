@@ -279,7 +279,7 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 
 ## D-022 - Core database schema and access boundary
 
-**Status:** Approved for Phase 9 Batch 1 architecture; Batch 4 authenticated read RLS prepared (unapplied)
+**Status:** Approved for Phase 9 Batch 1 architecture; Batch 4 authenticated read RLS applied on staging and attack-tested
 
 - Store core application tables in a dedicated `institutionlens` schema, not in the default public Data API surface.
 - Use raw UUIDs only for server-side database joins. Use tenant-scoped opaque references at presentation and audit boundaries.
@@ -308,7 +308,7 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 
 ## D-025 - Authenticated read-only RLS enablement
 
-**Status:** Approved for Batch 4 preparation; hardened after security review; remote apply and Auth-user attack tests remain gated
+**Status:** Approved; applied on staging; disposable Auth/fixture attack-test gate 17/17 passed and cleaned
 
 - Grant `authenticated` only `USAGE` on `institutionlens` plus **explicit column** `SELECT` grants. Never use table-level `SELECT` (it would override column withholdings).
 - Withhold `private_notes`, provenance `source_reference`, and `memberships.user_id` from `authenticated` (grant omit + revoke).
@@ -317,7 +317,7 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - Map membership roles as: `owner` (restricted + overlay + audit), `analyst` (overlay, no restricted), `viewer` (publication-eligible rows only; no provenance/overlays).
 - Default user-owned rows to self-only (`memberships`, saved comparisons, own brief drafts).
 - Use narrow `SECURITY DEFINER` membership helpers with pinned `search_path`; do not use `USING (true)`, client tenant IDs, or broad definer bypasses.
-- Prove isolation later with the two-tenant attack-test plan before claiming RLS completeness.
+- Isolation proven on staging via `scripts/phase-9-rls-attack-harness.mjs` against `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md` (17/17); residual fixtures must remain empty.
 - See `docs/PHASE_9_BATCH_4_POLICY_MODEL.md` and `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`.
 
 ## D-024 - Production repository and configuration boundary

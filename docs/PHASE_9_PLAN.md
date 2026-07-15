@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS migrations applied on staging; live verifier 12/12; Auth/session binding, attack tests, and runtime cutover pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS migrations applied on staging; live verifier 12/12; staging RLS attack-test gate 17/17 passed and cleaned; Auth/session binding, narrow RPC, and runtime cutover pending
 
 **Depends on:** Phases 0-8
 
@@ -88,13 +88,13 @@ Compatibility findings:
 
 ### Batch 4 - RLS and cross-tenant hardening
 
-- Preparation checkpoint: unapplied forward migration `20260715200000_phase9_authenticated_read_rls.sql` with fail-closed rollback
-- Preparation checkpoint: `auth.uid()` → active membership tenant binding; authenticated **column-only** SELECT grants; anon/PUBLIC/service_role remain denied
-- Preparation checkpoint: withheld `private_notes`, provenance `source_reference`, and `memberships.user_id`; self-only memberships/comparisons; viewer publication-eligible gates
-- Preparation checkpoint: static RLS policy contracts + live verifier expectations for 18 SELECT policies, withheld-column proofs, and three-migration history
-- Preparation checkpoint: documented two-tenant attack-test plan (`docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`) and policy model (`docs/PHASE_9_BATCH_4_POLICY_MODEL.md`)
-- Later external gate: apply migration; run live verifier 12/12; execute attack-test plan with Auth users
-- Later Batch 4 work still required: narrow API/RPC schema that never returns raw internal IDs; live two-tenant/three-role attack execution
+- Applied forward migration `20260715200000_phase9_authenticated_read_rls.sql` with fail-closed rollback artifact retained
+- `auth.uid()` → active membership tenant binding; authenticated **column-only** SELECT grants; anon/PUBLIC/service_role remain denied
+- Withheld `private_notes`, provenance `source_reference`, and `memberships.user_id`; self-only memberships/comparisons; viewer publication-eligible gates
+- Static RLS policy contracts + live verifier expectations for 18 SELECT policies, withheld-column proofs, and three-migration history
+- Staging attack gate: disposable Auth/fixture harness `scripts/phase-9-rls-attack-harness.mjs` executed 17/17 and cleaned to empty; live verifier 12/12
+- Policy model and attack plan: `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`, `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`
+- Remaining Batch 4 work: narrow API/RPC schema that never returns raw internal IDs; live row decoders
 
 ### Batch 5 - Controlled cutover
 
@@ -127,7 +127,7 @@ Compatibility findings:
 7. Production adapters consume persisted assessment results and never import or invoke Phase 4 assessment generation.
 8. Restricted evidence, overlays, private notes, raw IDs, and repository configuration do not cross unauthorized or rendered boundaries.
 9. No Supabase project, client SDK, privileged credential, direct database connection, migration execution, deployment, or runtime cutover is introduced.
-10. Live PostgreSQL migration, row decoding, RPC implementation, RLS policy/attack tests, query plans, and rollback rehearsal remain mandatory later gates.
+10. Live row decoding, narrow RPC implementation, query plans, and rollback rehearsal remain mandatory later gates.
 
 ## Batch 1 acceptance criteria
 
@@ -178,7 +178,7 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-Corrective migration `20260715181000` is applied and cleared the function default-ACL gap (live verifier 12/12 at that checkpoint). Batch 4 preparation adds unapplied `20260715200000` authenticated read RLS. After that migration is approved and applied, history must contain exactly `20260713190000`, `20260715181000`, and `20260715200000`, with 18 authenticated SELECT policies and authenticated SELECT-only privileges. Live two-tenant attack tests and narrow RPC work remain later gates.
+Corrective migration `20260715181000` and Batch 4 migration `20260715200000` are applied on staging. History must contain exactly `20260713190000`, `20260715181000`, and `20260715200000`, with 18 authenticated SELECT policies and authenticated SELECT-only privileges. Staging RLS attack-test gate is complete (17/17 + cleanup + verifier 12/12). Narrow RPC / live row decoder work remains.
 
 ## Stop gates
 

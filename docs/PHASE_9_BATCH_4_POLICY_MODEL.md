@@ -1,6 +1,6 @@
 # Phase 9 Batch 4 authenticated read policy model
 
-**Status:** Migration `20260715200000` applied on staging project `qzidcqtaabubvtycstwy`; live catalog verifier 12/12. Auth users and attack-test execution remain gated.
+**Status:** Migration `20260715200000` applied on staging project `qzidcqtaabubvtycstwy`; live catalog verifier 12/12; disposable two-tenant RLS attack-test gate executed 17/17 and cleaned.
 
 ## Principal → tenant binding
 

@@ -1,8 +1,10 @@
 # Phase 9 live two-tenant RLS attack-test plan
 
-**Status:** Prepared for the later external gate. Not executed in Batch 4 preparation.
+**Status:** Executed on staging project `qzidcqtaabubvtycstwy`. Disposable Auth users and fixture rows were created, all 17 cases passed, fixtures were removed, and the live schema verifier returned 12/12 with empty application tables.
 
 **Depends on:** Applied migration `20260715200000_phase9_authenticated_read_rls.sql`, Supabase Auth users, and active `institutionlens.memberships` rows for both tenants.
+
+**Harness:** `scripts/phase-9-rls-attack-harness.mjs` (staging-only; creates/removes disposable Auth users via Auth Admin API; never inserts into `auth.users`; prints pass/fail aggregates only).
 
 ## Principal binding under test
 
@@ -51,4 +53,14 @@ Seed minimal rows in both tenants: organizations; evidence with `eligible`, `int
 - Run as discrete authenticated sessions (one JWT / role per case).
 - Prefer SQL assertions that count rows and probe forbidden columns; do not print secrets or raw customer payloads into logs.
 - Application-layer permission checks remain mandatory after RLS passes.
-- This plan does not authorize Auth configuration, seed of real customer data, or production cutover.
+- This plan does not authorize Auth configuration for the application runtime, seed of real customer data, or production cutover.
+- Cleanup order: delete marker tenants (cascade fixture rows), then delete disposable Auth users via Auth Admin API, then re-run `scripts/phase-9-live-schema-verify.sql`.
+
+## Staging execution record
+
+| Item | Result |
+| ---- | ------ |
+| Cases | 17/17 passed |
+| Cleanup | marker Auth users = 0; application tables empty |
+| Live verifier | 12/12 passed |
+| Repro | `node scripts/phase-9-rls-attack-harness.mjs` against linked staging only |
