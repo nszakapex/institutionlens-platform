@@ -11,6 +11,7 @@ import type {
   SupabasePostgresGateway,
   SupabasePostgresGatewayRequest,
 } from "@/repositories/supabase-postgres/gateway";
+import { generateSyntheticAssessments } from "@/verticals/financial-institutions/assessment/generate";
 
 type AnyGatewayRequest = {
   [K in RepositoryOperation]: SupabasePostgresGatewayRequest<K>;
@@ -140,23 +141,53 @@ describe("Supabase/Postgres repository adapter", () => {
     errorSpy.mockRestore();
   });
 
-  it("fails closed for deferred assessment and provenance operations", async () => {
+  it("delegates live-supported workspace, provenance, assessment, portfolio, and overlay reads to the gateway", async () => {
     const context = getDemoAuthorizationContext();
-    const gateway = new FakeGateway(async () => {
-      throw new Error("gateway must not run for deferred ops");
+    const store = loadFinancialInstitutionsStore();
+    const organization = store.organizations[0]!;
+    const provenance = store.provenance.find((item) => item.tenantId === context.tenant.id)!;
+    const portfolio = generateSyntheticAssessments().organizations.find(
+      (item) => item.organizationId === organization.id,
+    )!.portfolioAssessment;
+
+    const gateway = new FakeGateway(async (request) => {
+      switch (request.operation) {
+        case "workspace.get":
+          return {
+            tenantPublicRef: context.tenantPublicRef,
+            tenantId: context.tenant.id,
+            principalId: context.principal.id,
+            displayName: context.principal.displayName,
+            status: "active",
+            role: "analyst",
+            allowedVerticalIds: ["financial_institutions"],
+          };
+        case "provenance.getById":
+          return provenance;
+        case "assessments.getPortfolio":
+          return portfolio;
+        case "portfolios.list":
+        case "overlays.list":
+          return { items: [], page: 1, pageSize: 12, total: 0 };
+        default:
+          throw new Error(`unexpected operation ${request.operation}`);
+      }
     });
     const bundle = createSupabasePostgresRepositoryBundle(CONFIG, gateway);
 
-    await expect(
-      bundle.assessments.getPortfolioAssessment(context, "assess_syn_fi_001_portfolio" as never),
-    ).rejects.toMatchObject({
-      code: "UNSUPPORTED_OPERATION",
-      publicMessage: "This data operation is not available.",
-    });
-    await expect(
-      bundle.organizations.getProvenance(context, "prov_syn_fi_001_profile" as never),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPERATION" });
-    expect(gateway.requests).toHaveLength(0);
+    await bundle.workspace.getCurrent(context);
+    await bundle.organizations.getProvenance(context, provenance.id);
+    await bundle.assessments.getPortfolioAssessment(context, portfolio.id);
+    await bundle.portfolios.list(context, {});
+    await bundle.overlays.list(context, {});
+
+    expect(gateway.requests.map((item) => item.operation)).toEqual([
+      "workspace.get",
+      "provenance.getById",
+      "assessments.getPortfolio",
+      "portfolios.list",
+      "overlays.list",
+    ]);
   });
 
   it("rejects unsafe snapshot content on supported brief reads", async () => {

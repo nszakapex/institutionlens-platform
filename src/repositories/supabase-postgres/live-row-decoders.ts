@@ -3,9 +3,14 @@ import "server-only";
 import { z } from "zod";
 import {
   AdapterVersionSchema,
+  AssessmentIdSchema,
+  CapabilityIdSchema,
   EvidenceIdSchema,
   OrganizationIdSchema,
+  OverlayIdSchema,
+  PortfolioIdSchema,
   ProvenanceIdSchema,
+  RuleSetIdSchema,
   TenantIdSchema,
   VerticalIdSchema,
 } from "@/domain/ids";
@@ -13,11 +18,27 @@ import {
   OrganizationPublicRefSchema,
   type OrganizationPublicRef,
 } from "@/domain/organization-public-ref";
+import { AssessmentManifestSchema, type AssessmentManifest } from "@/domain/assessments/manifest";
+import { RuleLedgerEntrySchema, type RuleLedgerEntry } from "@/domain/assessments/ledger";
 import {
+  CapabilityAssessmentSchema,
+  OpportunityContextSchema,
+  PortfolioAssessmentSchema,
+  type CapabilityAssessment,
+  type OpportunityContext,
+  type PortfolioAssessment,
+} from "@/domain/assessments/results";
+import { OrganizationOverlaySchema, type OrganizationOverlay } from "@/domain/overlays/schemas";
+import { CapabilityPortfolioSchema, type CapabilityPortfolio } from "@/domain/portfolios/schemas";
+import {
+  CompletenessStatusSchema,
   ConfidenceLevelSchema,
+  FitAssessmentSchema,
   FreshnessStatusSchema,
+  ObservedFitBandSchema,
   PublicationEligibilitySchema,
 } from "@/domain/schemas/assessment";
+import { CapabilitySchema, type Capability } from "@/domain/schemas/capability";
 import {
   BoundedTagsSchema,
   DataClassificationSchema,
@@ -35,14 +56,24 @@ import {
 import { ObservationValueSchema } from "@/domain/schemas/observation";
 import { OrganizationSchema, type Organization } from "@/domain/schemas/organization";
 import {
+  AccessClassificationSchema,
+  LicenseStatusSchema,
+  ProvenanceRecordSchema,
+  SourceTypeSchema,
+  ValidationStatusSchema,
+  type ProvenanceRecord,
+} from "@/domain/schemas/provenance";
+import {
   BriefSnapshotPublicRefSchema,
   BriefSnapshotRecordSchema,
   SavedComparisonPublicRefSchema,
   SavedComparisonRecordSchema,
   type BriefSnapshotRecord,
   type SavedComparisonRecord,
+  type WorkspaceContextRecord,
 } from "@/repositories/repository-contracts";
 import { RepositoryError } from "@/repositories/repository-errors";
+import { isMembershipRole, mapMembershipRole } from "@/authorization/membership-role";
 
 export const TenantPublicRefSchema = z
   .string()
@@ -431,6 +462,492 @@ export function decodeOrganizationCount(raw: unknown): number {
   if (typeof raw === "number" && Number.isInteger(raw) && raw >= 0) return raw;
   if (typeof raw === "string" && /^\d+$/.test(raw)) return Number(raw);
   throw new RepositoryError("INVALID_RESPONSE");
+}
+
+function stripWireTenantId(
+  raw: Record<string, unknown>,
+  binding: LiveTenantBinding,
+): Record<string, unknown> {
+  if (typeof raw.tenantId === "string" && raw.tenantId !== binding.tenantId) {
+    throw new RepositoryError("INVALID_RESPONSE");
+  }
+  const { tenantId: _ignored, ...rest } = raw;
+  void _ignored;
+  return rest;
+}
+
+const WorkspaceWireSchema = z
+  .object({
+    tenantPublicRef: TenantPublicRefSchema,
+    tenantId: TenantIdSchema,
+    principalId: z.string().min(1).max(64),
+    displayName: z.string().min(1).max(160),
+    status: z.enum(["active", "suspended"]),
+    role: z.string().min(1).max(32),
+    allowedVerticalIds: z.array(z.string().min(1).max(64)).max(20),
+  })
+  .strict();
+
+const ProvenanceWireSchema = z
+  .object({
+    tenantPublicRef: TenantPublicRefSchema,
+    id: ProvenanceIdSchema,
+    sourceType: SourceTypeSchema,
+    sourceName: z.string().min(1).max(160),
+    retrievedAt: IsoDateTimeSchema.nullable().optional(),
+    publishedAt: IsoDateTimeSchema.nullable().optional(),
+    reportingPeriod: z
+      .object({
+        start: IsoDateTimeSchema.optional(),
+        end: IsoDateTimeSchema.optional(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
+    checksum: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .nullable()
+      .optional(),
+    licenseStatus: LicenseStatusSchema,
+    accessClassification: AccessClassificationSchema,
+    validationStatus: ValidationStatusSchema,
+    synthetic: z.boolean(),
+    dataClassification: DataClassificationSchema,
+    createdAt: IsoDateTimeSchema,
+    domainSchemaVersion: z.literal("1.0.0"),
+  })
+  .strict();
+
+const OverlayWireSchema = z
+  .object({
+    tenantPublicRef: TenantPublicRefSchema,
+    id: OverlayIdSchema,
+    organizationId: OrganizationIdSchema,
+    schemaVersion: z.literal("1.0.0"),
+    synthetic: z.boolean(),
+    relationshipStatus: z.enum([
+      "unknown",
+      "prospect",
+      "active_client",
+      "former_client",
+      "excluded",
+    ]),
+    capabilityUsage: z
+      .array(
+        z
+          .object({
+            capabilityId: CapabilityIdSchema,
+            usageStatus: z.enum(["unknown", "not_used", "evaluating", "active", "former"]),
+          })
+          .strict(),
+      )
+      .max(12),
+    matchStatus: z.enum(["unreviewed", "exact", "probable", "ambiguous", "rejected"]),
+    reviewStatus: z.enum(["unreviewed", "reviewed", "needs_attention"]),
+    sourceClassification: z.enum(["tenant_provided", "synthetic_demo"]),
+    effectiveAt: IsoDateTimeSchema,
+    updatedAt: IsoDateTimeSchema,
+  })
+  .strict();
+
+const CapabilityAssessmentWireSchema = z
+  .object({
+    tenantPublicRef: TenantPublicRefSchema,
+    id: AssessmentIdSchema,
+    organizationId: OrganizationIdSchema,
+    portfolioId: PortfolioIdSchema,
+    capabilityId: CapabilityIdSchema,
+    verticalId: VerticalIdSchema,
+    ruleSetId: RuleSetIdSchema,
+    ruleSetVersion: AdapterVersionSchema,
+    schemaVersion: z.literal("1.0.0"),
+    fit: FitAssessmentSchema,
+    confidence: ConfidenceLevelSchema,
+    freshness: FreshnessStatusSchema,
+    completeness: CompletenessStatusSchema,
+    publicationEligibility: PublicationEligibilitySchema,
+    ledger: z.array(z.unknown()).max(40),
+    assessedAt: IsoDateTimeSchema,
+    engineVersion: AdapterVersionSchema,
+    synthetic: z.boolean(),
+  })
+  .strict();
+
+const PortfolioAssessmentWireSchema = z
+  .object({
+    tenantPublicRef: TenantPublicRefSchema,
+    id: AssessmentIdSchema,
+    organizationId: OrganizationIdSchema,
+    portfolioId: PortfolioIdSchema,
+    verticalId: VerticalIdSchema,
+    schemaVersion: z.literal("1.0.0"),
+    status: z.enum(["unassessed", "insufficient_evidence", "invalid", "superseded", "assessed"]),
+    portfolioPriorityScore: z
+      .object({
+        pointsAwarded: z.number().int().min(0).max(10_000),
+        pointsPossible: z.number().int().min(1).max(10_000),
+        band: ObservedFitBandSchema,
+      })
+      .strict()
+      .nullable(),
+    bestObservedCapabilityFit: z
+      .object({
+        capabilityId: CapabilityIdSchema,
+        fit: FitAssessmentSchema,
+      })
+      .strict()
+      .nullable()
+      .optional(),
+    capabilityAssessmentIds: z.array(AssessmentIdSchema).max(20),
+    contributions: z.array(z.unknown()).max(20),
+    coverage: z
+      .object({
+        enabledCapabilityCount: z.number().int().min(0).max(20),
+        assessedCapabilityCount: z.number().int().min(0).max(20),
+        insufficientCapabilityCount: z.number().int().min(0).max(20),
+        enabledPriorityWeight: z.number().int().min(0).max(10_000),
+        assessedPriorityWeight: z.number().int().min(0).max(10_000),
+        conditionalOnAssessedCapabilities: z.boolean(),
+      })
+      .strict(),
+    confidence: ConfidenceLevelSchema,
+    freshness: FreshnessStatusSchema,
+    completeness: CompletenessStatusSchema,
+    publicationEligibility: PublicationEligibilitySchema,
+    opportunityContexts: z.array(OpportunityContextSchema).max(20),
+    assessedAt: IsoDateTimeSchema,
+    engineVersion: AdapterVersionSchema,
+    aggregationPolicyVersion: z.literal("1.0.0"),
+    synthetic: z.boolean(),
+  })
+  .strict();
+
+export function decodeWorkspaceRow(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): WorkspaceContextRecord {
+  rejectNullProjection(raw);
+  const wire = WorkspaceWireSchema.safeParse(raw);
+  if (!wire.success) throw new RepositoryError("INVALID_RESPONSE");
+  if (wire.data.tenantPublicRef !== binding.tenantPublicRef) {
+    throw new RepositoryError("INVALID_RESPONSE");
+  }
+  if (wire.data.tenantId !== binding.tenantId) {
+    throw new RepositoryError("INVALID_RESPONSE");
+  }
+  if (!isMembershipRole(wire.data.role)) {
+    throw new RepositoryError("INVALID_RESPONSE");
+  }
+  const mapped = mapMembershipRole(wire.data.role);
+  return Object.freeze({
+    tenantId: binding.tenantId,
+    principalId: wire.data.principalId,
+    displayName: wire.data.displayName,
+    status: wire.data.status,
+    role: mapped.principalRole,
+    allowedVerticalIds: Object.freeze([...wire.data.allowedVerticalIds]),
+    permissions: Object.freeze([...mapped.permissions]),
+  });
+}
+
+function isAlreadyDomainProvenance(value: unknown, tenantId: string): value is ProvenanceRecord {
+  const parsed = ProvenanceRecordSchema.safeParse(value);
+  return parsed.success && parsed.data.tenantId === tenantId;
+}
+
+function isAlreadyDomainOverlay(value: unknown, tenantId: string): value is OrganizationOverlay {
+  const parsed = OrganizationOverlaySchema.safeParse(value);
+  return parsed.success && parsed.data.tenantId === tenantId;
+}
+
+function isAlreadyDomainCapabilityAssessment(
+  value: unknown,
+  tenantId: string,
+): value is CapabilityAssessment {
+  const parsed = CapabilityAssessmentSchema.safeParse(value);
+  return parsed.success && parsed.data.tenantId === tenantId;
+}
+
+function isAlreadyDomainPortfolioAssessment(
+  value: unknown,
+  tenantId: string,
+): value is PortfolioAssessment {
+  const parsed = PortfolioAssessmentSchema.safeParse(value);
+  return parsed.success && parsed.data.tenantId === tenantId;
+}
+
+export function decodeProvenanceRow(raw: unknown, binding: LiveTenantBinding): ProvenanceRecord {
+  if (isAlreadyDomainProvenance(raw, binding.tenantId)) return Object.freeze(raw);
+  rejectNullProjection(raw);
+  const cleaned = stripWireTenantId(raw, binding);
+  assertNoForbiddenKeys(cleaned);
+  const wire = ProvenanceWireSchema.safeParse(cleaned);
+  if (!wire.success) throw new RepositoryError("INVALID_RESPONSE");
+  const stamped = bindAndStripTenantPublicRef(wire.data, binding);
+  const domain = ProvenanceRecordSchema.safeParse({
+    ...stamped,
+    retrievedAt: stamped.retrievedAt ?? null,
+    publishedAt: stamped.publishedAt ?? null,
+    reportingPeriod: stamped.reportingPeriod ?? null,
+    checksum: stamped.checksum ?? null,
+  });
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
+}
+
+export function decodeOverlayRow(raw: unknown, binding: LiveTenantBinding): OrganizationOverlay {
+  if (isAlreadyDomainOverlay(raw, binding.tenantId)) return Object.freeze(raw);
+  rejectNullProjection(raw);
+  const cleaned = stripWireTenantId(raw, binding);
+  assertNoForbiddenKeys(cleaned);
+  const wire = OverlayWireSchema.safeParse(cleaned);
+  if (!wire.success) throw new RepositoryError("INVALID_RESPONSE");
+  const stamped = bindAndStripTenantPublicRef(wire.data, binding);
+  const domain = OrganizationOverlaySchema.safeParse(stamped);
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
+}
+
+export function decodeCapabilityAssessmentRow(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): CapabilityAssessment {
+  if (isAlreadyDomainCapabilityAssessment(raw, binding.tenantId)) return Object.freeze(raw);
+  rejectNullProjection(raw);
+  const cleaned = stripWireTenantId(raw, binding);
+  assertNoForbiddenKeys(cleaned);
+  const wire = CapabilityAssessmentWireSchema.safeParse(cleaned);
+  if (!wire.success) throw new RepositoryError("INVALID_RESPONSE");
+  const stamped = bindAndStripTenantPublicRef(wire.data, binding);
+  const ledger = stamped.ledger.map((entry) => {
+    if (entry && typeof entry === "object") {
+      const record = entry as Record<string, unknown>;
+      const { tenantPublicRef: _ref, ...rest } = record;
+      void _ref;
+      return rest;
+    }
+    return entry;
+  });
+  const domain = CapabilityAssessmentSchema.safeParse({ ...stamped, ledger });
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
+}
+
+export function decodePortfolioAssessmentRow(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): PortfolioAssessment {
+  if (isAlreadyDomainPortfolioAssessment(raw, binding.tenantId)) return Object.freeze(raw);
+  rejectNullProjection(raw);
+  const cleaned = stripWireTenantId(raw, binding);
+  assertNoForbiddenKeys(cleaned);
+  const wire = PortfolioAssessmentWireSchema.safeParse(cleaned);
+  if (!wire.success) throw new RepositoryError("INVALID_RESPONSE");
+  const stamped = bindAndStripTenantPublicRef(wire.data, binding);
+  const domain = PortfolioAssessmentSchema.safeParse({
+    ...stamped,
+    bestObservedCapabilityFit: stamped.bestObservedCapabilityFit ?? null,
+    contributions: stamped.contributions,
+  });
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
+}
+
+export function decodeLedgerEntries(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): readonly RuleLedgerEntry[] {
+  if (!Array.isArray(raw)) throw new RepositoryError("INVALID_RESPONSE");
+  if (raw.length > 200) throw new RepositoryError("INVALID_RESPONSE");
+  const items = raw.map((entry) => {
+    rejectNullProjection(entry);
+    if (
+      typeof entry.tenantPublicRef === "string" &&
+      entry.tenantPublicRef !== binding.tenantPublicRef
+    ) {
+      throw new RepositoryError("INVALID_RESPONSE");
+    }
+    const cleaned = stripWireTenantId(entry, binding);
+    const { tenantPublicRef: _ref, ...withoutRef } = cleaned;
+    void _ref;
+    assertNoForbiddenKeys(withoutRef);
+    const domain = RuleLedgerEntrySchema.safeParse(withoutRef);
+    if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+    return domain.data;
+  });
+  return Object.freeze(items);
+}
+
+export function decodeAssessmentManifest(raw: unknown): AssessmentManifest {
+  rejectNullProjection(raw);
+  assertNoForbiddenKeys(raw);
+  const domain = AssessmentManifestSchema.safeParse(raw);
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
+}
+
+export function decodeOpportunityContext(raw: unknown): OpportunityContext {
+  rejectNullProjection(raw);
+  assertNoForbiddenKeys(raw);
+  const domain = OpportunityContextSchema.safeParse(raw);
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
+}
+
+export function decodeCapabilityPage(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): Readonly<{
+  items: readonly Capability[];
+  page: number;
+  pageSize: number;
+  total: number;
+}> {
+  assertNoForbiddenKeys(raw);
+  const page = PagedWireSchema.safeParse(raw);
+  if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
+  if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
+  const items = page.data.items.map((item) => {
+    rejectNullProjection(item);
+    const cleaned = stripWireTenantId(item, binding);
+    assertNoForbiddenKeys(cleaned);
+    const stamped =
+      typeof cleaned.tenantPublicRef === "string"
+        ? bindAndStripTenantPublicRef(
+            cleaned as { tenantPublicRef: string } & Record<string, unknown>,
+            binding,
+          )
+        : { ...cleaned, tenantId: binding.tenantId };
+    const domain = CapabilitySchema.safeParse(stamped);
+    if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+    return domain.data;
+  });
+  return Object.freeze({
+    items: Object.freeze(items),
+    page: page.data.page,
+    pageSize: page.data.pageSize,
+    total: page.data.total,
+  });
+}
+
+export function decodePortfolioPage(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): Readonly<{
+  items: readonly CapabilityPortfolio[];
+  page: number;
+  pageSize: number;
+  total: number;
+}> {
+  assertNoForbiddenKeys(raw);
+  const page = PagedWireSchema.safeParse(raw);
+  if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
+  if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
+  const items = page.data.items.map((item) => {
+    rejectNullProjection(item);
+    const cleaned = stripWireTenantId(item, binding);
+    assertNoForbiddenKeys(cleaned);
+    const stamped =
+      typeof cleaned.tenantPublicRef === "string"
+        ? bindAndStripTenantPublicRef(
+            cleaned as { tenantPublicRef: string } & Record<string, unknown>,
+            binding,
+          )
+        : { ...cleaned, tenantId: binding.tenantId };
+    const domain = CapabilityPortfolioSchema.safeParse(stamped);
+    if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+    return domain.data;
+  });
+  return Object.freeze({
+    items: Object.freeze(items),
+    page: page.data.page,
+    pageSize: page.data.pageSize,
+    total: page.data.total,
+  });
+}
+
+export function decodeCapabilityAssessmentPage(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): Readonly<{
+  items: readonly CapabilityAssessment[];
+  page: number;
+  pageSize: number;
+  total: number;
+}> {
+  assertNoForbiddenKeys(raw);
+  const page = PagedWireSchema.safeParse(raw);
+  if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
+  if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze({
+    items: Object.freeze(
+      page.data.items.map((item) => decodeCapabilityAssessmentRow(item, binding)),
+    ),
+    page: page.data.page,
+    pageSize: page.data.pageSize,
+    total: page.data.total,
+  });
+}
+
+export function decodePortfolioAssessmentPage(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): Readonly<{
+  items: readonly PortfolioAssessment[];
+  page: number;
+  pageSize: number;
+  total: number;
+}> {
+  assertNoForbiddenKeys(raw);
+  const page = PagedWireSchema.safeParse(raw);
+  if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
+  if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze({
+    items: Object.freeze(
+      page.data.items.map((item) => decodePortfolioAssessmentRow(item, binding)),
+    ),
+    page: page.data.page,
+    pageSize: page.data.pageSize,
+    total: page.data.total,
+  });
+}
+
+export function decodeOverlayPage(
+  raw: unknown,
+  binding: LiveTenantBinding,
+): Readonly<{
+  items: readonly OrganizationOverlay[];
+  page: number;
+  pageSize: number;
+  total: number;
+}> {
+  assertNoForbiddenKeys(raw);
+  const page = PagedWireSchema.safeParse(raw);
+  if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
+  if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze({
+    items: Object.freeze(page.data.items.map((item) => decodeOverlayRow(item, binding))),
+    page: page.data.page,
+    pageSize: page.data.pageSize,
+    total: page.data.total,
+  });
+}
+
+export function decodePortfolioRow(raw: unknown, binding: LiveTenantBinding): CapabilityPortfolio {
+  rejectNullProjection(raw);
+  const cleaned = stripWireTenantId(raw, binding);
+  assertNoForbiddenKeys(cleaned);
+  const stamped =
+    typeof cleaned.tenantPublicRef === "string"
+      ? bindAndStripTenantPublicRef(
+          cleaned as { tenantPublicRef: string } & Record<string, unknown>,
+          binding,
+        )
+      : { ...cleaned, tenantId: binding.tenantId };
+  const domain = CapabilityPortfolioSchema.safeParse(stamped);
+  if (!domain.success) throw new RepositoryError("INVALID_RESPONSE");
+  return Object.freeze(domain.data);
 }
 
 export type { OrganizationPublicRef };

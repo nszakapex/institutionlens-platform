@@ -75,18 +75,32 @@ import {
   type SupabasePostgresGateway,
 } from "@/repositories/supabase-postgres/gateway";
 import {
+  decodeAssessmentManifest,
   decodeBriefPage,
   decodeBriefSnapshotRow,
+  decodeCapabilityAssessmentPage,
+  decodeCapabilityAssessmentRow,
+  decodeCapabilityPage,
   decodeComparisonPage,
   decodeEvidencePage,
+  decodeLedgerEntries,
+  decodeOpportunityContext,
   decodeOrganizationCount,
   decodeOrganizationPage,
   decodeOrganizationRow,
+  decodeOverlayPage,
+  decodeOverlayRow,
+  decodePortfolioAssessmentPage,
+  decodePortfolioAssessmentRow,
+  decodePortfolioPage,
+  decodePortfolioRow,
+  decodeProvenanceRow,
   decodeSavedComparisonRow,
+  decodeWorkspaceRow,
   parseLiveTenantBinding,
   type LiveTenantBinding,
 } from "@/repositories/supabase-postgres/live-row-decoders";
-import { isNarrowReadGatewayOperation } from "@/repositories/supabase-postgres/rpc-surface";
+import { isLiveReadGatewayOperation } from "@/repositories/supabase-postgres/rpc-surface";
 
 function requireLiveTenantBinding(context: AuthorizationContext): LiveTenantBinding {
   return parseLiveTenantBinding({
@@ -242,7 +256,7 @@ class OperationRunner {
     operation: K,
     input: RepositoryOperationMap[K]["input"],
   ): Promise<RepositoryOperationMap[K]["output"]> {
-    if (!isNarrowReadGatewayOperation(operation)) {
+    if (!isLiveReadGatewayOperation(operation)) {
       throw new RepositoryError("UNSUPPORTED_OPERATION");
     }
     const binding = requireLiveTenantBinding(context);
@@ -284,7 +298,9 @@ class ProductionWorkspaceRepository implements WorkspaceRepository {
 
   async getCurrent(context: AuthorizationContext): Promise<WorkspaceContextRecord> {
     authorize(context, "organization:read");
-    return this.runner.execute(context, "workspace.get", {});
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "workspace.get", {});
+    return decodeWorkspaceRow(raw, binding);
   }
 }
 
@@ -365,9 +381,11 @@ class ProductionOrganizationRepository implements OrganizationRepository {
     provenanceId: ProvenanceId,
   ): Promise<ProvenanceRecord> {
     authorize(context, "evidence:read");
-    const result = await this.runner.execute(context, "provenance.getById", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "provenance.getById", {
       provenanceId: parseIdentifier(ProvenanceIdSchema, provenanceId),
     });
+    const result = decodeProvenanceRow(raw, binding);
     if (
       result.accessClassification === "restricted" &&
       !context.permissions.includes("evidence:restricted_read")
@@ -382,10 +400,12 @@ class ProductionOrganizationRepository implements OrganizationRepository {
     query: CapabilityQueryInput,
   ): Promise<PagedResult<Capability>> {
     authorize(context, "methodology:read");
-    return this.runner.execute(context, "capabilities.list", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "capabilities.list", {
       query: parseInput(CapabilityQuerySchema, query),
       sortField: "id",
     });
+    return decodeCapabilityPage(raw, binding);
   }
 }
 
@@ -394,9 +414,11 @@ class ProductionAssessmentRepository implements AssessmentRepository {
 
   async getCapabilityAssessment(context: AuthorizationContext, assessmentId: AssessmentId) {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "assessments.getCapability", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.getCapability", {
       assessmentId: parseIdentifier(AssessmentIdSchema, assessmentId),
     });
+    return decodeCapabilityAssessmentRow(raw, binding);
   }
 
   async listCapabilityAssessments(
@@ -404,17 +426,21 @@ class ProductionAssessmentRepository implements AssessmentRepository {
     query: AssessmentListQueryInput,
   ): Promise<PagedResult<CapabilityAssessment>> {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "assessments.listCapabilities", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.listCapabilities", {
       query: parseInput(AssessmentListQuerySchema, query),
       sortField: "id",
     });
+    return decodeCapabilityAssessmentPage(raw, binding);
   }
 
   async getPortfolioAssessment(context: AuthorizationContext, assessmentId: AssessmentId) {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "assessments.getPortfolio", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.getPortfolio", {
       assessmentId: parseIdentifier(AssessmentIdSchema, assessmentId),
     });
+    return decodePortfolioAssessmentRow(raw, binding);
   }
 
   async listPortfolioAssessments(
@@ -422,10 +448,12 @@ class ProductionAssessmentRepository implements AssessmentRepository {
     query: AssessmentListQueryInput,
   ): Promise<PagedResult<PortfolioAssessment>> {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "assessments.listPortfolios", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.listPortfolios", {
       query: parseInput(AssessmentListQuerySchema, query),
       sortField: "id",
     });
+    return decodePortfolioAssessmentPage(raw, binding);
   }
 
   async getAssessmentLedger(
@@ -433,9 +461,11 @@ class ProductionAssessmentRepository implements AssessmentRepository {
     assessmentId: AssessmentId,
   ): Promise<readonly RuleLedgerEntry[]> {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "assessments.getLedger", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.getLedger", {
       assessmentId: parseIdentifier(AssessmentIdSchema, assessmentId),
     });
+    return decodeLedgerEntries(raw, binding);
   }
 
   async getAssessmentManifest(
@@ -443,9 +473,11 @@ class ProductionAssessmentRepository implements AssessmentRepository {
     assessmentId: AssessmentId,
   ): Promise<AssessmentManifest> {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "assessments.getManifest", {
+    requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.getManifest", {
       assessmentId: parseIdentifier(AssessmentIdSchema, assessmentId),
     });
+    return decodeAssessmentManifest(raw);
   }
 
   async getOpportunityContext(
@@ -454,10 +486,12 @@ class ProductionAssessmentRepository implements AssessmentRepository {
     capabilityId: CapabilityId,
   ): Promise<OpportunityContext> {
     authorize(context, "assessment:read", "overlay:read");
-    return this.runner.execute(context, "assessments.getOpportunityContext", {
+    requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "assessments.getOpportunityContext", {
       organizationId: parseIdentifier(OrganizationIdSchema, organizationId),
       capabilityId: parseIdentifier(CapabilityIdSchema, capabilityId),
     });
+    return decodeOpportunityContext(raw);
   }
 }
 
@@ -469,9 +503,11 @@ class ProductionPortfolioRepository implements PortfolioRepository {
     portfolioId: PortfolioId,
   ): Promise<CapabilityPortfolio> {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "portfolios.getById", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "portfolios.getById", {
       portfolioId: parseIdentifier(PortfolioIdSchema, portfolioId),
     });
+    return decodePortfolioRow(raw, binding);
   }
 
   async list(
@@ -479,10 +515,12 @@ class ProductionPortfolioRepository implements PortfolioRepository {
     query: PortfolioListQueryInput,
   ): Promise<PagedResult<CapabilityPortfolio>> {
     authorize(context, "assessment:read");
-    return this.runner.execute(context, "portfolios.list", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "portfolios.list", {
       query: parseInput(PortfolioListQuerySchema, query),
       sortField: "id",
     });
+    return decodePortfolioPage(raw, binding);
   }
 }
 
@@ -491,10 +529,11 @@ class ProductionOverlayRepository implements OverlayRepository {
 
   async getById(context: AuthorizationContext, overlayId: OverlayId): Promise<OrganizationOverlay> {
     authorize(context, "overlay:read");
-    const result = await this.runner.execute(context, "overlays.getById", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "overlays.getById", {
       overlayId: parseIdentifier(OverlayIdSchema, overlayId),
     });
-    return withoutPrivateNotes(result);
+    return withoutPrivateNotes(decodeOverlayRow(raw, binding));
   }
 
   async getByOrganizationId(
@@ -502,10 +541,11 @@ class ProductionOverlayRepository implements OverlayRepository {
     organizationId: OrganizationId,
   ): Promise<OrganizationOverlay> {
     authorize(context, "overlay:read");
-    const result = await this.runner.execute(context, "overlays.getByOrganizationId", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "overlays.getByOrganizationId", {
       organizationId: parseIdentifier(OrganizationIdSchema, organizationId),
     });
-    return withoutPrivateNotes(result);
+    return withoutPrivateNotes(decodeOverlayRow(raw, binding));
   }
 
   async list(
@@ -513,10 +553,12 @@ class ProductionOverlayRepository implements OverlayRepository {
     query: OverlayListQueryInput,
   ): Promise<PagedResult<OrganizationOverlay>> {
     authorize(context, "overlay:read");
-    const result = await this.runner.execute(context, "overlays.list", {
+    const binding = requireLiveTenantBinding(context);
+    const raw = await this.runner.execute(context, "overlays.list", {
       query: parseInput(OverlayListQuerySchema, query),
       sortField: "id",
     });
+    const result = decodeOverlayPage(raw, binding);
     return Object.freeze({
       ...result,
       items: Object.freeze(result.items.map(withoutPrivateNotes)),

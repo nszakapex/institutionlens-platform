@@ -59,7 +59,7 @@ export const AssessmentManifestSchema = z
     overlayId: OverlayIdSchema.optional(),
     overlayVersion: AdapterVersionSchema.optional(),
     outputFingerprint: FingerprintSchema,
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
   })
   .strict();
 

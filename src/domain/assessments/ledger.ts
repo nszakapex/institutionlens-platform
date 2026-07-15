@@ -62,7 +62,7 @@ export const RuleLedgerEntrySchema = z
     publicationEligibility: PublicationEligibilitySchema,
     evaluatedAt: IsoDateTimeSchema,
     engineVersion: AdapterVersionSchema,
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
   })
   .strict()
   .superRefine((entry, ctx) => {

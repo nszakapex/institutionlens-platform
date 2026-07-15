@@ -73,7 +73,7 @@ export const CapabilityPortfolioSchema = z
     name: z.string().min(1).max(120),
     description: z.string().min(1).max(600),
     status: PortfolioStatusSchema,
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
     createdAt: IsoDateTimeSchema,
     updatedAt: IsoDateTimeSchema,
     capabilities: z.array(PortfolioCapabilityRefSchema).min(1).max(20),

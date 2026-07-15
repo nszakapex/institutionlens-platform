@@ -15,7 +15,7 @@ export const CapabilitySchema = z
     description: z.string().min(1).max(600),
     category: z.string().min(1).max(64),
     status: CapabilityStatusSchema,
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
     dataClassification: DataClassificationSchema,
     evidenceRequirements: z.array(z.string().min(1).max(80)).max(12),
     publicationPolicy: PublicationPolicySchema.default(DEFAULT_PUBLICATION_POLICY),

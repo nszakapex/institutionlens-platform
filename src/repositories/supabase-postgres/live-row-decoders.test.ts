@@ -12,8 +12,8 @@ import {
 import {
   DEFERRED_READ_GATEWAY_OPERATIONS,
   GATEWAY_OPERATION_TO_RPC,
+  LIVE_READ_GATEWAY_OPERATIONS,
   NARROW_READ_GATEWAY_OPERATIONS,
-  NARROW_READ_RPC_FUNCTIONS,
 } from "@/repositories/supabase-postgres/rpc-surface";
 
 const BINDING: LiveTenantBinding = Object.freeze({
@@ -165,13 +165,12 @@ describe("Phase 9 live row decoders", () => {
     expect(brief.state).toBe("approved");
   });
 
-  it("keeps the gateway-to-RPC map aligned and disjoint from deferred ops", () => {
-    expect(Object.values(GATEWAY_OPERATION_TO_RPC).sort()).toEqual(
-      [...NARROW_READ_RPC_FUNCTIONS].sort(),
+  it("keeps the gateway-to-RPC map aligned with the live read surface", () => {
+    expect(Object.keys(GATEWAY_OPERATION_TO_RPC).sort()).toEqual(
+      [...LIVE_READ_GATEWAY_OPERATIONS].sort(),
     );
     expect(NARROW_READ_GATEWAY_OPERATIONS).toHaveLength(9);
-    for (const deferred of DEFERRED_READ_GATEWAY_OPERATIONS) {
-      expect(NARROW_READ_GATEWAY_OPERATIONS).not.toContain(deferred);
-    }
+    expect(LIVE_READ_GATEWAY_OPERATIONS.length).toBeGreaterThan(9);
+    expect(DEFERRED_READ_GATEWAY_OPERATIONS).toEqual([]);
   });
 });

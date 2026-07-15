@@ -23,7 +23,6 @@ import type {
 import {
   DEFERRED_READ_GATEWAY_OPERATIONS,
   GATEWAY_OPERATION_TO_RPC,
-  NARROW_READ_GATEWAY_OPERATIONS,
   NARROW_READ_RPC_FUNCTIONS,
 } from "@/repositories/supabase-postgres/rpc-surface";
 import {
@@ -33,6 +32,7 @@ import {
   readAndValidatePhase9ApiRpc,
 } from "../../../scripts/phase-9-api-rpc-contract";
 import { PRIVILEGED_API_ROLE } from "../../../scripts/phase-9-schema-contract";
+import { generateSyntheticAssessments } from "@/verticals/financial-institutions/assessment/generate";
 
 function walkTsFiles(directory: string, files: string[] = []): string[] {
   for (const entry of readdirSync(directory)) {
@@ -185,10 +185,14 @@ describe("Phase 9 narrow read security contract", () => {
       );
       expect(content, relative).not.toMatch(/createAuthorizationContext\s*\(/);
       if (/searchParams/.test(content)) {
-        expect(content, relative).toMatch(/getDemoAuthorizationContext\(\)/);
+        expect(content, relative).toMatch(/getRequestAccess\(\)/);
         expect(content, relative).not.toMatch(
-          /getDemoAuthorizationContext\([^)]*searchParams|createAuthorizationContext\([\s\S]*searchParams/,
+          /getRequestAccess\([^)]*searchParams|createAuthorizationContext\([\s\S]*searchParams/,
         );
+      }
+      if (relative.replace(/\\/g, "/").includes("src/app/(app)/") && /page\.tsx$/.test(relative)) {
+        expect(content, relative).toMatch(/getRequestAccess\(\)/);
+        expect(content, relative).not.toMatch(/getDemoAuthorizationContext\(\)/);
       }
     }
 
@@ -331,32 +335,54 @@ describe("Phase 9 narrow read security contract", () => {
     expect(migration).not.toMatch(/\buser_id\b/);
   });
 
-  it("4. partial coverage: deferred live ops fail closed with UNSUPPORTED_OPERATION", async () => {
-    expect(NARROW_READ_GATEWAY_OPERATIONS).toHaveLength(9);
-    expect(DEFERRED_READ_GATEWAY_OPERATIONS.length).toBeGreaterThan(0);
-    const gateway = new FakeGateway(async () => {
-      throw new Error("synthetic fallback must never run");
+  it("4. live read ops delegate to the gateway without synthetic fallback", async () => {
+    expect(DEFERRED_READ_GATEWAY_OPERATIONS).toEqual([]);
+    const context = getDemoAuthorizationContext();
+    const store = loadFinancialInstitutionsStore();
+    const organization = store.organizations[0]!;
+    const provenance = store.provenance.find((item) => item.tenantId === context.tenant.id)!;
+    const portfolio = generateSyntheticAssessments().organizations.find(
+      (item) => item.organizationId === organization.id,
+    )!.portfolioAssessment;
+
+    const gateway = new FakeGateway(async (request) => {
+      switch (request.operation) {
+        case "workspace.get":
+          return {
+            tenantPublicRef: context.tenantPublicRef,
+            tenantId: context.tenant.id,
+            principalId: context.principal.id,
+            displayName: context.principal.displayName,
+            status: "active",
+            role: "analyst",
+            allowedVerticalIds: ["financial_institutions"],
+          };
+        case "provenance.getById":
+          return provenance;
+        case "assessments.getPortfolio":
+          return portfolio;
+        case "portfolios.list":
+        case "overlays.list":
+          return { items: [], page: 1, pageSize: 12, total: 0 };
+        default:
+          throw new Error(`unexpected operation ${request.operation}`);
+      }
     });
     const bundle = createSupabasePostgresRepositoryBundle(CONFIG, gateway);
-    const context = getDemoAuthorizationContext();
 
-    await expect(bundle.workspace.getCurrent(context)).rejects.toMatchObject({
-      code: "UNSUPPORTED_OPERATION",
-      publicMessage: "This data operation is not available.",
-    });
-    await expect(
-      bundle.organizations.getProvenance(context, "prov_syn_fi_001_profile" as never),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPERATION" });
-    await expect(
-      bundle.assessments.getPortfolioAssessment(context, "assess_syn_fi_001_portfolio" as never),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPERATION" });
-    await expect(bundle.portfolios.list(context, {})).rejects.toMatchObject({
-      code: "UNSUPPORTED_OPERATION",
-    });
-    await expect(bundle.overlays.list(context, {})).rejects.toMatchObject({
-      code: "UNSUPPORTED_OPERATION",
-    });
-    expect(gateway.requests).toHaveLength(0);
+    await bundle.workspace.getCurrent(context);
+    await bundle.organizations.getProvenance(context, provenance.id);
+    await bundle.assessments.getPortfolioAssessment(context, portfolio.id);
+    await bundle.portfolios.list(context, {});
+    await bundle.overlays.list(context, {});
+
+    expect(gateway.requests.map((request) => request.operation)).toEqual([
+      "workspace.get",
+      "provenance.getById",
+      "assessments.getPortfolio",
+      "portfolios.list",
+      "overlays.list",
+    ]);
   });
 
   it("4b. supported ops do not fall back to synthetic loaders", () => {

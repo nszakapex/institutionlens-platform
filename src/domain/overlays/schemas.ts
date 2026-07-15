@@ -60,7 +60,7 @@ export const OrganizationOverlaySchema = z
     tenantId: TenantIdSchema,
     organizationId: OrganizationIdSchema,
     schemaVersion: z.literal("1.0.0"),
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
     relationshipStatus: RelationshipStatusSchema,
     capabilityUsage: z.array(CapabilityUsageRecordSchema).max(12),
     matchStatus: OverlayMatchStatusSchema,
@@ -72,8 +72,8 @@ export const OrganizationOverlaySchema = z
   })
   .strict()
   .refine(
-    (overlay) => overlay.sourceClassification === "synthetic_demo",
-    "Synthetic Phase 4 overlays must use synthetic_demo source classification",
+    (overlay) => overlay.sourceClassification !== "synthetic_demo" || overlay.synthetic,
+    "synthetic_demo overlays must be marked synthetic",
   );
 
 export type OrganizationOverlay = z.infer<typeof OrganizationOverlaySchema>;

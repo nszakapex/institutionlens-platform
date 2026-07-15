@@ -63,7 +63,7 @@ export const CapabilityAssessmentSchema = z
     ledger: z.array(RuleLedgerEntrySchema).max(40),
     assessedAt: IsoDateTimeSchema,
     engineVersion: AdapterVersionSchema,
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
   })
   .strict();
 
@@ -130,7 +130,7 @@ export const PortfolioAssessmentSchema = z
     assessedAt: IsoDateTimeSchema,
     engineVersion: AdapterVersionSchema,
     aggregationPolicyVersion: z.literal("1.0.0"),
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
   })
   .strict();
 

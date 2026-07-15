@@ -24,7 +24,10 @@ export const ProvenanceRecordSchema = z
     tenantId: TenantIdSchema,
     sourceType: SourceTypeSchema,
     sourceName: z.string().min(1).max(160),
-    /** Safe internal scheme only for synthetic Phase 3 data. */
+    /**
+     * Safe internal scheme for synthetic fixtures.
+     * Live RPC projections intentionally withhold source_reference — optional here.
+     */
     sourceReference: z
       .string()
       .min(1)
@@ -37,7 +40,8 @@ export const ProvenanceRecordSchema = z
       .refine(
         (value) => !/^(file:|https?:\/\/(?!.*\.example$))/i.test(value),
         "HTTP(S) and file references are forbidden except .example labels",
-      ),
+      )
+      .optional(),
     retrievedAt: IsoDateTimeSchema.nullable(),
     publishedAt: IsoDateTimeSchema.nullable(),
     reportingPeriod: z
@@ -48,12 +52,12 @@ export const ProvenanceRecordSchema = z
       .nullable(),
     checksum: z
       .string()
-      .regex(/^[a-f0-9]{64}$/)
+      .regex(/^[0-9a-f]{64}$/)
       .nullable(),
     licenseStatus: LicenseStatusSchema,
     accessClassification: AccessClassificationSchema,
     validationStatus: ValidationStatusSchema,
-    synthetic: z.literal(true),
+    synthetic: z.boolean(),
     dataClassification: DataClassificationSchema,
     notes: z.string().max(400).optional(),
     createdAt: IsoDateTimeSchema,
