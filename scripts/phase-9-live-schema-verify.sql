@@ -312,6 +312,22 @@ missing_api_roles as (
   left join pg_catalog.pg_roles role_catalog on role_catalog.rolname = expected.role_name
   where role_catalog.oid is null
 ),
+denied_api_roles(role_name) as (
+  values ('anon'), ('service_role')
+),
+allowed_helper_functions(function_name) as (
+  values
+    ('accessible_tenant_ids'),
+    ('own_membership_ids'),
+    ('active_member_has_roles')
+),
+withheld_columns(table_name, column_name) as (
+  values
+    ('provenance_records', 'private_notes'),
+    ('provenance_records', 'source_reference'),
+    ('organization_overlays', 'private_notes'),
+    ('memberships', 'user_id')
+),
 schema_acl_violations as (
   select acl.grantee
   from pg_catalog.pg_namespace namespace
@@ -320,9 +336,18 @@ schema_acl_violations as (
   ) acl
   left join pg_catalog.pg_roles grantee_role on grantee_role.oid = acl.grantee
   where namespace.nspname = 'institutionlens'
-    and (acl.grantee = 0 or grantee_role.rolname in (select role_name from expected_api_roles))
+    and (
+      acl.grantee = 0
+      or grantee_role.rolname in (select role_name from denied_api_roles)
+      or (
+        grantee_role.rolname = 'authenticated'
+        and acl.privilege_type <> 'USAGE'
+      )
+    )
 ),
 relation_acl_violations as (
+  -- Table-level ACLs for authenticated are forbidden: SELECT must be column-only
+  -- (attacl) so withheld columns cannot be overridden by GRANT SELECT ON TABLE.
   select relation.relname
   from pg_catalog.pg_class relation
   join pg_catalog.pg_namespace namespace on namespace.oid = relation.relnamespace
@@ -338,7 +363,33 @@ relation_acl_violations as (
   left join pg_catalog.pg_roles grantee_role on grantee_role.oid = acl.grantee
   where namespace.nspname = 'institutionlens'
     and relation.relkind in ('r', 'p', 'S')
-    and (acl.grantee = 0 or grantee_role.rolname in (select role_name from expected_api_roles))
+    and (
+      acl.grantee = 0
+      or grantee_role.rolname in (select role_name from denied_api_roles)
+      or grantee_role.rolname = 'authenticated'
+    )
+),
+withheld_column_privilege_violations as (
+  select withheld.table_name || '.' || withheld.column_name as column_ref
+  from withheld_columns withheld
+  where has_column_privilege(
+    'authenticated',
+    format('institutionlens.%I', withheld.table_name),
+    withheld.column_name,
+    'select'
+  )
+  or has_column_privilege(
+    'anon',
+    format('institutionlens.%I', withheld.table_name),
+    withheld.column_name,
+    'select'
+  )
+  or has_column_privilege(
+    'service_role',
+    format('institutionlens.%I', withheld.table_name),
+    withheld.column_name,
+    'select'
+  )
 ),
 function_acl_violations as (
   select procedure.proname
@@ -349,7 +400,17 @@ function_acl_violations as (
   ) acl
   left join pg_catalog.pg_roles grantee_role on grantee_role.oid = acl.grantee
   where namespace.nspname = 'institutionlens'
-    and (acl.grantee = 0 or grantee_role.rolname in (select role_name from expected_api_roles))
+    and (
+      acl.grantee = 0
+      or grantee_role.rolname in (select role_name from denied_api_roles)
+      or (
+        grantee_role.rolname = 'authenticated'
+        and (
+          acl.privilege_type <> 'EXECUTE'
+          or procedure.proname not in (select function_name from allowed_helper_functions)
+        )
+      )
+    )
 ),
 default_acl_types(object_type) as (
   values ('r'::"char"), ('S'::"char"), ('f'::"char")
@@ -376,7 +437,7 @@ default_acl_violations as (
 ),
 effective_role_privilege_violations as (
   select role_name
-  from expected_api_roles
+  from denied_api_roles
   where has_schema_privilege(role_name, 'institutionlens', 'usage')
      or has_schema_privilege(role_name, 'institutionlens', 'create')
      or exists (
@@ -396,6 +457,38 @@ effective_role_privilege_violations as (
          role_name,
          format('institutionlens.%I', table_name),
          privilege_name
+       )
+     )
+  union all
+  select role_name
+  from (values ('authenticated')) authenticated_role(role_name)
+  where has_schema_privilege(role_name, 'institutionlens', 'create')
+     or exists (
+       select 1
+       from expected_tables
+       cross join (
+         values
+           ('insert'),
+           ('update'),
+           ('delete'),
+           ('truncate'),
+           ('references'),
+           ('trigger')
+       ) privileges(privilege_name)
+       where has_table_privilege(
+         role_name,
+         format('institutionlens.%I', table_name),
+         privilege_name
+       )
+     )
+     or not has_schema_privilege(role_name, 'institutionlens', 'usage')
+     or exists (
+       select 1
+       from expected_tables
+       where not has_table_privilege(
+         role_name,
+         format('institutionlens.%I', table_name),
+         'select'
        )
      )
 ),
@@ -425,7 +518,8 @@ application_rows_exist as (
 expected_migration_versions(version) as (
   values
     ('20260713190000'),
-    ('20260715181000')
+    ('20260715181000'),
+    ('20260715200000')
 ),
 migration_history as (
   select
@@ -437,6 +531,67 @@ migration_history as (
       where version not in (select version from expected_migration_versions)
     )::bigint as unexpected_count
   from supabase_migrations.schema_migrations
+),
+expected_select_policies(policy_name) as (
+  values
+    ('tenants_select_authenticated'),
+    ('tenant_verticals_select_authenticated'),
+    ('memberships_select_authenticated'),
+    ('organizations_select_authenticated'),
+    ('import_runs_select_authenticated'),
+    ('provenance_records_select_authenticated'),
+    ('evidence_records_select_authenticated'),
+    ('evidence_dependencies_select_authenticated'),
+    ('assessment_runs_select_authenticated'),
+    ('assessment_results_select_authenticated'),
+    ('capability_results_select_authenticated'),
+    ('rule_results_select_authenticated'),
+    ('rule_result_evidence_select_authenticated'),
+    ('organization_overlays_select_authenticated'),
+    ('saved_comparisons_select_authenticated'),
+    ('saved_comparison_organizations_select_authenticated'),
+    ('brief_snapshots_select_authenticated'),
+    ('audit_events_select_authenticated')
+),
+policy_differences as (
+  select expected.policy_name
+  from expected_select_policies expected
+  left join (
+    select policy.polname as policy_name
+    from pg_catalog.pg_policy policy
+    join pg_catalog.pg_class relation on relation.oid = policy.polrelid
+    join pg_catalog.pg_namespace namespace on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'institutionlens'
+  ) actual on actual.policy_name = expected.policy_name
+  where actual.policy_name is null
+  union
+  select actual.policy_name
+  from (
+    select policy.polname as policy_name
+    from pg_catalog.pg_policy policy
+    join pg_catalog.pg_class relation on relation.oid = policy.polrelid
+    join pg_catalog.pg_namespace namespace on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'institutionlens'
+  ) actual
+  left join expected_select_policies expected on expected.policy_name = actual.policy_name
+  where expected.policy_name is null
+),
+policy_shape_violations as (
+  select policy.polname as policy_name
+  from pg_catalog.pg_policy policy
+  join pg_catalog.pg_class relation on relation.oid = policy.polrelid
+  join pg_catalog.pg_namespace namespace on namespace.oid = relation.relnamespace
+  where namespace.nspname = 'institutionlens'
+    and (
+      policy.polcmd <> 'r'
+      or policy.polpermissive is distinct from true
+      or not exists (
+        select 1
+        from unnest(policy.polroles) role_oid
+        join pg_catalog.pg_roles role_catalog on role_catalog.oid = role_oid
+        where role_catalog.rolname = 'authenticated'
+      )
+    )
 ),
 checks(check_name, passed, expected_value, actual_value) as (
   select
@@ -480,7 +635,15 @@ checks(check_name, passed, expected_value, actual_value) as (
   select 'rls_enabled_and_forced', count(*) = 0, '0 violations', count(*)::text || ' violations'
   from rls_violations
   union all
-  select 'rls_policy_count', value = 0, '0', value::text
+  select
+    'rls_policy_count',
+    value = 18
+      and (select count(*) from policy_differences) = 0
+      and (select count(*) from policy_shape_violations) = 0,
+    '18 authenticated SELECT policies',
+    value::text || ' total, '
+      || (select count(*) from policy_differences)::text || ' set diffs, '
+      || (select count(*) from policy_shape_violations)::text || ' shape violations'
   from policy_count
   union all
   select 'api_roles_exist', count(*) = 0, '0 missing', count(*)::text || ' missing'
@@ -491,6 +654,7 @@ checks(check_name, passed, expected_value, actual_value) as (
     (
       (select count(*) from schema_acl_violations)
       + (select count(*) from relation_acl_violations)
+      + (select count(*) from withheld_column_privilege_violations)
       + (select count(*) from function_acl_violations)
       + (select count(*) from default_acl_violations)
       + (select count(*) from effective_role_privilege_violations)
@@ -499,6 +663,7 @@ checks(check_name, passed, expected_value, actual_value) as (
     (
       (select count(*) from schema_acl_violations)
       + (select count(*) from relation_acl_violations)
+      + (select count(*) from withheld_column_privilege_violations)
       + (select count(*) from function_acl_violations)
       + (select count(*) from default_acl_violations)
       + (select count(*) from effective_role_privilege_violations)
@@ -509,8 +674,8 @@ checks(check_name, passed, expected_value, actual_value) as (
   union all
   select
     'migration_history',
-    total_count = 2 and expected_count = 2 and unexpected_count = 0,
-    'exactly 20260713190000 and 20260715181000',
+    total_count = 3 and expected_count = 3 and unexpected_count = 0,
+    'exactly 20260713190000, 20260715181000, 20260715200000',
     total_count::text || ' total, ' || expected_count::text
       || ' expected, ' || unexpected_count::text || ' unexpected'
   from migration_history

@@ -279,14 +279,15 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 
 ## D-022 - Core database schema and access boundary
 
-**Status:** Approved for Phase 9 Batch 1 architecture; allow policies deferred to Batch 4
+**Status:** Approved for Phase 9 Batch 1 architecture; Batch 4 authenticated read RLS prepared (unapplied)
 
 - Store core application tables in a dedicated `institutionlens` schema, not in the default public Data API surface.
 - Use raw UUIDs only for server-side database joins. Use tenant-scoped opaque references at presentation and audit boundaries.
 - Put `tenant_id` on every tenant-owned table and use tenant-composite foreign keys for tenant-owned relationships.
 - Enable and force RLS on every core table from the initial migration.
 - Batch 1 revokes `anon`, `authenticated`, and `service_role` access and defines no allow policies. This is intentionally fail closed.
-- Batch 4 may introduce a separate narrow API/RPC schema. It must omit raw IDs and private fields, use minimal grants, and preserve RLS.
+- Batch 4 read RLS binds `auth.uid()` to active `memberships.user_id` only; tenant identity must not come from client input or mutable JWT metadata.
+- Batch 4 may later introduce a separate narrow API/RPC schema. It must omit raw IDs and private fields, use minimal grants, and preserve RLS.
 - Customer reads use authenticated membership identity. Privileged ingestion/maintenance paths remain server-only, bounded, authorized, and audited.
 - Restricted evidence carries a direct access classification, and restricted content is excluded from publication-safe search.
 - Overlay private notes, provenance private notes, and source references never enter application view models, search, exports, logs, or client state.
@@ -304,6 +305,20 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - Propose tenant-scoped research data for active-contract lifetime plus a 30-day deletion grace; this requires legal/customer approval.
 - Retention expiry columns do not authorize automated deletion. No purge job is implemented in Phase 9 Batch 1.
 - See `docs/PRODUCTION_DATA_FOUNDATION.md` for the schema, migration, rollback, and retention controls.
+
+## D-025 - Authenticated read-only RLS enablement
+
+**Status:** Approved for Batch 4 preparation; hardened after security review; remote apply and Auth-user attack tests remain gated
+
+- Grant `authenticated` only `USAGE` on `institutionlens` plus **explicit column** `SELECT` grants. Never use table-level `SELECT` (it would override column withholdings).
+- Withhold `private_notes`, provenance `source_reference`, and `memberships.user_id` from `authenticated` (grant omit + revoke).
+- Keep `anon`, `PUBLIC`, and `service_role` without InstitutionLens request-path privileges.
+- Create exactly one `FOR SELECT TO authenticated` policy per core table; create no write policies.
+- Map membership roles as: `owner` (restricted + overlay + audit), `analyst` (overlay, no restricted), `viewer` (publication-eligible rows only; no provenance/overlays).
+- Default user-owned rows to self-only (`memberships`, saved comparisons, own brief drafts).
+- Use narrow `SECURITY DEFINER` membership helpers with pinned `search_path`; do not use `USING (true)`, client tenant IDs, or broad definer bypasses.
+- Prove isolation later with the two-tenant attack-test plan before claiming RLS completeness.
+- See `docs/PHASE_9_BATCH_4_POLICY_MODEL.md` and `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`.
 
 ## D-024 - Production repository and configuration boundary
 

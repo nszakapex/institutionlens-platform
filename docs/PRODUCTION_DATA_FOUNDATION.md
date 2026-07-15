@@ -2,12 +2,13 @@
 
 **Phase:** Project Phase 9
 
-**Status:** Staging schema foundation linked/applied for `20260713190000`; corrective default-function-privilege migration prepared and unapplied; application runtime still synthetic local-demo
+**Status:** Staging schema applied through corrective default privileges; Batch 4 authenticated read RLS prepared and unapplied; application runtime still synthetic local-demo
 
 **Migrations:**
 
-- `supabase/migrations/20260713190000_phase9_initial_schema.sql` (applied on approved staging)
-- `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` (prepared; not applied)
+- `supabase/migrations/20260713190000_phase9_initial_schema.sql` (applied)
+- `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` (applied)
+- `supabase/migrations/20260715200000_phase9_authenticated_read_rls.sql` (prepared; not applied)
 
 ## Architecture
 
@@ -114,7 +115,7 @@ All application tables use UUID primary keys for internal joins. Those UUIDs mus
 - Tables that reference memberships use tenant-composite keys.
 - `memberships.user_id` is the only application-schema reference to Supabase-managed `auth.users`; it references the primary key as recommended by Supabase.
 - Auth-user deletion nulls `memberships.user_id` while retaining the membership tombstone for historical references. A membership without a user cannot resolve an authenticated session.
-- RLS is enabled and forced on all 18 core tables (17 tenant-owned child tables plus `tenants`). Batch 1 defines no policies, so access is denied by default.
+- RLS is enabled and forced on all 18 core tables (17 tenant-owned child tables plus `tenants`). Batch 1 defined no policies (fail closed). Batch 4 prepares authenticated SELECT policies in `20260715200000` (unapplied): column-only grants (no table-level SELECT), withheld private notes / source references / membership Auth UUIDs, self-only ownership defaults, and viewer publication-eligible row gates. See `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`.
 
 RLS is necessary but not sufficient. Application authorization, tenant filters, frozen/redacted view models, opaque refs, safe errors, and privacy tests remain mandatory.
 
@@ -134,7 +135,7 @@ Existing local-demo analyst/reviewer/administrator types remain unchanged in Bat
 
 Evidence stores `access_classification` directly so policy checks do not depend on joining provenance. Restricted rows must have an empty `safe_search_text`; the initial migration enforces this. Restricted content remains in server-only columns and later policies/RPCs must require `evidence:restricted_read` before reading it.
 
-Provenance private notes and overlay private notes are stored only for controlled internal workflows. They are forbidden in application view models, exports, logs, search indexes, and audit metadata.
+Provenance private notes and overlay private notes are stored only for controlled internal workflows. They are forbidden in application view models, exports, logs, search indexes, and audit metadata. Batch 4 authenticated grants omit and revoke `private_notes` and provenance `source_reference` so those columns are unreachable even when a provenance/overlay row is otherwise readable.
 
 Verified-evidence lineage requirements span evidence and provenance rows and cannot be expressed as a static row `CHECK`. The production repository transaction must enforce them and Batch 4 integration tests must prove them under RLS.
 
@@ -167,7 +168,7 @@ All list operations remain bounded and use stable tie-breakers. Batch 2 caps pag
 7. Apply with `supabase db push` only after local and staging checks pass.
 8. Production migrations use expand/migrate/contract changes; destructive contract steps require a separate approved maintenance change.
 
-The approved staging project is linked through ignored local CLI metadata only. The initial schema migration is applied; the corrective default-function-privilege migration is repository-prepared and remains unapplied until a separate owner-approved push. Application runtime wiring is unchanged.
+The approved staging project is linked through ignored local CLI metadata only. Initial and corrective migrations are applied. Authenticated read RLS (`20260715200000`) is repository-prepared and remains unapplied until a separate owner-approved push. Application runtime wiring remains synthetic local-demo.
 
 ## Default privilege invariant
 
@@ -183,6 +184,7 @@ Before external data exists:
 
 - reset a disposable local stack with `supabase db reset`; or
 - reset the last local migration with `supabase migration down --local --last 1` and verify migration history;
+- use `supabase/rollback/20260715200000_phase9_authenticated_read_rls.sql` only on an explicitly approved disposable database to remove authenticated read policies/grants and restore fail-closed zero-policy posture;
 - use `supabase/rollback/20260715181000_phase9_default_function_privileges.sql` only as a security-reverting emergency operation on an explicitly approved disposable database; it reintroduces `PUBLIC EXECUTE` defaults for future functions, does not drop data, and is not a safe production rollback;
 - use `supabase/rollback/20260713190000_phase9_initial_schema.sql` only for an explicitly approved disposable local/staging database wipe.
 

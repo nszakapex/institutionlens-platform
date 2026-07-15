@@ -1,10 +1,10 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2 plus Batch 3 live-migration preparation and default-function-privilege remediation (prepared)
+**Scope:** Batches 1-2, Batch 3 live-migration preparation, corrective default privileges (applied), Batch 4 authenticated read RLS preparation (unapplied)
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial remote migration applied; corrective migration prepared and unapplied
+**Status:** Batches 1-2 complete; Batch 3 prep complete; corrective applied; Batch 4 RLS preparation complete and unapplied
 
-**External infrastructure:** One owner-approved staging/development Supabase project (`qzidcqtaabubvtycstwy`) exists; linked locally via ignored metadata; `20260713190000` applied; `20260715181000` not applied; no deployment
+**External infrastructure:** Staging project `qzidcqtaabubvtycstwy`; linked via ignored metadata; `20260713190000` + `20260715181000` applied; `20260715200000` not applied; no Auth users; no deployment
 
 ## Batch 1 requirements
 
@@ -53,7 +53,21 @@
 | P9B3P-05 | Verify staging contains no application rows or unexpected migration rows  | Implemented    | Exact `EXISTS` probes for all 18 tables; history expects `20260713190000` + `20260715181000`                   | Corrective version absent until approved push           |
 | P9B3P-06 | Keep verifier aligned with the committed migration and non-mutating       | Implemented    | Contracts cover initial + corrective migrations; retain `acldefault` fallback; reject verifier exemptions      | Static validation cannot prove PostgreSQL execution     |
 | P9B3P-07 | Make no remote, Auth, runtime, environment, deployment, or Vercel change  | Implemented    | Corrective batch is repository-only until separately approved push; no Auth/app/Vercel/deploy changes          | Corrective remote apply remains approval-gated          |
-| P9B3C-01 | Remediate missing function default-ACL lockdown without weakening gates   | Prepared       | `20260715181000_phase9_default_function_privileges.sql` fail-closed forward migration + destructive rollback   | Not applied to staging yet                              |
+| P9B3C-01 | Remediate missing function default-ACL lockdown without weakening gates   | Implemented    | `20260715181000` applied; live verifier 12/12 including `api_role_privileges`                                  | —                                                       |
+
+## Batch 4 authenticated read RLS preparation requirements
+
+| ID       | Requirement                                                            | Classification | Evidence                                                                        | Remaining limitation                        |
+| -------- | ---------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
+| P9B4P-01 | Bind principals via `auth.uid()` → active memberships only             | Prepared       | Helpers + policies in `20260715200000`; `PHASE_9_BATCH_4_POLICY_MODEL.md`       | Auth users / session binding not configured |
+| P9B4P-02 | Authenticated SELECT-only; deny anon/PUBLIC/service_role request paths | Prepared       | Column grants/revokes + live verifier denied-role privilege model               | Unapplied; live privilege proof deferred    |
+| P9B4P-03 | One SELECT policy per core table with tenant + role gates              | Prepared       | 18 `*_select_authenticated` policies; restricted/overlay/viewer/self-only gates | Live attack tests not run                   |
+| P9B4P-04 | No private-note / source_reference / memberships.user_id; no writes    | Prepared       | Column-only grants + explicit revokes; contract rejects table-level SELECT      | RPC projection surface still deferred       |
+| P9B4P-05 | Static contracts reject missing/cross-tenant/permissive/service grants | Prepared       | `phase-9-rls-policy-contract.ts` + tests (viewer/self-only/withheld columns)    | Cannot prove PostgreSQL enforcement offline |
+| P9B4P-06 | Document two-tenant attack-test plan for later external gate           | Prepared       | `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md` (17 cases incl. identity/publication)    | Requires Auth fixtures and approved apply   |
+| P9B4P-07 | No Auth/runtime/env/Vercel/apply/commit/push in preparation            | Implemented    | Repository-only Batch 4 prep                                                    | Apply + Auth remain approval-gated          |
+| P9B4P-08 | Viewer cannot read unpublished research; self-only ownership defaults  | Prepared       | Publication-eligibility predicates; memberships/comparisons self-only           | Live attack tests not run                   |
+| P9B4P-09 | Explicit viewer table/column allowlist enforced in static contracts    | Prepared       | `VIEWER_PUBLICATION_SAFE_COLUMN_ALLOWLIST` + denied-table/policy checks         | Live attack tests not run                   |
 
 ## Batch 1 verification evidence
 
@@ -128,13 +142,14 @@ After the corrective migration is approved and applied, `supabase_migrations.sch
 
 ## Deferred Phase 9 requirements
 
-| Area                                                           | Batch                                                     |
-| -------------------------------------------------------------- | --------------------------------------------------------- |
-| Authenticated Supabase SDK transport and session binding       | 3                                                         |
-| Narrow RPC implementation and live row decoders                | 4                                                         |
-| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation            |
-| Supabase Auth, SSR sessions, invites/recovery, role resolution | 3                                                         |
-| RLS policies, narrow grants/API surface, direct attack tests   | 4                                                         |
-| Environment cutover, health/readiness, demo-seed isolation     | 5                                                         |
-| Local/staging migration and rollback rehearsal                 | 5                                                         |
-| Remote staging migration application                           | Separate owner approval after dry-run and verifier review |
+| Area                                                           | Batch                                          |
+| -------------------------------------------------------------- | ---------------------------------------------- |
+| Authenticated Supabase SDK transport and session binding       | 3                                              |
+| Narrow RPC implementation and live row decoders                | 4                                              |
+| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation |
+| Supabase Auth, SSR sessions, invites/recovery, role resolution | 3                                              |
+| Apply prepared read RLS migration + live 12/12 verifier        | Separate owner approval                        |
+| Execute two-tenant RLS attack-test plan                        | After Auth users + memberships exist           |
+| Narrow API/RPC schema and live row decoders                    | Remaining Batch 4 work                         |
+| Environment cutover, health/readiness, demo-seed isolation     | 5                                              |
+| Local/staging migration and rollback rehearsal                 | 5                                              |

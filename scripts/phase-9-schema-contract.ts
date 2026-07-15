@@ -34,10 +34,12 @@ export const PHASE_9_CORRECTIVE_ROLLBACK_PATH = path.join(
 
 export const PHASE_9_INITIAL_MIGRATION_VERSION = "20260713190000";
 export const PHASE_9_CORRECTIVE_MIGRATION_VERSION = "20260715181000";
+export const PHASE_9_RLS_MIGRATION_VERSION = "20260715200000";
 
 export const PHASE_9_EXPECTED_MIGRATION_VERSIONS = [
   PHASE_9_INITIAL_MIGRATION_VERSION,
   PHASE_9_CORRECTIVE_MIGRATION_VERSION,
+  PHASE_9_RLS_MIGRATION_VERSION,
 ] as const;
 
 export const CORE_TABLES = [
@@ -61,7 +63,7 @@ export const CORE_TABLES = [
   "audit_events",
 ] as const;
 
-const PRIVILEGED_API_ROLE = ["service", "role"].join("_");
+export const PRIVILEGED_API_ROLE = ["service", "role"].join("_");
 const API_ROLES = ["anon", "authenticated", PRIVILEGED_API_ROLE];
 
 function normalizeSql(sql: string): string {

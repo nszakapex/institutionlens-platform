@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial remote schema applied; default-function-privilege corrective migration prepared and unapplied; authentication work pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective migrations applied; Batch 4 authenticated read RLS preparation complete (unapplied); Auth/session binding and runtime cutover pending
 
 **Depends on:** Phases 0-8
 
@@ -88,11 +88,13 @@ Compatibility findings:
 
 ### Batch 4 - RLS and cross-tenant hardening
 
-- Add reviewed RLS policies and minimal grants for every table
-- Add a narrow API/RPC schema that never returns raw internal IDs
-- Test two tenants and all three roles against reads, writes, joins, aggregates, searches, and foreign references
-- Test restricted evidence, overlays, audits, membership changes, and disabled principals
-- Verify missing access does not disclose whether restricted or overlay data exists
+- Preparation checkpoint: unapplied forward migration `20260715200000_phase9_authenticated_read_rls.sql` with fail-closed rollback
+- Preparation checkpoint: `auth.uid()` → active membership tenant binding; authenticated **column-only** SELECT grants; anon/PUBLIC/service_role remain denied
+- Preparation checkpoint: withheld `private_notes`, provenance `source_reference`, and `memberships.user_id`; self-only memberships/comparisons; viewer publication-eligible gates
+- Preparation checkpoint: static RLS policy contracts + live verifier expectations for 18 SELECT policies, withheld-column proofs, and three-migration history
+- Preparation checkpoint: documented two-tenant attack-test plan (`docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`) and policy model (`docs/PHASE_9_BATCH_4_POLICY_MODEL.md`)
+- Later external gate: apply migration; run live verifier 12/12; execute attack-test plan with Auth users
+- Later Batch 4 work still required: narrow API/RPC schema that never returns raw internal IDs; live two-tenant/three-role attack execution
 
 ### Batch 5 - Controlled cutover
 
@@ -176,7 +178,7 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-After the approved initial push, live history contained `20260713190000` and the verifier reported `api_role_privileges` = 1 violation (default ACL / future functions / `PUBLIC EXECUTE`). After the corrective migration is approved and applied, CLI migration history must contain exactly the two repository versions `20260713190000` and `20260715181000`, and the SELECT-only verifier must report 12/12 including `api_role_privileges` with the retained `acldefault` fallback. The verifier remains an immediate post-migration, pre-seed gate: later RLS allow-policy validation, two-tenant attack tests, and rollback rehearsal remain mandatory and cannot be inferred from these static tests.
+Corrective migration `20260715181000` is applied and cleared the function default-ACL gap (live verifier 12/12 at that checkpoint). Batch 4 preparation adds unapplied `20260715200000` authenticated read RLS. After that migration is approved and applied, history must contain exactly `20260713190000`, `20260715181000`, and `20260715200000`, with 18 authenticated SELECT policies and authenticated SELECT-only privileges. Live two-tenant attack tests and narrow RPC work remain later gates.
 
 ## Stop gates
 

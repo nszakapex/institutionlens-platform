@@ -370,8 +370,22 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   ) {
     findings.push("Live verifier must fail on missing, extra, or unusable indexes.");
   }
-  if (!normalizedSql.includes("select 'rls_policy_count',value = 0,'0',value::text")) {
-    findings.push("Live verifier must fail on any RLS policy.");
+  if (
+    !normalizedSql.includes("value = 18") ||
+    !normalizedSql.includes("expected_select_policies") ||
+    !normalizedSql.includes("policy_shape_violations")
+  ) {
+    findings.push(
+      "Live verifier must require exactly 18 authenticated SELECT policies with shape checks.",
+    );
+  }
+  if (normalizedSql.includes("select 'rls_policy_count',value = 0,'0',value::text")) {
+    findings.push("Live verifier must not keep the pre-Batch-4 zero-policy expectation.");
+  }
+  if (!normalizedSql.includes("denied_api_roles")) {
+    findings.push(
+      "Live verifier must deny anon and privileged API-role privileges while allowing authenticated reads.",
+    );
   }
 
   const privilegeCheck = normalizedSql.match(
@@ -380,6 +394,7 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   const privilegeSources = [
     "schema_acl_violations",
     "relation_acl_violations",
+    "withheld_column_privilege_violations",
     "function_acl_violations",
     "default_acl_violations",
     "effective_role_privilege_violations",
@@ -390,7 +405,28 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
       (source) => countMatches(privilegeCheck, new RegExp(`from ${source}\\b`, "g")) !== 2,
     )
   ) {
-    findings.push("Live verifier must fail on any API-role privilege.");
+    findings.push("Live verifier must fail closed on unauthorized API-role privileges.");
+  }
+  if (
+    !normalizedSql.includes("withheld_columns") ||
+    !normalizedSql.includes("private_notes") ||
+    !normalizedSql.includes("source_reference") ||
+    !normalizedSql.includes("has_column_privilege")
+  ) {
+    findings.push(
+      "Live verifier must prove withheld columns are unreachable for authenticated and denied roles.",
+    );
+  }
+  if (!normalizedSql.includes("own_membership_ids")) {
+    findings.push("Live verifier must allow only the reviewed membership helper functions.");
+  }
+  if (
+    !normalizedSql.includes("or grantee_role.rolname = 'authenticated'") ||
+    normalizedSql.includes("acl.privilege_type <> 'select'")
+  ) {
+    findings.push(
+      "Live verifier must reject table-level authenticated relation ACLs (column grants only).",
+    );
   }
   if (!normalizedSql.includes("select 'application_row_count',not value,'0 rows'")) {
     findings.push("Live verifier must fail when any Phase 9 application row exists.");
@@ -412,16 +448,17 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   if (!normalizedSql.includes("expected_migration_versions")) {
     findings.push("Live verifier must declare the exact expected migration-version set.");
   }
-  if (!normalizedSql.includes("total_count = 2 and expected_count = 2 and unexpected_count = 0")) {
+  if (!normalizedSql.includes("total_count = 3 and expected_count = 3 and unexpected_count = 0")) {
     findings.push(
-      "Live verifier must require exactly the two Phase 9 migrations and reject extras.",
+      "Live verifier must require exactly the three Phase 9 migrations and reject extras.",
     );
   }
   if (
     normalizedSql.includes("total_count = 1 and expected_count = 1") ||
+    normalizedSql.includes("total_count = 2 and expected_count = 2") ||
     sql.includes("only 20260713190000")
   ) {
-    findings.push("Live verifier must not accept the pre-corrective single-migration history.");
+    findings.push("Live verifier must not accept pre-Batch-4 migration history expectations.");
   }
 
   return findings;
