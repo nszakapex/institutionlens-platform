@@ -359,8 +359,8 @@ default_acl_state as (
     expected.object_type,
     coalesce(default_acl.defaclacl, acldefault(expected.object_type, owner_role.oid)) as acl_items
   from default_acl_types expected
-  join pg_catalog.pg_roles owner_role on owner_role.rolname = 'postgres'
   join pg_catalog.pg_namespace namespace on namespace.nspname = 'institutionlens'
+  join pg_catalog.pg_roles owner_role on owner_role.oid = namespace.nspowner
   left join pg_catalog.pg_default_acl default_acl
     on default_acl.defaclrole = owner_role.oid
    and default_acl.defaclnamespace = namespace.oid
@@ -422,10 +422,20 @@ application_rows_exist as (
     limit 1
   ) as value
 ),
+expected_migration_versions(version) as (
+  values
+    ('20260713190000'),
+    ('20260715181000')
+),
 migration_history as (
   select
     count(*)::bigint as total_count,
-    count(*) filter (where version = '20260713190000')::bigint as expected_count
+    count(*) filter (
+      where version in (select version from expected_migration_versions)
+    )::bigint as expected_count,
+    count(*) filter (
+      where version not in (select version from expected_migration_versions)
+    )::bigint as unexpected_count
   from supabase_migrations.schema_migrations
 ),
 checks(check_name, passed, expected_value, actual_value) as (
@@ -499,9 +509,10 @@ checks(check_name, passed, expected_value, actual_value) as (
   union all
   select
     'migration_history',
-    total_count = 1 and expected_count = 1,
-    'only 20260713190000',
-    total_count::text || ' total, ' || expected_count::text || ' expected'
+    total_count = 2 and expected_count = 2 and unexpected_count = 0,
+    'exactly 20260713190000 and 20260715181000',
+    total_count::text || ' total, ' || expected_count::text
+      || ' expected, ' || unexpected_count::text || ' unexpected'
   from migration_history
 )
 select check_name, passed, expected_value, actual_value

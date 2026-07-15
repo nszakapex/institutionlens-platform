@@ -293,10 +293,11 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 
 ## D-023 - Database migration, rollback, and retention posture
 
-**Status:** Approved as implementation posture; retention values remain proposed defaults
+**Status:** Approved as implementation posture; retention values remain proposed defaults; corrective default-privilege forward fix prepared
 
 - Version forward SQL migrations under `supabase/migrations` and verify them on a clean local stack before any remote application.
 - Use expand/migrate/contract changes once non-disposable data exists. Prefer forward fixes over destructive down migrations.
+- If an applied migration’s intended default-privilege revoke does not materialize, add a later fail-closed forward migration; do not weaken the live verifier’s `acldefault` fallback.
 - The initial schema rollback script is destructive and permitted only on approved disposable local/staging databases.
 - Remote rollback requires a verified backup or point-in-time recovery plan, migration-state capture, and full security/regression verification before reopening writes.
 - Preserve D-009 proposed defaults: draft briefs 30 days, approved internal briefs 90 days, audit/security events 180 days, exports 7 days, and temporary files deleted after completion.

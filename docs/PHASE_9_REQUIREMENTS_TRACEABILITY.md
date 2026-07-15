@@ -1,10 +1,10 @@
 # Phase 9 requirements traceability
 
-**Scope:** Batches 1-2 plus Batch 3 live-migration preparation
+**Scope:** Batches 1-2 plus Batch 3 live-migration preparation and default-function-privilege remediation (prepared)
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial remote migration applied; corrective migration prepared and unapplied
 
-**External infrastructure:** One owner-approved staging/development Supabase project exists; repository unlinked, migration unapplied, no deployment
+**External infrastructure:** One owner-approved staging/development Supabase project (`qzidcqtaabubvtycstwy`) exists; linked locally via ignored metadata; `20260713190000` applied; `20260715181000` not applied; no deployment
 
 ## Batch 1 requirements
 
@@ -44,15 +44,16 @@
 
 ## Batch 3 live-migration preparation requirements
 
-| ID       | Requirement                                                               | Classification | Evidence                                                                                                       | Remaining limitation                                   |
-| -------- | ------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| P9B3P-01 | Add canonical local Supabase CLI configuration without credentials        | Implemented    | `supabase/config.toml`; generated files reviewed; `.temp` and local environment metadata ignored               | Repository remains intentionally unlinked              |
-| P9B3P-02 | Prevent accidental seed execution                                         | Implemented    | No `[db.seed]` configuration or seed file; local metadata ignored                                              | Demo/staging seed isolation remains Batch 5            |
-| P9B3P-03 | Add a SELECT-only live schema verifier                                    | Implemented    | `scripts/phase-9-live-schema-verify.sql`; one CTE-backed SELECT with bounded summary output                    | Not executed against PostgreSQL yet                    |
-| P9B3P-04 | Verify exact tables, FKs, lineage, indexes, RLS, policies, and privileges | Implemented    | Catalog CTEs over namespace/class/constraint/index/policy/default-ACL catalogs plus effective privilege checks | Live catalog results require separately approved link  |
-| P9B3P-05 | Verify staging contains no application rows or unexpected migration rows  | Implemented    | Exact `EXISTS` probes for all 18 tables; migration history requires only version `20260713190000`              | Valid only immediately after the approved initial push |
-| P9B3P-06 | Keep verifier aligned with the committed migration and non-mutating       | Implemented    | Contract derives migration version/object sets/FK shapes/count and checks exact lineage columns; 18 tests      | Static validation cannot prove PostgreSQL execution    |
-| P9B3P-07 | Make no remote, Auth, runtime, environment, deployment, or Vercel change  | Implemented    | No link metadata, password access, SQL execution, Auth/app config, Vercel action, deployment, push, or runtime | Remote migration remains separately approval-gated     |
+| ID       | Requirement                                                               | Classification | Evidence                                                                                                       | Remaining limitation                                    |
+| -------- | ------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| P9B3P-01 | Add canonical local Supabase CLI configuration without credentials        | Implemented    | `supabase/config.toml`; generated files reviewed; `.temp` and local environment metadata ignored               | Repository remains intentionally unlinked               |
+| P9B3P-02 | Prevent accidental seed execution                                         | Implemented    | No `[db.seed]` configuration or seed file; local metadata ignored                                              | Demo/staging seed isolation remains Batch 5             |
+| P9B3P-03 | Add a SELECT-only live schema verifier                                    | Implemented    | `scripts/phase-9-live-schema-verify.sql`; one CTE-backed SELECT with bounded summary output                    | Re-run required after corrective push                   |
+| P9B3P-04 | Verify exact tables, FKs, lineage, indexes, RLS, policies, and privileges | Implemented    | Catalog CTEs over namespace/class/constraint/index/policy/default-ACL catalogs plus effective privilege checks | Live `api_role_privileges` failed 1/1 before corrective |
+| P9B3P-05 | Verify staging contains no application rows or unexpected migration rows  | Implemented    | Exact `EXISTS` probes for all 18 tables; history expects `20260713190000` + `20260715181000`                   | Corrective version absent until approved push           |
+| P9B3P-06 | Keep verifier aligned with the committed migration and non-mutating       | Implemented    | Contracts cover initial + corrective migrations; retain `acldefault` fallback; reject verifier exemptions      | Static validation cannot prove PostgreSQL execution     |
+| P9B3P-07 | Make no remote, Auth, runtime, environment, deployment, or Vercel change  | Implemented    | Corrective batch is repository-only until separately approved push; no Auth/app/Vercel/deploy changes          | Corrective remote apply remains approval-gated          |
+| P9B3C-01 | Remediate missing function default-ACL lockdown without weakening gates   | Prepared       | `20260715181000_phase9_default_function_privileges.sql` fail-closed forward migration + destructive rollback   | Not applied to staging yet                              |
 
 ## Batch 1 verification evidence
 
@@ -105,11 +106,25 @@ Recorded on 2026-07-13:
 | Format/lint/typecheck/build      | Pass                                                                                                              |
 | Secrets / clean-room             | Pass - no credential, customer-data, or source-material finding                                                   |
 | Local Supabase configuration     | Local-only project namespace; PostgreSQL 17; no seed/Auth/provider config; local credential/link metadata ignored |
-| Live PostgreSQL execution        | Not run or claimed - repository remains unlinked and migration unapplied                                          |
+| Live PostgreSQL execution        | Later approved: initial `20260713190000` applied; live verifier 11/12 (`api_role_privileges` failed)              |
 | Auth/runtime/deployment boundary | No Auth provider, app environment, runtime route, Vercel, deployment, or push change                              |
 | Full `npm run verify`            | Pass - 48 files / 323 tests; all validators/scans and production build                                            |
 
-After one approved successful initial `supabase db push`, `supabase_migrations.schema_migrations` must contain exactly the single repository version `20260713190000`; the SELECT-only verifier requires that exact state and zero application rows. Live migration execution, RLS allow-policy validation, two-tenant/cross-tenant attack tests, and rollback rehearsal remain mandatory later gates and are not claimed by static verification.
+## Corrective default-function-privilege evidence
+
+Recorded on 2026-07-15:
+
+| Check                      | Result                                                                                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Live SELECT-only diagnosis | Sole violation: `default_acl` / future functions / grantee `public` / privilege `EXECUTE`; missing `pg_default_acl` row; `acldefault('f')` fallback                 |
+| Security classification    | Real least-privilege defect for future functions; not a verifier exemption candidate                                                                                |
+| Immediate exploitability   | None while schema `USAGE` remains revoked and no functions exist                                                                                                    |
+| Corrective migration       | `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` prepared; fail closed unless function default-ACL row exists without public/API execute |
+| Corrective rollback        | `supabase/rollback/20260715181000_phase9_default_function_privileges.sql` restores `PUBLIC EXECUTE` defaults; destructive security regression; disposable only      |
+| Verifier history contract  | Expects exactly `20260713190000` and `20260715181000`; retains `acldefault` fallback and `default_acl_violations`                                                   |
+| Remote apply               | Not performed in the corrective preparation batch                                                                                                                   |
+
+After the corrective migration is approved and applied, `supabase_migrations.schema_migrations` must contain exactly those two repository versions, application rows must remain zero, and the SELECT-only verifier must pass all 12 checks. RLS allow-policy validation, two-tenant/cross-tenant attack tests, and rollback rehearsal remain mandatory later gates.
 
 ## Deferred Phase 9 requirements
 

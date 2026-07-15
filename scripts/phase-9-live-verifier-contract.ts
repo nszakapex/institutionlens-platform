@@ -1,6 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
-import { CORE_TABLES, PHASE_9_MIGRATION_PATH } from "./phase-9-schema-contract";
+import {
+  CORE_TABLES,
+  PHASE_9_CORRECTIVE_MIGRATION_PATH,
+  PHASE_9_CORRECTIVE_MIGRATION_VERSION,
+  PHASE_9_EXPECTED_MIGRATION_VERSIONS,
+  PHASE_9_INITIAL_MIGRATION_VERSION,
+  PHASE_9_MIGRATION_PATH,
+  validatePhase9CorrectiveMigration,
+} from "./phase-9-schema-contract";
 
 export const PHASE_9_LIVE_VERIFIER_PATH = path.join(
   process.cwd(),
@@ -8,11 +16,7 @@ export const PHASE_9_LIVE_VERIFIER_PATH = path.join(
   "phase-9-live-schema-verify.sql",
 );
 
-const migrationVersionMatch = /^(\d{14})_/.exec(path.basename(PHASE_9_MIGRATION_PATH));
-if (!migrationVersionMatch?.[1]) {
-  throw new Error("Phase 9 migration filename must start with a 14-digit version.");
-}
-export const PHASE_9_MIGRATION_VERSION = migrationVersionMatch[1];
+export const PHASE_9_MIGRATION_VERSION = PHASE_9_INITIAL_MIGRATION_VERSION;
 
 type LineageForeignKey = {
   name: string;
@@ -391,18 +395,56 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   if (!normalizedSql.includes("select 'application_row_count',not value,'0 rows'")) {
     findings.push("Live verifier must fail when any Phase 9 application row exists.");
   }
-  if (!sql.includes(`version = '${PHASE_9_MIGRATION_VERSION}'`)) {
-    findings.push("Live verifier must require only the expected Phase 9 migration version.");
+  if (!normalizedSql.includes("acldefault(")) {
+    findings.push("Live verifier must retain the acldefault fallback for default privileges.");
   }
-  if (!normalizedSql.includes("total_count = 1 and expected_count = 1")) {
-    findings.push("Live verifier must reject additional migration-history rows.");
+  if (!normalizedSql.includes("default_acl_violations")) {
+    findings.push("Live verifier must retain default_acl_violations.");
+  }
+  if (!normalizedSql.includes("namespace.nspowner")) {
+    findings.push("Live verifier must evaluate default privileges for the live schema owner.");
+  }
+  for (const version of PHASE_9_EXPECTED_MIGRATION_VERSIONS) {
+    if (!sql.includes(`'${version}'`)) {
+      findings.push(`Live verifier must require migration version ${version}.`);
+    }
+  }
+  if (!normalizedSql.includes("expected_migration_versions")) {
+    findings.push("Live verifier must declare the exact expected migration-version set.");
+  }
+  if (!normalizedSql.includes("total_count = 2 and expected_count = 2 and unexpected_count = 0")) {
+    findings.push(
+      "Live verifier must require exactly the two Phase 9 migrations and reject extras.",
+    );
+  }
+  if (
+    normalizedSql.includes("total_count = 1 and expected_count = 1") ||
+    sql.includes("only 20260713190000")
+  ) {
+    findings.push("Live verifier must not accept the pre-corrective single-migration history.");
   }
 
+  return findings;
+}
+
+export function validatePhase9CorrectiveMigrationPresence(correctiveMigration: string): string[] {
+  const findings = validatePhase9CorrectiveMigration(correctiveMigration);
+  if (PHASE_9_CORRECTIVE_MIGRATION_VERSION <= PHASE_9_INITIAL_MIGRATION_VERSION) {
+    findings.push("Corrective migration version must be later than the initial schema migration.");
+  }
+  const basename = path.basename(PHASE_9_CORRECTIVE_MIGRATION_PATH);
+  if (!basename.startsWith(`${PHASE_9_CORRECTIVE_MIGRATION_VERSION}_`)) {
+    findings.push("Corrective migration filename must use its version prefix.");
+  }
   return findings;
 }
 
 export function readAndValidatePhase9LiveVerifier(): string[] {
   const sql = fs.readFileSync(PHASE_9_LIVE_VERIFIER_PATH, "utf8");
   const migration = fs.readFileSync(PHASE_9_MIGRATION_PATH, "utf8");
-  return validatePhase9LiveVerifier(sql, migration);
+  const correctiveMigration = fs.readFileSync(PHASE_9_CORRECTIVE_MIGRATION_PATH, "utf8");
+  return [
+    ...validatePhase9LiveVerifier(sql, migration),
+    ...validatePhase9CorrectiveMigrationPresence(correctiveMigration),
+  ];
 }

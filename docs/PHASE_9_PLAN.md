@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; authentication work pending
+**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial remote schema applied; default-function-privilege corrective migration prepared and unapplied; authentication work pending
 
 **Depends on:** Phases 0-8
 
@@ -28,9 +28,9 @@ Replace the local-demo-only persistence and identity foundations with a producti
 
 Batches 1-2 add the versioned database architecture, fail-closed initial migration, shared read repository contracts, explicit adapter selection, and an offline-testable Supabase/Postgres gateway boundary. They do not install a Supabase runtime client, connect an external project, change the default synthetic runtime, add authentication UI, add RLS allow policies, or execute SQL.
 
-After separate owner approval, one staging/development Supabase project was created and verified healthy. The repository remains unlinked, the migration remains unapplied, no credentials or remote references are stored in Git, and the application runtime remains unchanged. Batch 3 preparation adds only canonical local CLI configuration plus a SELECT-only live catalog verifier.
+After separate owner approval, one staging/development Supabase project (`qzidcqtaabubvtycstwy`) was created, linked locally via ignored CLI metadata, and the initial schema migration `20260713190000` was applied. No credentials are stored in Git, and the application runtime remains unchanged. Batch 3 preparation added canonical local CLI configuration plus a SELECT-only live catalog verifier.
 
-The initial migration creates an unexposed `institutionlens` schema, revokes all Data API role privileges, and enables and forces RLS without policies. A database created from Batch 1 is intentionally unusable by `anon`, `authenticated`, and `service_role` until later, tested migrations grant a narrow access path.
+The initial migration creates an unexposed `institutionlens` schema, revokes all Data API role privileges, and enables and forces RLS without policies. Live verification after that push passed 11/12 checks: future functions still retained PostgreSQL's implicit `PUBLIC EXECUTE` default because the function default-ACL revoke did not materialize. Corrective forward migration `20260715181000_phase9_default_function_privileges.sql` reasserts owner-scoped default-privilege lockdown and fails closed unless the function default-ACL row is established without public/API execute. It is prepared in the repository and must not be treated as applied until a separate approved `db push`. A database created from these migrations remains intentionally unusable by `anon`, `authenticated`, and `service_role` until later, tested migrations grant a narrow access path.
 
 ## Official guidance review
 
@@ -176,7 +176,7 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-Immediately after one approved, successful initial `supabase db push`, CLI migration history must contain exactly one repository migration row with version `20260713190000`. The verifier is an immediate post-migration, pre-seed gate: live SQL execution, later RLS allow-policy validation, two-tenant attack tests, and rollback rehearsal remain mandatory and cannot be inferred from these static tests.
+After the approved initial push, live history contained `20260713190000` and the verifier reported `api_role_privileges` = 1 violation (default ACL / future functions / `PUBLIC EXECUTE`). After the corrective migration is approved and applied, CLI migration history must contain exactly the two repository versions `20260713190000` and `20260715181000`, and the SELECT-only verifier must report 12/12 including `api_role_privileges` with the retained `acldefault` fallback. The verifier remains an immediate post-migration, pre-seed gate: later RLS allow-policy validation, two-tenant attack tests, and rollback rehearsal remain mandatory and cannot be inferred from these static tests.
 
 ## Stop gates
 

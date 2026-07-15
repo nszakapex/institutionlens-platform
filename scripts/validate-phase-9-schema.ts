@@ -10,5 +10,5 @@ if (findings.length > 0) {
 }
 
 console.log(
-  "Phase 9 schema contracts passed: 18 tables, RLS forced, no allow policies, SELECT-only live verifier.",
+  "Phase 9 schema contracts passed: 18 tables, RLS forced, no allow policies, corrective default-privilege migration, SELECT-only live verifier.",
 );

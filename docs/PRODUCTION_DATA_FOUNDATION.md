@@ -2,9 +2,12 @@
 
 **Phase:** Project Phase 9
 
-**Status:** Batch 2 repository/configuration boundary; no connected database
+**Status:** Staging schema foundation linked/applied for `20260713190000`; corrective default-function-privilege migration prepared and unapplied; application runtime still synthetic local-demo
 
-**Migration:** `supabase/migrations/20260713190000_phase9_initial_schema.sql`
+**Migrations:**
+
+- `supabase/migrations/20260713190000_phase9_initial_schema.sql` (applied on approved staging)
+- `supabase/migrations/20260715181000_phase9_default_function_privileges.sql` (prepared; not applied)
 
 ## Architecture
 
@@ -164,7 +167,15 @@ All list operations remain bounded and use stable tie-breakers. Batch 2 caps pag
 7. Apply with `supabase db push` only after local and staging checks pass.
 8. Production migrations use expand/migrate/contract changes; destructive contract steps require a separate approved maintenance change.
 
-No remote project is linked and no migration has been applied in Batches 1-2.
+The approved staging project is linked through ignored local CLI metadata only. The initial schema migration is applied; the corrective default-function-privilege migration is repository-prepared and remains unapplied until a separate owner-approved push. Application runtime wiring is unchanged.
+
+## Default privilege invariant
+
+For the live `institutionlens` schema owner:
+
+- future tables/sequences must not default-grant `public`, `anon`, `authenticated`, or `service_role`;
+- future functions must not default-grant `EXECUTE` to `public`, `anon`, `authenticated`, or `service_role`;
+- the live verifier retains `acldefault(...)` fallback so a missing function default-ACL row still fails closed.
 
 ## Rollback strategy
 
@@ -172,9 +183,10 @@ Before external data exists:
 
 - reset a disposable local stack with `supabase db reset`; or
 - reset the last local migration with `supabase migration down --local --last 1` and verify migration history;
-- use `supabase/rollback/20260713190000_phase9_initial_schema.sql` only for an explicitly approved disposable local/staging database.
+- use `supabase/rollback/20260715181000_phase9_default_function_privileges.sql` only as a security-reverting emergency operation on an explicitly approved disposable database; it reintroduces `PUBLIC EXECUTE` defaults for future functions, does not drop data, and is not a safe production rollback;
+- use `supabase/rollback/20260713190000_phase9_initial_schema.sql` only for an explicitly approved disposable local/staging database wipe.
 
-The rollback SQL drops the entire schema and is intentionally marked destructive. It is never an automatic production down migration.
+The initial rollback SQL drops the entire schema and is intentionally marked `DESTRUCTIVE`. The corrective rollback is also `DESTRUCTIVE`: a security-reverting emergency script, not a data wipe and not a safe production down migration.
 
 After any non-disposable data exists:
 

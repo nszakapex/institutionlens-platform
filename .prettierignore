@@ -8,3 +8,5 @@ public/brand/fonts/
 *.woff2
 *.png
 next-env.d.ts
+
+supabase/.temp/**

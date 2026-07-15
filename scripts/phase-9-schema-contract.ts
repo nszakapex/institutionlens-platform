@@ -15,6 +15,31 @@ export const PHASE_9_ROLLBACK_PATH = path.join(
   "20260713190000_phase9_initial_schema.sql",
 );
 
+export const PHASE_9_CORRECTIVE_MIGRATION_FILENAME =
+  "20260715181000_phase9_default_function_privileges.sql";
+
+export const PHASE_9_CORRECTIVE_MIGRATION_PATH = path.join(
+  process.cwd(),
+  "supabase",
+  "migrations",
+  PHASE_9_CORRECTIVE_MIGRATION_FILENAME,
+);
+
+export const PHASE_9_CORRECTIVE_ROLLBACK_PATH = path.join(
+  process.cwd(),
+  "supabase",
+  "rollback",
+  PHASE_9_CORRECTIVE_MIGRATION_FILENAME,
+);
+
+export const PHASE_9_INITIAL_MIGRATION_VERSION = "20260713190000";
+export const PHASE_9_CORRECTIVE_MIGRATION_VERSION = "20260715181000";
+
+export const PHASE_9_EXPECTED_MIGRATION_VERSIONS = [
+  PHASE_9_INITIAL_MIGRATION_VERSION,
+  PHASE_9_CORRECTIVE_MIGRATION_VERSION,
+] as const;
+
 export const CORE_TABLES = [
   "tenants",
   "tenant_verticals",
@@ -212,8 +237,121 @@ export function validatePhase9Rollback(sql: string): string[] {
   return findings;
 }
 
+export function validatePhase9CorrectiveMigration(sql: string): string[] {
+  const findings: string[] = [];
+  const normalized = normalizeSql(sql);
+
+  if (!normalized.startsWith("begin;")) {
+    findings.push("Corrective migration must start in a transaction.");
+  }
+  if (!normalized.endsWith("commit;")) {
+    findings.push("Corrective migration must commit its transaction.");
+  }
+  if (!normalized.includes("alter default privileges for role")) {
+    findings.push("Corrective migration must alter default privileges for the schema owner role.");
+  }
+  const apiGrantees = `public, anon, authenticated, ${PRIVILEGED_API_ROLE}`;
+  if (!normalized.includes(`revoke all on functions from ${apiGrantees}`)) {
+    findings.push(
+      "Corrective migration must revoke default function execute from public and API roles.",
+    );
+  }
+  if (!normalized.includes(`revoke all on tables from ${apiGrantees}`)) {
+    findings.push("Corrective migration must retain deny-default table privileges.");
+  }
+  if (!normalized.includes(`revoke all on sequences from ${apiGrantees}`)) {
+    findings.push("Corrective migration must retain deny-default sequence privileges.");
+  }
+  if (!normalized.includes("raise exception")) {
+    findings.push(
+      "Corrective migration must fail closed when the function default ACL is not established.",
+    );
+  }
+  if (!normalized.includes("defaclobjtype = 'f'")) {
+    findings.push("Corrective migration must require a materialized function default-ACL row.");
+  }
+  if (!normalized.includes("acldefault(")) {
+    findings.push(
+      "Corrective migration must evaluate default privileges through acldefault fallback.",
+    );
+  }
+  if (normalized.includes("create policy")) {
+    findings.push("Corrective migration must not add an RLS allow policy.");
+  }
+  const apiGrant = new RegExp(
+    `\\bgrant\\b[^;]*\\bto\\b[^;]*\\b(public|anon|authenticated|${PRIVILEGED_API_ROLE})\\b`,
+  );
+  if (apiGrant.test(normalized)) {
+    findings.push("Corrective migration must not grant privileges to public or API roles.");
+  }
+  if (
+    /\b(insert|update|delete)\s+into\b/.test(normalized) ||
+    /\binsert\s+into\b/.test(normalized)
+  ) {
+    findings.push("Corrective migration must not mutate application data.");
+  }
+  if (/\bdrop\s+(schema|table|function)\b/.test(normalized)) {
+    findings.push("Corrective migration must not drop schema objects.");
+  }
+
+  return findings;
+}
+
+export function validatePhase9CorrectiveRollback(sql: string): string[] {
+  const findings: string[] = [];
+  const normalized = normalizeSql(sql);
+
+  if (!sql.includes("DESTRUCTIVE")) {
+    findings.push("Corrective rollback must carry an explicit DESTRUCTIVE warning.");
+  }
+  if (!/security-reverting|emergency/i.test(sql)) {
+    findings.push(
+      "Corrective rollback must be labeled as a security-reverting emergency operation.",
+    );
+  }
+  if (!/not a safe production rollback/i.test(sql)) {
+    findings.push("Corrective rollback must state it is not a safe production rollback.");
+  }
+  if (!sql.toLowerCase().includes("public execute") && !sql.includes("PUBLIC EXECUTE")) {
+    findings.push("Corrective rollback must disclose that PUBLIC EXECUTE is restored.");
+  }
+  if (!normalized.includes("grant execute on functions to public")) {
+    findings.push("Corrective rollback must reverse the function default-privilege lockdown.");
+  }
+  if (normalized.includes("drop schema")) {
+    findings.push("Corrective rollback must not drop the institutionlens schema.");
+  }
+  if (!normalized.startsWith("begin;")) {
+    findings.push("Corrective rollback must start in a transaction.");
+  }
+  if (!normalized.endsWith("commit;")) {
+    findings.push("Corrective rollback must commit its transaction.");
+  }
+
+  return findings;
+}
+
 export function readAndValidatePhase9Schema(): string[] {
   const migration = fs.readFileSync(PHASE_9_MIGRATION_PATH, "utf8");
   const rollback = fs.readFileSync(PHASE_9_ROLLBACK_PATH, "utf8");
-  return [...validatePhase9Migration(migration), ...validatePhase9Rollback(rollback)];
+  const correctiveMigration = fs.readFileSync(PHASE_9_CORRECTIVE_MIGRATION_PATH, "utf8");
+  const correctiveRollback = fs.readFileSync(PHASE_9_CORRECTIVE_ROLLBACK_PATH, "utf8");
+  const findings = [
+    ...validatePhase9Migration(migration),
+    ...validatePhase9Rollback(rollback),
+    ...validatePhase9CorrectiveMigration(correctiveMigration),
+    ...validatePhase9CorrectiveRollback(correctiveRollback),
+  ];
+
+  if (PHASE_9_CORRECTIVE_MIGRATION_VERSION <= PHASE_9_INITIAL_MIGRATION_VERSION) {
+    findings.push("Corrective migration version must be later than the initial schema migration.");
+  }
+  if (!fs.existsSync(PHASE_9_CORRECTIVE_MIGRATION_PATH)) {
+    findings.push("Corrective default-privilege migration file is missing.");
+  }
+  if (!fs.existsSync(PHASE_9_CORRECTIVE_ROLLBACK_PATH)) {
+    findings.push("Corrective default-privilege rollback file is missing.");
+  }
+
+  return findings;
 }

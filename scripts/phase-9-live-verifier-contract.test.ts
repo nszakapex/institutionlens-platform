@@ -1,14 +1,21 @@
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { PHASE_9_MIGRATION_PATH } from "./phase-9-schema-contract";
+import {
+  PHASE_9_CORRECTIVE_MIGRATION_PATH,
+  PHASE_9_CORRECTIVE_MIGRATION_VERSION,
+  PHASE_9_INITIAL_MIGRATION_VERSION,
+  PHASE_9_MIGRATION_PATH,
+} from "./phase-9-schema-contract";
 import {
   PHASE_9_LIVE_VERIFIER_PATH,
   readAndValidatePhase9LiveVerifier,
+  validatePhase9CorrectiveMigrationPresence,
   validatePhase9LiveVerifier,
 } from "./phase-9-live-verifier-contract";
 
 const verifier = fs.readFileSync(PHASE_9_LIVE_VERIFIER_PATH, "utf8");
 const migration = fs.readFileSync(PHASE_9_MIGRATION_PATH, "utf8");
+const correctiveMigration = fs.readFileSync(PHASE_9_CORRECTIVE_MIGRATION_PATH, "utf8");
 const supabaseConfig = fs.readFileSync("supabase/config.toml", "utf8");
 const supabaseIgnore = fs.readFileSync("supabase/.gitignore", "utf8");
 
@@ -153,11 +160,66 @@ describe("Phase 9 live schema verifier contract", () => {
 
   it("rejects additional or substituted migration history", () => {
     const weakened = verifier.replace(
-      "total_count = 1 and expected_count = 1",
-      "expected_count = 1",
+      "total_count = 2 and expected_count = 2 and unexpected_count = 0",
+      "expected_count = 2",
     );
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
-      "Live verifier must reject additional migration-history rows.",
+      "Live verifier must require exactly the two Phase 9 migrations and reject extras.",
+    );
+  });
+
+  it("rejects a pre-corrective single-migration history expectation", () => {
+    const weakened = verifier
+      .replace(
+        "total_count = 2 and expected_count = 2 and unexpected_count = 0",
+        "total_count = 1 and expected_count = 1",
+      )
+      .replace("exactly 20260713190000 and 20260715181000", "only 20260713190000")
+      .replace("    ('20260715181000')\n", "");
+    expect(validatePhase9LiveVerifier(weakened, migration)).toEqual(
+      expect.arrayContaining([
+        "Live verifier must require migration version 20260715181000.",
+        "Live verifier must require exactly the two Phase 9 migrations and reject extras.",
+        "Live verifier must not accept the pre-corrective single-migration history.",
+      ]),
+    );
+  });
+
+  it("rejects omitting the corrective migration version from history", () => {
+    const weakened = verifier.replace("    ('20260715181000')\n", "");
+    expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
+      "Live verifier must require migration version 20260715181000.",
+    );
+  });
+
+  it("requires the corrective migration timestamp to sort after the initial schema migration", () => {
+    expect(PHASE_9_CORRECTIVE_MIGRATION_VERSION > PHASE_9_INITIAL_MIGRATION_VERSION).toBe(true);
+    expect(validatePhase9CorrectiveMigrationPresence(correctiveMigration)).toEqual([]);
+    expect(fs.existsSync(PHASE_9_CORRECTIVE_MIGRATION_PATH)).toBe(true);
+    expect(PHASE_9_CORRECTIVE_MIGRATION_PATH.includes(PHASE_9_INITIAL_MIGRATION_VERSION)).toBe(
+      false,
+    );
+  });
+
+  it("rejects replacing the privilege gate with a verifier exemption", () => {
+    const withoutDefaultAcl = verifier.replace(/default_acl_violations/g, "schema_acl_violations");
+    expect(validatePhase9LiveVerifier(withoutDefaultAcl, migration)).toEqual(
+      expect.arrayContaining([
+        "Live verifier must fail on any API-role privilege.",
+        "Live verifier must retain default_acl_violations.",
+      ]),
+    );
+
+    const withoutAclDefault = verifier.replace(/acldefault\s*\(/g, "null::aclitem[] -- ");
+    expect(validatePhase9LiveVerifier(withoutAclDefault, migration)).toContain(
+      "Live verifier must retain the acldefault fallback for default privileges.",
+    );
+  });
+
+  it("rejects a corrective migration that omits fail-closed default-ACL enforcement", () => {
+    const weakened = correctiveMigration.replace(/raise exception/gi, "raise notice");
+    expect(validatePhase9CorrectiveMigrationPresence(weakened)).toContain(
+      "Corrective migration must fail closed when the function default ACL is not established.",
     );
   });
 
