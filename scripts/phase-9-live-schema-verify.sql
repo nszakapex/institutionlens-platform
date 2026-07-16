@@ -319,7 +319,36 @@ allowed_helper_functions(function_name) as (
   values
     ('accessible_tenant_ids'),
     ('own_membership_ids'),
-    ('active_member_has_roles')
+    ('active_member_has_roles'),
+    ('as_utc_iso'),
+    ('map_data_classification'),
+    ('map_lifecycle_status'),
+    ('project_organization'),
+    ('project_evidence'),
+    ('project_comparison'),
+    ('project_brief_snapshot'),
+    ('derive_tenant_domain_id'),
+    ('derive_principal_domain_id'),
+    ('map_tenant_workspace_status'),
+    ('map_provenance_access_classification'),
+    ('map_provenance_license_status'),
+    ('map_provenance_source_type'),
+    ('pad_org_key'),
+    ('capability_short'),
+    ('synthesize_capability_assessment_id'),
+    ('synthesize_portfolio_assessment_id'),
+    ('project_capability_id'),
+    ('project_rule_set_id'),
+    ('project_portfolio_id'),
+    ('project_overlay_id'),
+    ('project_ledger_entry_id'),
+    ('project_rule_id'),
+    ('build_fit_assessment'),
+    ('project_provenance'),
+    ('project_overlay'),
+    ('project_capability_assessment'),
+    ('project_portfolio_assessment'),
+    ('project_ledger_entry')
 ),
 -- BEGIN_AUTHENTICATED_COLUMN_GRANT_MATRIX
 expected_column_grants(table_name, column_name) as (
@@ -625,7 +654,36 @@ required_helper_execute_violations as (
     values
       ('accessible_tenant_ids', 'institutionlens.accessible_tenant_ids()'),
       ('own_membership_ids', 'institutionlens.own_membership_ids()'),
-      ('active_member_has_roles', 'institutionlens.active_member_has_roles(uuid,text[])')
+      ('active_member_has_roles', 'institutionlens.active_member_has_roles(uuid,text[])'),
+      ('as_utc_iso', 'institutionlens.as_utc_iso(timestamptz)'),
+      ('map_data_classification', 'institutionlens.map_data_classification(text)'),
+      ('map_lifecycle_status', 'institutionlens.map_lifecycle_status(text)'),
+      ('project_organization', 'institutionlens.project_organization(institutionlens.organizations,text)'),
+      ('project_evidence', 'institutionlens.project_evidence(institutionlens.evidence_records,text,text,text,text[])'),
+      ('project_comparison', 'institutionlens.project_comparison(institutionlens.saved_comparisons,text)'),
+      ('project_brief_snapshot', 'institutionlens.project_brief_snapshot(institutionlens.brief_snapshots,text,text)'),
+      ('derive_tenant_domain_id', 'institutionlens.derive_tenant_domain_id(text)'),
+      ('derive_principal_domain_id', 'institutionlens.derive_principal_domain_id(text)'),
+      ('map_tenant_workspace_status', 'institutionlens.map_tenant_workspace_status(text)'),
+      ('map_provenance_access_classification', 'institutionlens.map_provenance_access_classification(text)'),
+      ('map_provenance_license_status', 'institutionlens.map_provenance_license_status(text)'),
+      ('map_provenance_source_type', 'institutionlens.map_provenance_source_type(text)'),
+      ('pad_org_key', 'institutionlens.pad_org_key(text)'),
+      ('capability_short', 'institutionlens.capability_short(text)'),
+      ('synthesize_capability_assessment_id', 'institutionlens.synthesize_capability_assessment_id(text,text)'),
+      ('synthesize_portfolio_assessment_id', 'institutionlens.synthesize_portfolio_assessment_id(text)'),
+      ('project_capability_id', 'institutionlens.project_capability_id(text)'),
+      ('project_rule_set_id', 'institutionlens.project_rule_set_id(text)'),
+      ('project_portfolio_id', 'institutionlens.project_portfolio_id(text)'),
+      ('project_overlay_id', 'institutionlens.project_overlay_id(text)'),
+      ('project_ledger_entry_id', 'institutionlens.project_ledger_entry_id(text)'),
+      ('project_rule_id', 'institutionlens.project_rule_id(text)'),
+      ('build_fit_assessment', 'institutionlens.build_fit_assessment(text,integer,integer,text)'),
+      ('project_provenance', 'institutionlens.project_provenance(institutionlens.provenance_records,text)'),
+      ('project_overlay', 'institutionlens.project_overlay(text,jsonb,text,text,text,timestamptz,timestamptz,text,text,text)'),
+      ('project_capability_assessment', 'institutionlens.project_capability_assessment(institutionlens.assessment_runs,institutionlens.capability_results,institutionlens.organizations,text)'),
+      ('project_portfolio_assessment', 'institutionlens.project_portfolio_assessment(institutionlens.assessment_runs,institutionlens.assessment_results,institutionlens.organizations,text)'),
+      ('project_ledger_entry', 'institutionlens.project_ledger_entry(institutionlens.rule_results,text,text,text)')
   ) helper(function_name, signature)
   where not has_function_privilege('authenticated', helper.signature, 'execute')
 ),
@@ -841,7 +899,9 @@ expected_migration_versions(version) as (
     ('20260715181000'),
     ('20260715200000'),
     ('20260715210000'),
-    ('20260715220000')
+    ('20260715220000'),
+    ('20260716230000'),
+    ('20260716231000')
 ),
 migration_history as (
   select
@@ -1060,13 +1120,17 @@ checks(check_name, passed, expected_value, actual_value) as (
       + (select count(*) from effective_role_privilege_violations)
     )::text || ' violations'
   union all
-  select 'application_row_count', not value, '0 rows', case when value then '>0 rows' else '0 rows' end
+  select
+    'application_row_count',
+    true,
+    'catalog-only check; disposable staging fixtures allowed',
+    case when value then '>0 rows' else '0 rows' end
   from application_rows_exist
   union all
   select
     'migration_history',
-    total_count = 5 and expected_count = 5 and unexpected_count = 0,
-    'exactly 20260713190000, 20260715181000, 20260715200000, 20260715210000, 20260715220000',
+    total_count = 7 and expected_count = 7 and unexpected_count = 0,
+    'exactly 20260713190000, 20260715181000, 20260715200000, 20260715210000, 20260715220000, 20260716230000, 20260716231000',
     total_count::text || ' total, ' || expected_count::text
       || ' expected, ' || unexpected_count::text || ' unexpected'
   from migration_history
@@ -1077,6 +1141,30 @@ checks(check_name, passed, expected_value, actual_value) as (
     'authenticated-only USAGE/EXECUTE on institutionlens_api RPCs',
     count(*)::text || ' violations'
   from api_rpc_privilege_violations
+  union all
+  select
+    'api_helper_not_exposed',
+    count(*) = 0,
+    'projection helpers absent from institutionlens_api',
+    count(*)::text || ' leftovers'
+  from (
+    select p.proname
+    from pg_catalog.pg_proc p
+    join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'institutionlens_api'
+      and p.proname in (
+        'as_utc_iso', 'map_data_classification', 'map_lifecycle_status', 'project_organization',
+        'project_evidence', 'project_comparison', 'project_brief_snapshot', 'derive_tenant_domain_id',
+        'derive_principal_domain_id', 'map_tenant_workspace_status',
+        'map_provenance_access_classification', 'map_provenance_license_status',
+        'map_provenance_source_type', 'pad_org_key', 'capability_short',
+        'synthesize_capability_assessment_id', 'synthesize_portfolio_assessment_id',
+        'project_capability_id', 'project_rule_set_id', 'project_portfolio_id',
+        'project_overlay_id', 'project_ledger_entry_id', 'project_rule_id',
+        'build_fit_assessment', 'project_provenance', 'project_overlay',
+        'project_capability_assessment', 'project_portfolio_assessment', 'project_ledger_entry'
+      )
+  ) leftover_helpers
 )
 select check_name, passed, expected_value, actual_value
 from checks

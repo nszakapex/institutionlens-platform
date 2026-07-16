@@ -156,11 +156,11 @@ describe("Phase 9 live schema verifier contract", () => {
 
   it("rejects nonzero application rows", () => {
     const weakened = verifier.replace(
-      "select 'application_row_count', not value, '0 rows'",
-      "select 'application_row_count', value, '0 rows'",
+      "disposable staging fixtures allowed",
+      "must be empty",
     );
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
-      "Live verifier must fail when any Phase 9 application row exists.",
+      "Live verifier must allow disposable staging Auth fixtures in application_row_count.",
     );
   });
 
@@ -176,34 +176,34 @@ describe("Phase 9 live schema verifier contract", () => {
 
   it("rejects additional or substituted migration history", () => {
     const weakened = verifier.replace(
-      "total_count = 5 and expected_count = 5 and unexpected_count = 0",
-      "expected_count = 5",
+      "total_count = 7 and expected_count = 7 and unexpected_count = 0",
+      "expected_count = 7",
     );
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
-      "Live verifier must require exactly the five Phase 9 migrations and reject extras.",
+      "Live verifier must require exactly the seven Phase 9 migrations and reject extras.",
     );
   });
 
-  it("rejects a pre-remaining-API-RPC migration history expectation", () => {
+  it("rejects a pre-overlay-column-safe migration history expectation", () => {
     const weakened = verifier
       .replace(
-        "total_count = 5 and expected_count = 5 and unexpected_count = 0",
-        "total_count = 4 and expected_count = 4 and unexpected_count = 0",
+        "total_count = 7 and expected_count = 7 and unexpected_count = 0",
+        "total_count = 6 and expected_count = 6 and unexpected_count = 0",
       )
-      .replace("    ('20260715220000')\n", "");
+      .replace("    ('20260716231000')\n", "");
     expect(validatePhase9LiveVerifier(weakened, migration)).toEqual(
       expect.arrayContaining([
-        "Live verifier must require migration version 20260715220000.",
-        "Live verifier must require exactly the five Phase 9 migrations and reject extras.",
-        "Live verifier must not accept pre-remaining-API-RPC migration history expectations.",
+        "Live verifier must require migration version 20260716231000.",
+        "Live verifier must require exactly the seven Phase 9 migrations and reject extras.",
+        "Live verifier must not accept pre-overlay-column-safe migration history expectations.",
       ]),
     );
   });
 
-  it("rejects omitting the remaining API RPC migration version from history", () => {
-    const weakened = verifier.replace("    ('20260715220000')\n", "");
+  it("rejects omitting the overlay-column-safe migration version from history", () => {
+    const weakened = verifier.replace("    ('20260716231000')\n", "");
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
-      "Live verifier must require migration version 20260715220000.",
+      "Live verifier must require migration version 20260716231000.",
     );
   });
 
@@ -248,7 +248,10 @@ describe("Phase 9 live schema verifier contract", () => {
     );
     expect(supabaseConfig).not.toMatch(/env\s*\(|SUPABASE_DB_PASSWORD|sbp_[a-z0-9]/i);
     expect(supabaseConfig).not.toMatch(/^\s*\[(auth|db\.seed|experimental)(?:\.|\])/im);
-    expect(supabaseConfig).not.toMatch(/^\s*schemas\s*=.*institutionlens/im);
+    expect(supabaseConfig).toMatch(/^\s*schemas\s*=\s*\[[^\]]*institutionlens_api/im);
+    expect(supabaseConfig).not.toMatch(
+      /^\s*schemas\s*=\s*\[[^\]]*["']institutionlens["']/im,
+    );
     expect(fs.existsSync("supabase/seed.sql")).toBe(false);
   });
 

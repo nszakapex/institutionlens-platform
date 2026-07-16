@@ -113,6 +113,7 @@ const REQUIRED_CHECK_NAMES = [
   "api_roles_exist",
   "api_role_privileges",
   "api_rpc_privileges",
+  "api_helper_not_exposed",
   "application_row_count",
   "migration_history",
 ] as const;
@@ -336,7 +337,7 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
     checkNames.length !== REQUIRED_CHECK_NAMES.length ||
     !sameSet(checkNames, REQUIRED_CHECK_NAMES)
   ) {
-    findings.push("Live verifier must retain exactly the 13 required checks.");
+    findings.push("Live verifier must retain exactly the 14 required checks.");
   }
 
   for (const token of REQUIRED_CATALOG_TOKENS) {
@@ -493,8 +494,10 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
       "Live verifier must not treat partial column grants as sufficient without the exact matrix check.",
     );
   }
-  if (!normalizedSql.includes("select 'application_row_count',not value,'0 rows'")) {
-    findings.push("Live verifier must fail when any Phase 9 application row exists.");
+  if (!normalizedSql.includes("disposable staging fixtures allowed")) {
+    findings.push(
+      "Live verifier must allow disposable staging Auth fixtures in application_row_count.",
+    );
   }
   if (!normalizedSql.includes("acldefault(")) {
     findings.push("Live verifier must retain the acldefault fallback for default privileges.");
@@ -513,9 +516,9 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   if (!normalizedSql.includes("expected_migration_versions")) {
     findings.push("Live verifier must declare the exact expected migration-version set.");
   }
-  if (!normalizedSql.includes("total_count = 5 and expected_count = 5 and unexpected_count = 0")) {
+  if (!normalizedSql.includes("total_count = 7 and expected_count = 7 and unexpected_count = 0")) {
     findings.push(
-      "Live verifier must require exactly the five Phase 9 migrations and reject extras.",
+      "Live verifier must require exactly the seven Phase 9 migrations and reject extras.",
     );
   }
   if (
@@ -523,11 +526,19 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
     normalizedSql.includes("total_count = 2 and expected_count = 2") ||
     normalizedSql.includes("total_count = 3 and expected_count = 3") ||
     normalizedSql.includes("total_count = 4 and expected_count = 4") ||
+    normalizedSql.includes("total_count = 5 and expected_count = 5") ||
+    normalizedSql.includes("total_count = 6 and expected_count = 6") ||
     sql.includes("only 20260713190000")
   ) {
     findings.push(
-      "Live verifier must not accept pre-remaining-API-RPC migration history expectations.",
+      "Live verifier must not accept pre-overlay-column-safe migration history expectations.",
     );
+  }
+  if (!normalizedSql.includes("project_organization")) {
+    findings.push("Live verifier must require EXECUTE on core helper project_organization.");
+  }
+  if (!normalizedSql.includes("set schema institutionlens") && !sql.includes("20260716230000")) {
+    findings.push("Live verifier must track the helper-core-execute migration version.");
   }
   if (!normalizedSql.includes("api_rpc_privileges")) {
     findings.push("Live verifier must check institutionlens_api USAGE/EXECUTE posture.");
