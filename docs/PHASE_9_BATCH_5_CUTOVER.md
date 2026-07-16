@@ -1,8 +1,8 @@
 # Phase 9 Batch 5 controlled cutover runbook
 
-**Status:** Documentation and offline contracts only. Application runtime remains `local-demo`. Remaining read API/RPC migration `20260715220000` is prepared in the repository and **not applied** until a separate owner-approved database push.
+**Status:** Staging database Batch 5 RPC **applied** on `qzidcqtaabubvtycstwy` (see `docs/PHASE_9_BATCH_5_STAGING_APPLY.md`). Application runtime remains `local-demo` until Auth fixtures + live Preview env are provisioned.
 
-**Depends on:** Applied migrations `20260713190000`, `20260715181000`, `20260715200000`, `20260715210000` on the target Supabase project; Auth users and memberships managed outside this repository.
+**Depends on:** Applied migrations `20260713190000` … `20260715220000` on the target Supabase project; Auth users and memberships managed outside this repository.
 
 **Does not include:** deployment from this runbook alone, Vercel promotion, production customer data, billing, or silent fallback to synthetic fixtures.
 
@@ -43,8 +43,8 @@ Configuration validation is fail-closed: invalid or partial settings deny data a
 ## External prerequisites (not performed by this runbook)
 
 1. **Supabase Auth users and memberships** — create invite/signup flows, disable inactive users, and insert `memberships` rows through approved operational tooling. The application does not seed production identities.
-2. **Apply remaining RPC migration** — after owner approval, apply `supabase/migrations/20260715220000_phase9_remaining_read_api_rpc.sql` to the target project (CLI `db push` or equivalent). Do not treat this document as authorization to push.
-3. **Live verifier** — re-run `scripts/phase-9-live-schema-verify.sql` on the target database. Expect four applied migration versions until Batch 5 RPC is pushed; extend verifier expectations only after the fifth migration is applied and reviewed.
+2. **Apply remaining RPC migration** — **done on staging** after owner approval (`20260715220000` via linked `db push`).
+3. **Live verifier** — re-run `scripts/phase-9-live-schema-verify.sql` on the target database. Staging post-apply: **13/13** with five migration versions.
 4. **Repository regression** — replay repository contract and security tests against staging with disposable Auth fixtures before any production cutover.
 
 ## Cutover sequence (staging rehearsal)
@@ -73,8 +73,9 @@ This drops Batch 5 functions and helpers only; it does not drop the `institution
 
 Stop for owner approval before:
 
-- applying `20260715220000` to any shared or production database;
+- applying `20260715220000` to **production** (staging apply already approved and recorded);
 - promoting live mode to production traffic;
+- switching Vercel Preview/Production from `local-demo` to `staging`/`production` without Auth fixtures;
 - storing real customer data;
 - reconnecting Vercel or changing DNS;
 - using service-role credentials on user-facing request paths.

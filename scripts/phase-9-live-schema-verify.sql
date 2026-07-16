@@ -840,7 +840,8 @@ expected_migration_versions(version) as (
     ('20260713190000'),
     ('20260715181000'),
     ('20260715200000'),
-    ('20260715210000')
+    ('20260715210000'),
+    ('20260715220000')
 ),
 migration_history as (
   select
@@ -863,7 +864,23 @@ expected_api_rpc_functions(function_name, arg_types) as (
     ('comparisons_get_by_public_ref', 'text, text'),
     ('comparisons_list', 'text, jsonb'),
     ('brief_snapshots_get_by_public_ref', 'text, text'),
-    ('brief_snapshots_list', 'text, jsonb')
+    ('brief_snapshots_list', 'text, jsonb'),
+    ('session_tenant_public_ref', ''),
+    ('workspace_get', 'text'),
+    ('provenance_get_by_domain_id', 'text, text'),
+    ('capabilities_list', 'text, jsonb'),
+    ('assessments_list_portfolios', 'text, jsonb'),
+    ('assessments_get_portfolio_by_domain_id', 'text, text'),
+    ('assessments_list_capabilities', 'text, jsonb'),
+    ('assessments_get_capability_by_domain_id', 'text, text'),
+    ('assessments_get_ledger', 'text, text'),
+    ('assessments_get_manifest', 'text, text'),
+    ('assessments_get_opportunity_context', 'text, text, text'),
+    ('portfolios_list', 'text, jsonb'),
+    ('portfolios_get_by_domain_id', 'text, text'),
+    ('overlays_get_by_organization_domain_id', 'text, text'),
+    ('overlays_list', 'text, jsonb'),
+    ('overlays_get_by_domain_id', 'text, text')
 ),
 api_rpc_privilege_violations as (
   select probe.violation
@@ -1048,8 +1065,8 @@ checks(check_name, passed, expected_value, actual_value) as (
   union all
   select
     'migration_history',
-    total_count = 4 and expected_count = 4 and unexpected_count = 0,
-    'exactly 20260713190000, 20260715181000, 20260715200000, 20260715210000',
+    total_count = 5 and expected_count = 5 and unexpected_count = 0,
+    'exactly 20260713190000, 20260715181000, 20260715200000, 20260715210000, 20260715220000',
     total_count::text || ' total, ' || expected_count::text
       || ' expected, ' || unexpected_count::text || ' unexpected'
   from migration_history

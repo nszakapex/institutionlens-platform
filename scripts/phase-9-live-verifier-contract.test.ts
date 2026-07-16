@@ -176,34 +176,34 @@ describe("Phase 9 live schema verifier contract", () => {
 
   it("rejects additional or substituted migration history", () => {
     const weakened = verifier.replace(
-      "total_count = 4 and expected_count = 4 and unexpected_count = 0",
-      "expected_count = 4",
+      "total_count = 5 and expected_count = 5 and unexpected_count = 0",
+      "expected_count = 5",
     );
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
-      "Live verifier must require exactly the four Phase 9 migrations and reject extras.",
+      "Live verifier must require exactly the five Phase 9 migrations and reject extras.",
     );
   });
 
-  it("rejects a pre-API-RPC migration history expectation", () => {
+  it("rejects a pre-remaining-API-RPC migration history expectation", () => {
     const weakened = verifier
       .replace(
+        "total_count = 5 and expected_count = 5 and unexpected_count = 0",
         "total_count = 4 and expected_count = 4 and unexpected_count = 0",
-        "total_count = 3 and expected_count = 3 and unexpected_count = 0",
       )
-      .replace("    ('20260715210000')\n", "");
+      .replace("    ('20260715220000')\n", "");
     expect(validatePhase9LiveVerifier(weakened, migration)).toEqual(
       expect.arrayContaining([
-        "Live verifier must require migration version 20260715210000.",
-        "Live verifier must require exactly the four Phase 9 migrations and reject extras.",
-        "Live verifier must not accept pre-API-RPC migration history expectations.",
+        "Live verifier must require migration version 20260715220000.",
+        "Live verifier must require exactly the five Phase 9 migrations and reject extras.",
+        "Live verifier must not accept pre-remaining-API-RPC migration history expectations.",
       ]),
     );
   });
 
-  it("rejects omitting the API RPC migration version from history", () => {
-    const weakened = verifier.replace("    ('20260715210000')\n", "");
+  it("rejects omitting the remaining API RPC migration version from history", () => {
+    const weakened = verifier.replace("    ('20260715220000')\n", "");
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
-      "Live verifier must require migration version 20260715210000.",
+      "Live verifier must require migration version 20260715220000.",
     );
   });
 

@@ -513,24 +513,30 @@ export function validatePhase9LiveVerifier(sql: string, migration: string): stri
   if (!normalizedSql.includes("expected_migration_versions")) {
     findings.push("Live verifier must declare the exact expected migration-version set.");
   }
-  if (!normalizedSql.includes("total_count = 4 and expected_count = 4 and unexpected_count = 0")) {
+  if (!normalizedSql.includes("total_count = 5 and expected_count = 5 and unexpected_count = 0")) {
     findings.push(
-      "Live verifier must require exactly the four Phase 9 migrations and reject extras.",
+      "Live verifier must require exactly the five Phase 9 migrations and reject extras.",
     );
   }
   if (
     normalizedSql.includes("total_count = 1 and expected_count = 1") ||
     normalizedSql.includes("total_count = 2 and expected_count = 2") ||
     normalizedSql.includes("total_count = 3 and expected_count = 3") ||
+    normalizedSql.includes("total_count = 4 and expected_count = 4") ||
     sql.includes("only 20260713190000")
   ) {
-    findings.push("Live verifier must not accept pre-API-RPC migration history expectations.");
+    findings.push(
+      "Live verifier must not accept pre-remaining-API-RPC migration history expectations.",
+    );
   }
   if (!normalizedSql.includes("api_rpc_privileges")) {
     findings.push("Live verifier must check institutionlens_api USAGE/EXECUTE posture.");
   }
   if (!normalizedSql.includes("expected_api_rpc_functions")) {
-    findings.push("Live verifier must declare the narrow read API RPC function set.");
+    findings.push("Live verifier must declare the authenticated read API RPC function set.");
+  }
+  if (!normalizedSql.includes("session_tenant_public_ref")) {
+    findings.push("Live verifier must include session_tenant_public_ref in the RPC privilege set.");
   }
 
   return findings;

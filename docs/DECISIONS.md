@@ -338,7 +338,7 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 
 ## D-026 - Server-only Auth session binding and RPC gateway transport
 
-**Status:** Approved for Phase 9 Batch 5 preparation; remaining RPC migration prepared but unapplied; runtime cutover pending
+**Status:** Staging Batch 5 RPC applied on `qzidcqtaabubvtycstwy`; application runtime cutover (Auth fixtures + live Preview env) still pending
 
 - Bind tenant identity only through server-side Supabase Auth: `auth.getUser()` plus `institutionlens_api.session_tenant_public_ref()` derived from active memberships and RLS — never from client query parameters, JWT custom claims, or user-selected tenant IDs.
 - Pass the session-bound `p_tenant_public_ref` into every public read RPC; decoders validate wire `tenantPublicRef` against the session binding before stamping domain `tenantId`.

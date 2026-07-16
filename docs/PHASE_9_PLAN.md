@@ -1,6 +1,6 @@
 # Phase 9 plan - Production data, authentication, and tenant isolation
 
-**Status:** Batches 1-2 complete; Batch 3 live-migration preparation complete; initial + corrective + Batch 4 authenticated read RLS + narrow read API/RPC migrations applied on staging; live verifier includes `api_rpc_privileges`; staging RLS attack-test gate 17/17 passed and cleaned; Batch 4/5 code-side Auth session binding + gateway transport + remaining read RPC migration prepared (unapplied) + Batch 5 cutover/rollback docs; runtime cutover pending
+**Status:** Batches 1-2 complete; Batch 3–4 applied on staging; Batch 5 remaining read RPC `20260715220000` **applied on staging** (live verifier 13/13, five migrations); Auth session binding + gateway transport in code; application runtime still `local-demo` pending Auth fixtures + live Preview env
 
 **Depends on:** Phases 0-8
 
@@ -96,17 +96,18 @@ Compatibility findings:
 - Policy model and attack plan: `docs/PHASE_9_BATCH_4_POLICY_MODEL.md`, `docs/PHASE_9_RLS_ATTACK_TEST_PLAN.md`
 - Applied: narrow `institutionlens_api` read RPCs + server-only live-row decoders for organizations, evidence, comparisons, and briefs (`docs/PHASE_9_BATCH_4_API_RPC.md`)
 - Narrow read API/RPC: 9 RPCs require `p_tenant_public_ref`; unsupported ops fail closed with `UNSUPPORTED_OPERATION`; live verifier 13/13 including `api_rpc_privileges`
-- Code-side (repository): server-only Supabase Auth session binding via `session_tenant_public_ref()`; authenticated gateway transport for full read surface; remaining read RPC migration `20260715220000` + offline contract prepared — **migration unapplied** on staging
+- Code-side (repository): server-only Supabase Auth session binding via `session_tenant_public_ref()`; authenticated gateway transport for full read surface
+- Staging DB: remaining read RPC migration `20260715220000` **applied**; apply record in `docs/PHASE_9_BATCH_5_STAGING_APPLY.md`
 
 ### Batch 5 - Controlled cutover
 
-- Explicit local-demo, development, staging, and production modes
-- Cutover runbook and rollback docs (`docs/PHASE_9_BATCH_5_CUTOVER.md`, `docs/PHASE_9_BATCH_5_ROLLBACK.md`)
+- Explicit local-demo, development, staging, and production modes (app still defaults to local-demo)
+- Cutover/rollback docs + staging apply record
 - Health and readiness checks
 - Demo-seed isolation
-- Local/staging migration and rollback rehearsal
-- Full Phase 4-8 product regression through the database adapter
-- Stop before production deployment or runtime cutover
+- Staging Batch 5 RPC apply complete; live verifier 13/13 (five migrations)
+- Remaining: Auth/membership fixtures, Preview live env, smoke test
+- Stop before production deployment or production DB apply
 
 ## Batch 3 live-migration preparation acceptance criteria
 
@@ -181,14 +182,15 @@ Batch 3 live-migration preparation, strictly reviewed on 2026-07-14:
 - full `npm run verify`: 48 files / 323 tests, all validators/scans, and production build passed;
 - no live execution claim: the project is not linked and the verifier has not queried PostgreSQL.
 
-Corrective migration `20260715181000`, Batch 4 RLS migration `20260715200000`, and narrow read API/RPC migration `20260715210000` are applied on staging. History currently contains exactly those four versions. Staging RLS attack-test gate is complete (17/17 + cleanup). Remaining read RPC migration `20260715220000` and Batch 5 cutover docs are prepared in the repository but unapplied. Auth session binding and gateway transport exist in code; runtime cutover remains gated.
+Staging history contains five versions through `20260715220000`. Staging RLS attack-test gate previously completed (17/17 + cleanup); application tables remain empty pending durable Auth/research fixtures. Auth session binding and gateway transport exist in code; Vercel Preview still uses `local-demo` env.
 
 ## Stop gates
 
 Stop for owner approval before:
 
-- creating any additional Supabase project or linking the repository;
+- creating any additional Supabase project;
 - adding billable Supabase resources;
-- applying migrations to a remote database;
+- applying migrations to **production**;
+- switching Preview/Production to live mode without Auth fixtures;
 - using real or customer data;
-- reconnecting Vercel or deploying any environment.
+- production deployment.

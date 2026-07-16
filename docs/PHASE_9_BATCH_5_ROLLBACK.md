@@ -41,7 +41,7 @@ This path does **not** remove Batch 5 Postgres functions. Live-mode deployments 
 3. Confirm dropped functions: `session_tenant_public_ref`, `workspace_get`, assessment/portfolio/overlay/provenance/capability RPCs, and listed helper functions.
 4. Confirm **retained** functions: Batch 4 organization/evidence/comparison/brief RPCs still exist with authenticated-only EXECUTE.
 5. Remove migration version `20260715220000` from `supabase_migrations.schema_migrations` only if your operational playbook requires history alignment (follow D-023 expand/contract posture; prefer forward fix when data exists).
-6. Re-run `scripts/phase-9-live-schema-verify.sql` — live verifier currently expects four applied versions until separately updated after a fifth apply/rollback cycle.
+6. Re-run `scripts/phase-9-live-schema-verify.sql` — after staging Batch 5 apply the verifier expects **five** versions; after SQL rollback, temporarily restore the four-version expectation or re-apply before verifying.
 
 ### Post-rollback verification
 
