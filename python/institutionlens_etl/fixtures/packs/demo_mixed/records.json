@@ -1,0 +1,56 @@
+[
+  {
+    "recordId": "mixed_ambiguous",
+    "sourceId": "src_off_demo_mixed",
+    "organizationDomainId": "org_syn_fi_001",
+    "title": "Ambiguous institution notice",
+    "summary": "Offline fixture with ambiguous organization match.",
+    "observedAt": "2026-02-01T12:00:00.000Z",
+    "publishedAt": "2026-02-01T12:00:00.000Z",
+    "retrievedAt": "2026-02-02T12:00:00.000Z",
+    "textBody": "A notice that cannot be confidently matched. Synthetic offline text.",
+    "evidenceType": "public_change_signal",
+    "matchConfidence": "ambiguous"
+  },
+  {
+    "recordId": "mixed_unknown_license",
+    "sourceId": "src_off_demo_mixed",
+    "organizationDomainId": "org_syn_fi_001",
+    "title": "Unknown license excerpt",
+    "summary": "Offline fixture forcing unknown license handling.",
+    "observedAt": "2026-02-01T12:00:00.000Z",
+    "publishedAt": "2026-02-01T12:00:00.000Z",
+    "retrievedAt": "2026-02-02T12:00:00.000Z",
+    "textBody": "License terms are not established for this synthetic excerpt.",
+    "evidenceType": "organization_profile",
+    "matchConfidence": "exact",
+    "licenseHint": "unknown"
+  },
+  {
+    "recordId": "mixed_restricted",
+    "sourceId": "src_off_demo_mixed",
+    "organizationDomainId": "org_syn_fi_001",
+    "title": "Restricted classification excerpt",
+    "summary": "Offline fixture forcing restricted access classification.",
+    "observedAt": "2026-02-01T12:00:00.000Z",
+    "publishedAt": "2026-02-01T12:00:00.000Z",
+    "retrievedAt": "2026-02-02T12:00:00.000Z",
+    "textBody": "Restricted synthetic excerpt used only to exercise review routing.",
+    "evidenceType": "capability_signal",
+    "matchConfidence": "exact",
+    "accessHint": "restricted"
+  },
+  {
+    "recordId": "mixed_stale",
+    "sourceId": "src_off_demo_mixed",
+    "organizationDomainId": "org_syn_fi_001",
+    "title": "Stale observation excerpt",
+    "summary": "Offline fixture older than stale threshold relative to as-of.",
+    "observedAt": "2024-01-01T12:00:00.000Z",
+    "publishedAt": "2024-01-01T12:00:00.000Z",
+    "retrievedAt": "2026-02-02T12:00:00.000Z",
+    "textBody": "An old synthetic notice used to exercise stale freshness mapping.",
+    "evidenceType": "public_change_signal",
+    "matchConfidence": "exact"
+  }
+]

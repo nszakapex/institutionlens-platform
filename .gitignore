@@ -49,3 +49,16 @@ blob-report/
 .vercel/
 
 .tmp-qa/
+
+# Python (Phase 10 ETL)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+python/.venv/
+python/**/__pycache__/
+python/institutionlens_etl.egg-info/

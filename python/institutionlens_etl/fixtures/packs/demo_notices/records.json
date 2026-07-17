@@ -1,0 +1,28 @@
+[
+  {
+    "recordId": "notice_001",
+    "sourceId": "src_off_demo_notices",
+    "organizationDomainId": "org_syn_fi_001",
+    "title": "Synthetic branch hours update",
+    "summary": "Offline fixture describing a public institutional hours notice.",
+    "observedAt": "2026-01-15T12:00:00.000Z",
+    "publishedAt": "2026-01-14T12:00:00.000Z",
+    "retrievedAt": "2026-01-16T09:00:00.000Z",
+    "textBody": "Demo West Locality branch will adjust lobby hours effective 2026-02-01. This is synthetic fixture text only.",
+    "evidenceType": "public_change_signal",
+    "matchConfidence": "exact"
+  },
+  {
+    "recordId": "notice_002",
+    "sourceId": "src_off_demo_notices",
+    "organizationDomainId": "org_syn_fi_001",
+    "title": "Synthetic digital services summary",
+    "summary": "Offline fixture summarizing publicly described digital service maturity signals.",
+    "observedAt": "2025-12-01T12:00:00.000Z",
+    "publishedAt": "2025-11-30T12:00:00.000Z",
+    "retrievedAt": "2026-01-16T09:05:00.000Z",
+    "textBody": "Institution describes developing digital service channels for retail members. Synthetic offline text.",
+    "evidenceType": "operating_context",
+    "matchConfidence": "exact"
+  }
+]

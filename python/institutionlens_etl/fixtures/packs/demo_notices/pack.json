@@ -1,0 +1,5 @@
+{
+  "packId": "demo_notices",
+  "sourceId": "src_off_demo_notices",
+  "description": "Clean offline notices that map to verified/internal_only candidates."
+}

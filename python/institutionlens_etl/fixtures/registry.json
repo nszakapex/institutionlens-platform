@@ -1,0 +1,38 @@
+{
+  "registryVersion": "1.0.0",
+  "policyVersion": "1.0.0",
+  "sources": [
+    {
+      "id": "src_off_demo_notices",
+      "class": "offline_fixture",
+      "displayName": "Demo institutional public notices (offline)",
+      "jurisdiction": "XX_DEMO",
+      "licenseStatus": "synthetic_demo",
+      "defaultAccessClassification": "synthetic",
+      "liveFetch": false,
+      "fixtureUri": "fixture://phase10/demo_notices",
+      "notes": "Deterministic offline pack only. Not a live source."
+    },
+    {
+      "id": "src_off_demo_mixed",
+      "class": "offline_fixture",
+      "displayName": "Demo mixed review cases (offline)",
+      "jurisdiction": "XX_DEMO",
+      "licenseStatus": "synthetic_demo",
+      "defaultAccessClassification": "synthetic",
+      "liveFetch": false,
+      "fixtureUri": "fixture://phase10/demo_mixed",
+      "notes": "Includes ambiguous match, unknown license, and restricted rows for review-queue tests."
+    },
+    {
+      "id": "src_stub_public_registry",
+      "class": "public_registry",
+      "displayName": "Future public registry stub (non-executable)",
+      "jurisdiction": "XX_DEMO",
+      "licenseStatus": "unknown",
+      "defaultAccessClassification": "internal",
+      "liveFetch": false,
+      "notes": "Planning stub only. Phase 10 CLI must not process this source."
+    }
+  ]
+}

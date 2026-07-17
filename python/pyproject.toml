@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "institutionlens-etl"
+version = "0.1.0"
+description = "InstitutionLens Phase 10 offline public-source ETL foundation"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "UNLICENSED" }
+authors = [{ name = "InstitutionLens" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = []
+
+[project.scripts]
+il-etl = "institutionlens_etl.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["institutionlens_etl*"]
+
+[tool.setuptools.package-data]
+institutionlens_etl = ["fixtures/**/*.json"]

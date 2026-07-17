@@ -1,0 +1,5 @@
+{
+  "packId": "demo_mixed",
+  "sourceId": "src_off_demo_mixed",
+  "description": "Mixed offline cases for review queue and fail-closed publication rules."
+}
