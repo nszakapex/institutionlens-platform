@@ -73,8 +73,11 @@ Confirmed:
 - Auth marker users: **0**
 - Application marker rows (tenants, memberships, organizations, evidence, assessment runs, briefs, comparisons, audits): **0**
 
+## Rollback rehearsal
+
+Completed — see `docs/PHASE_9_ROLLBACK_REHEARSAL.md` (Batch 5+ helper/overlay reverse rollback, Batch 4 retained, forward restore, live verifier 14/14).
+
 ## Not done (still gated)
 
 - Vercel Preview / production env cutover
 - Git push / Production apply
-- Rollback rehearsal

@@ -2,7 +2,7 @@
 
 **Scope:** Remaining read API/RPC migration `20260715220000` and application mode reversal. Batch 4 narrow read RPCs (`20260715210000`) and core RLS remain unless separately rolled back.
 
-**Status:** Rollback SQL is prepared and validated offline. No remote execution is authorized from this document alone.
+**Status:** Staging rollback rehearsal **completed** on `qzidcqtaabubvtycstwy` (see `docs/PHASE_9_ROLLBACK_REHEARSAL.md`). Production remote execution remains owner-gated.
 
 ## When to use
 
@@ -37,11 +37,12 @@ This path does **not** remove Batch 5 Postgres functions. Live-mode deployments 
 ### Steps
 
 1. Stop or drain live-mode application instances using Batch 5 RPCs.
-2. Run the rollback script against the target database through approved tooling (Supabase SQL editor, `psql`, or CLI — not from CI without explicit gate).
-3. Confirm dropped functions: `session_tenant_public_ref`, `workspace_get`, assessment/portfolio/overlay/provenance/capability RPCs, and listed helper functions.
-4. Confirm **retained** functions: Batch 4 organization/evidence/comparison/brief RPCs still exist with authenticated-only EXECUTE.
-5. Remove migration version `20260715220000` from `supabase_migrations.schema_migrations` only if your operational playbook requires history alignment (follow D-023 expand/contract posture; prefer forward fix when data exists).
-6. Re-run `scripts/phase-9-live-schema-verify.sql` — after staging Batch 5 apply the verifier expects **five** versions; after SQL rollback, temporarily restore the four-version expectation or re-apply before verifying.
+2. If later repairs `20260716231000` / `20260716230000` are applied, roll those back **first** (reverse order), then run `20260715220000` rollback. Helpers must be back in `institutionlens_api` before the Batch 5 drop script runs.
+3. Run the rollback script(s) against the target database through approved tooling (Supabase SQL editor, `psql`, or CLI — not from CI without explicit gate).
+4. Confirm dropped functions: `session_tenant_public_ref`, `workspace_get`, assessment/portfolio/overlay/provenance/capability RPCs, and listed helper functions.
+5. Confirm **retained** functions: Batch 4 organization/evidence/comparison/brief RPCs still exist with authenticated-only EXECUTE.
+6. Remove rolled-back versions from `supabase_migrations.schema_migrations` only if re-applying via `db push` (follow D-023 expand/contract posture; prefer forward fix when non-disposable data exists).
+7. Re-run `scripts/phase-9-live-schema-verify.sql` after forward restore (staging currently expects **seven** versions including helper-core-execute + overlay column-safe). Mid-rollback, use targeted Batch 4 retention checks instead of the seven-version verifier.
 
 ### Post-rollback verification
 

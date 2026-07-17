@@ -161,13 +161,13 @@ After the corrective migration is approved and applied, `supabase_migrations.sch
 
 ## Deferred Phase 9 requirements
 
-| Area                                                           | Batch                                              |
-| -------------------------------------------------------------- | -------------------------------------------------- |
-| Authenticated Supabase SDK transport and session binding       | 5 (prepared; Auth fixtures pending)                |
-| Narrow RPC + remaining read RPC + live row decoders            | Applied on staging through `20260715220000`        |
-| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation     |
-| Supabase Auth, SSR sessions, invites/recovery, role resolution | Binding prepared; durable staging fixtures pending |
-| Apply/verify `institutionlens_api` narrow RPC migration        | Applied on staging (`20260715210000`)              |
-| Apply remaining read RPC migration `20260715220000`            | Applied on staging; production still gated         |
-| Environment cutover, health/readiness, demo-seed isolation     | Preview still local-demo; live Preview pending     |
-| Local/staging migration and rollback rehearsal                 | Staging apply done; SQL rollback artifact ready    |
+| Area                                                           | Batch                                                                      |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Authenticated Supabase SDK transport and session binding       | 5 (prepared; Auth fixtures pending)                                        |
+| Narrow RPC + remaining read RPC + live row decoders            | Applied on staging through `20260715220000`                                |
+| First mutation's bounded transaction and audit contract        | Phase 10/11 batch that introduces the mutation                             |
+| Supabase Auth, SSR sessions, invites/recovery, role resolution | Binding prepared; durable staging fixtures pending                         |
+| Apply/verify `institutionlens_api` narrow RPC migration        | Applied on staging (`20260715210000`)                                      |
+| Apply remaining read RPC migration `20260715220000`            | Applied on staging; production still gated                                 |
+| Environment cutover, health/readiness, demo-seed isolation     | Preview still local-demo; live Preview pending                             |
+| Local/staging migration and rollback rehearsal                 | Staging rollback rehearsal completed (see `PHASE_9_ROLLBACK_REHEARSAL.md`) |
