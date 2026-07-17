@@ -155,10 +155,7 @@ describe("Phase 9 live schema verifier contract", () => {
   });
 
   it("rejects nonzero application rows", () => {
-    const weakened = verifier.replace(
-      "disposable staging fixtures allowed",
-      "must be empty",
-    );
+    const weakened = verifier.replace("disposable staging fixtures allowed", "must be empty");
     expect(validatePhase9LiveVerifier(weakened, migration)).toContain(
       "Live verifier must allow disposable staging Auth fixtures in application_row_count.",
     );
@@ -249,9 +246,7 @@ describe("Phase 9 live schema verifier contract", () => {
     expect(supabaseConfig).not.toMatch(/env\s*\(|SUPABASE_DB_PASSWORD|sbp_[a-z0-9]/i);
     expect(supabaseConfig).not.toMatch(/^\s*\[(auth|db\.seed|experimental)(?:\.|\])/im);
     expect(supabaseConfig).toMatch(/^\s*schemas\s*=\s*\[[^\]]*institutionlens_api/im);
-    expect(supabaseConfig).not.toMatch(
-      /^\s*schemas\s*=\s*\[[^\]]*["']institutionlens["']/im,
-    );
+    expect(supabaseConfig).not.toMatch(/^\s*schemas\s*=\s*\[[^\]]*["']institutionlens["']/im);
     expect(fs.existsSync("supabase/seed.sql")).toBe(false);
   });
 

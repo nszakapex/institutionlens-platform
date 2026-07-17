@@ -1,33 +1,9 @@
 import "server-only";
 
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { ProductionRepositoryConfig } from "@/repositories/repository-config";
-
-type CookieStore = Awaited<ReturnType<typeof cookies>>;
-
-function asCookieAdapter(store: CookieStore) {
-  return {
-    get(name: string) {
-      return store.get(name)?.value;
-    },
-    set(name: string, value: string, options: CookieOptions) {
-      try {
-        store.set({ name, value, ...options });
-      } catch {
-        // Server Components may not mutate cookies; session refresh happens in Route Handlers / Proxy.
-      }
-    },
-    remove(name: string, options: CookieOptions) {
-      try {
-        store.set({ name, value: "", ...options, maxAge: 0 });
-      } catch {
-        // Same as set — ignore when cookies are read-only in RSC.
-      }
-    },
-  };
-}
 
 /**
  * Cookie-bound Supabase server client for the authenticated user JWT.
@@ -38,7 +14,20 @@ export async function createSupabaseServerClient(
 ): Promise<SupabaseClient> {
   const store = await cookies();
   return createServerClient(config.supabaseUrl, config.supabasePublishableKey, {
-    cookies: asCookieAdapter(store),
+    cookies: {
+      getAll() {
+        return store.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          for (const { name, value, options } of cookiesToSet) {
+            store.set(name, value, options);
+          }
+        } catch {
+          // Server Components may not mutate cookies; session refresh happens in Proxy / Route Handlers.
+        }
+      },
+    },
     auth: {
       persistSession: false,
       autoRefreshToken: false,

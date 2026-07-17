@@ -136,6 +136,24 @@ function assertNoForbiddenKeys(value: unknown, depth = 0): void {
   }
 }
 
+/**
+ * Page envelopes may include item rows that still carry wire `tenantId`
+ * for binding checks. Strip+assert those per row; only scan the envelope here.
+ */
+function assertPageEnvelopeNoForbiddenKeys(raw: unknown): void {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new RepositoryError("INVALID_RESPONSE");
+  }
+  const record = raw as Record<string, unknown>;
+  for (const [key, child] of Object.entries(record)) {
+    if (key === "items") continue;
+    if (FORBIDDEN_WIRE_KEYS.has(key) || UUID_PATTERN.test(key)) {
+      throw new RepositoryError("INVALID_RESPONSE");
+    }
+    assertNoForbiddenKeys(child);
+  }
+}
+
 function rejectNullProjection(value: unknown): asserts value is Record<string, unknown> {
   if (value === null || value === undefined) throw new RepositoryError("NOT_FOUND");
   if (typeof value !== "object" || Array.isArray(value)) {
@@ -804,7 +822,7 @@ export function decodeCapabilityPage(
   pageSize: number;
   total: number;
 }> {
-  assertNoForbiddenKeys(raw);
+  assertPageEnvelopeNoForbiddenKeys(raw);
   const page = PagedWireSchema.safeParse(raw);
   if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
   if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
@@ -840,7 +858,7 @@ export function decodePortfolioPage(
   pageSize: number;
   total: number;
 }> {
-  assertNoForbiddenKeys(raw);
+  assertPageEnvelopeNoForbiddenKeys(raw);
   const page = PagedWireSchema.safeParse(raw);
   if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
   if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
@@ -876,7 +894,7 @@ export function decodeCapabilityAssessmentPage(
   pageSize: number;
   total: number;
 }> {
-  assertNoForbiddenKeys(raw);
+  assertPageEnvelopeNoForbiddenKeys(raw);
   const page = PagedWireSchema.safeParse(raw);
   if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
   if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
@@ -899,7 +917,7 @@ export function decodePortfolioAssessmentPage(
   pageSize: number;
   total: number;
 }> {
-  assertNoForbiddenKeys(raw);
+  assertPageEnvelopeNoForbiddenKeys(raw);
   const page = PagedWireSchema.safeParse(raw);
   if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
   if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");
@@ -922,7 +940,7 @@ export function decodeOverlayPage(
   pageSize: number;
   total: number;
 }> {
-  assertNoForbiddenKeys(raw);
+  assertPageEnvelopeNoForbiddenKeys(raw);
   const page = PagedWireSchema.safeParse(raw);
   if (!page.success) throw new RepositoryError("INVALID_RESPONSE");
   if (page.data.items.length > page.data.pageSize) throw new RepositoryError("INVALID_RESPONSE");

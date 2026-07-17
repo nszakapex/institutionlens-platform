@@ -21,7 +21,7 @@ export default function AppError({ reset }: Props) {
     <div className="il-stack-section">
       <ErrorState
         title="Something went wrong"
-        description="The synthetic research surface could not load this view. Retry or return to the overview. No live market data is involved."
+        description="This view could not be loaded. You may need to sign in, or the request was denied. Retry or return to the overview."
       />
       <p className="il-filter-actions">
         <button

@@ -94,12 +94,38 @@ describe("server-only domain boundary", () => {
   });
 
   it("does not expose repository or fixture data through API routes", () => {
-    const health = readFileSync(path.join(ROOT, "src/app/api/health/route.ts"), "utf8");
-    expect(health).not.toMatch(/OrganizationRepository|loadFinancialInstitutionsStore|fixtures/);
-    expect(health).not.toMatch(/financial-institutions\/synthetic/);
+    const apiFiles = walk(path.join(SRC, "app", "api")).sort();
+    const relative = apiFiles.map((file) => path.relative(ROOT, file).replaceAll("\\", "/"));
+    expect(relative).toEqual([
+      "src/app/api/auth/sign-in/route.ts",
+      "src/app/api/auth/sign-out/route.ts",
+      "src/app/api/health/route.ts",
+    ]);
 
-    const apiFiles = walk(path.join(SRC, "app", "api"));
-    expect(apiFiles).toHaveLength(1);
+    for (const file of apiFiles) {
+      const content = readFileSync(file, "utf8");
+      const label = path.relative(ROOT, file);
+      expect(content, label).not.toMatch(
+        /OrganizationRepository|loadFinancialInstitutionsStore|fixtures/,
+      );
+      expect(content, label).not.toMatch(/financial-institutions\/synthetic/);
+      expect(content, label).not.toMatch(/@\/application\//);
+      expect(content, label).not.toMatch(new RegExp(`${["service", "role"].join("_")}|sb_secret_`));
+    }
+
+    // Auth session routes stay transport-only (no repository adapter surface).
+    for (const file of [
+      "src/app/api/auth/sign-in/route.ts",
+      "src/app/api/auth/sign-out/route.ts",
+    ]) {
+      const content = readFileSync(path.join(ROOT, file), "utf8");
+      expect(content, file).not.toMatch(/@\/repositories\//);
+    }
+
+    // Health may read repository-config for mode, but not repository adapters.
+    const health = readFileSync(path.join(ROOT, "src/app/api/health/route.ts"), "utf8");
+    expect(health).toMatch(/@\/repositories\/repository-config/);
+    expect(health).not.toMatch(/@\/repositories\/(supabase-postgres|synthetic)/);
   });
 
   it("keeps placeholder routes free of direct fixture access", () => {

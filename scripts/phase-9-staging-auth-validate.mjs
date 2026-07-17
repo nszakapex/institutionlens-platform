@@ -147,7 +147,8 @@ function loadApiKeys() {
     throw new Error("Unable to parse API keys from CLI.");
   }
   const service = keys.find((k) => k.id === PRIVILEGED_API_ROLE || k.name === PRIVILEGED_API_ROLE);
-  const publishable = keys.find((k) => k.type === "publishable") ?? keys.find((k) => k.id === "anon");
+  const publishable =
+    keys.find((k) => k.type === "publishable") ?? keys.find((k) => k.id === "anon");
   if (!service?.api_key || !publishable?.api_key) {
     throw new Error("Unable to resolve service and publishable API keys.");
   }
@@ -259,7 +260,11 @@ function seedSql(userId, refs) {
     conditionalOnAssessedCapabilities: true,
   });
   const opportunity = JSON.stringify([
-    { status: "new_logo", reasonCode: "prospect_overlay", capabilityId: "cap_syn_fi_ops_analytics" },
+    {
+      status: "new_logo",
+      reasonCode: "prospect_overlay",
+      capabilityId: "cap_syn_fi_ops_analytics",
+    },
   ]);
   const payload = JSON.stringify({
     schemaVersion: "1.0.0",
@@ -370,13 +375,13 @@ insert into institutionlens.evidence_records (
   '${refs.evProfileId}', '${refs.tenantId}', '${refs.orgId}', '${refs.provId}', '${refs.importId}',
   'ev_syn_fi_001_profile', 'financial_institutions', '1.0.0', 'organization_profile', 'verified',
   'public', 'Staging profile evidence', 'Synthetic profile summary for staging validation.',
-  '{"k":"profile"}'::jsonb, 'staging profile', 'current', 'high', 'eligible', true, 'synthetic', '1.0.0'
+  '{"kind":"text","value":"Staging profile observation"}'::jsonb, 'staging profile', 'current', 'high', 'eligible', true, 'synthetic', '1.0.0'
 ),
 (
   '${refs.evChangeId}', '${refs.tenantId}', '${refs.orgId}', '${refs.provId}', '${refs.importId}',
   'ev_syn_fi_001_change', 'financial_institutions', '1.0.0', 'public_change_signal', 'verified',
   'public', 'Staging change signal', 'Synthetic public change signal for staging validation.',
-  '{"k":"change"}'::jsonb, 'staging change', 'current', 'high', 'eligible', true, 'synthetic', '1.0.0'
+  '{"kind":"text","value":"Staging change observation"}'::jsonb, 'staging change', 'current', 'high', 'eligible', true, 'synthetic', '1.0.0'
 );
 
 insert into institutionlens.assessment_runs (
@@ -562,11 +567,16 @@ async function runSmokeSuite({
     throw new Error("overlays_get_by_organization_domain_id failed");
   }
 
-  const evidence = await rpc(publishableKey, accessToken, "evidence_list_by_organization_domain_id", {
-    p_tenant_public_ref: tenantPublicRef,
-    p_domain_id: "org_syn_fi_001",
-    p_query: { page: 1, pageSize: 12 },
-  });
+  const evidence = await rpc(
+    publishableKey,
+    accessToken,
+    "evidence_list_by_organization_domain_id",
+    {
+      p_tenant_public_ref: tenantPublicRef,
+      p_domain_id: "org_syn_fi_001",
+      p_query: { page: 1, pageSize: 12 },
+    },
+  );
   if (!Array.isArray(evidence?.items) || evidence.items.length < 2) {
     throw new Error("evidence_list_by_organization_domain_id returned insufficient items");
   }
@@ -691,14 +701,16 @@ async function main() {
     for (const file of [CREDENTIALS_PATH, STAGING_ENV_PATH]) {
       if (fs.existsSync(file)) fs.rmSync(file, { force: true });
     }
-    const counts = parseQueryRows(dbQuery(`
+    const counts = parseQueryRows(
+      dbQuery(`
 select
   (select count(*) from institutionlens.tenants where display_name like '${MARKER}%')::int as tenants,
   (select count(*) from institutionlens.memberships m
      join institutionlens.tenants t on t.id = m.tenant_id
     where t.display_name like '${MARKER}%')::int as memberships,
   (select count(*) from institutionlens.organizations where display_name like '${MARKER}%')::int as organizations;
-`))[0];
+`),
+    )[0];
     console.log(
       JSON.stringify(
         {

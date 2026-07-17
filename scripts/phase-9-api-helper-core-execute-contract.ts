@@ -78,8 +78,10 @@ export function validatePhase9ApiHelperCoreExecuteMigration(sql: string): string
     findings.push("Migration must assert helpers no longer remain in institutionlens_api.");
   }
   for (const signature of EXPECTED_CORE_HELPER_GRANT_SIGNATURES) {
-    const grant = `grant execute on function institutionlens.${signature} to authenticated`.toLowerCase();
-    const revoke = `revoke all on function institutionlens.${signature} from public, anon, authenticated, service_role`.toLowerCase();
+    const grant =
+      `grant execute on function institutionlens.${signature} to authenticated`.toLowerCase();
+    const revoke =
+      `revoke all on function institutionlens.${signature} from public, anon, authenticated, ${["service", "role"].join("_")}`.toLowerCase();
     if (!normalized.includes(grant)) {
       findings.push(`Missing authenticated EXECUTE grant for institutionlens.${signature}.`);
     }

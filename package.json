@@ -27,6 +27,7 @@
     "test:evidence": "vitest run src/application/evidence-catalog-service.test.ts src/application/methodology-service.test.ts",
     "test:database": "vitest run scripts/phase-9-schema-contract.test.ts scripts/phase-9-live-verifier-contract.test.ts scripts/phase-9-rls-policy-contract.test.ts scripts/phase-9-rls-attack-harness-contract.test.ts scripts/phase-9-api-rpc-contract.test.ts scripts/phase-9-remaining-api-rpc-contract.test.ts scripts/phase-9-api-helper-core-execute-contract.test.ts",
     "test:phase9-rls-attack:staging": "node scripts/phase-9-rls-attack-harness.mjs",
+    "validate:staging-app-smoke": "node scripts/phase-9-staging-app-smoke.mjs",
     "validate:synthetic": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-synthetic.ts",
     "validate:methodology": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-methodology.ts",
     "validate:assessments": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-assessments.ts",

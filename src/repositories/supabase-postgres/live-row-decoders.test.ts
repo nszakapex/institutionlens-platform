@@ -5,6 +5,7 @@ import {
   decodeEvidenceRow,
   decodeOrganizationPage,
   decodeOrganizationRow,
+  decodePortfolioAssessmentPage,
   decodeSavedComparisonRow,
   parseLiveTenantBinding,
   type LiveTenantBinding,
@@ -163,6 +164,57 @@ describe("Phase 9 live row decoders", () => {
       BINDING,
     );
     expect(brief.state).toBe("approved");
+  });
+
+  it("accepts wire tenantId on portfolio assessment pages before binding strip", () => {
+    const page = decodePortfolioAssessmentPage(
+      {
+        items: [
+          {
+            tenantPublicRef: BINDING.tenantPublicRef,
+            tenantId: BINDING.tenantId,
+            id: "assess_syn_fi_001_portfolio",
+            organizationId: "org_syn_fi_001",
+            portfolioId: "portfolio_syn_fi_demo",
+            verticalId: "financial_institutions",
+            schemaVersion: "1.0.0",
+            status: "assessed",
+            portfolioPriorityScore: {
+              pointsAwarded: 8,
+              pointsPossible: 10,
+              band: "strong_observed_alignment",
+            },
+            bestObservedCapabilityFit: null,
+            capabilityAssessmentIds: [],
+            contributions: [],
+            coverage: {
+              enabledCapabilityCount: 1,
+              assessedCapabilityCount: 1,
+              insufficientCapabilityCount: 0,
+              enabledPriorityWeight: 10,
+              assessedPriorityWeight: 10,
+              conditionalOnAssessedCapabilities: true,
+            },
+            confidence: "high",
+            freshness: "current",
+            completeness: "sufficient",
+            publicationEligibility: "eligible",
+            opportunityContexts: [],
+            assessedAt: "2026-01-01T00:00:00.000Z",
+            engineVersion: "1.0.0",
+            aggregationPolicyVersion: "1.0.0",
+            synthetic: true,
+          },
+        ],
+        page: 1,
+        pageSize: 12,
+        total: 1,
+      },
+      BINDING,
+    );
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]?.tenantId).toBe(BINDING.tenantId);
+    expect(page.items[0]).not.toHaveProperty("tenantPublicRef");
   });
 
   it("keeps the gateway-to-RPC map aligned with the live read surface", () => {
