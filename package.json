@@ -36,10 +36,12 @@
     "validate:lineage-ui": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-lineage-ui.ts",
     "validate:methodology-ui": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-methodology-ui.ts",
     "validate:database": "tsx scripts/validate-phase-9-schema.ts",
+    "test:phase10-etl": "tsx --require ./test/shims/preload-server-only.cjs scripts/validate-phase-10-etl.ts",
+    "validate:phase10-etl": "npm run test:phase10-etl",
     "scan:secrets": "tsx scripts/scan-secrets.ts",
     "scan:clean-room": "tsx scripts/scan-clean-room.ts",
     "scan:assets": "tsx scripts/scan-assets.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run validate:synthetic && npm run validate:methodology && npm run validate:assessments && npm run validate:read-models && npm run validate:prioritization && npm run validate:lineage-ui && npm run validate:methodology-ui && npm run validate:database && npm run scan:assets && npm run scan:secrets && npm run scan:clean-room && npm run build"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run validate:synthetic && npm run validate:methodology && npm run validate:assessments && npm run validate:read-models && npm run validate:prioritization && npm run validate:lineage-ui && npm run validate:methodology-ui && npm run validate:database && npm run test:phase10-etl && npm run scan:assets && npm run scan:secrets && npm run scan:clean-room && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

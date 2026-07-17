@@ -67,6 +67,8 @@ describe("server-only domain boundary", () => {
       "src/domain/organization-public-ref.ts",
       "src/domain/brief-public-ref.ts",
       "src/lib/demo-tenant.ts",
+      "src/ingestion/schemas.ts",
+      "src/ingestion/index.ts",
     ];
 
     for (const relative of required) {
