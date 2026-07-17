@@ -8,7 +8,7 @@
 
 The evidence catalog provides authorized, tenant-scoped evidence and provenance views. It supports text search, typed multi-select filters, organization scoping by `OrganizationPublicRef`, and page sizes of 20 or 40. The UI consumes a redacted application view model; it never loads fixtures directly.
 
-This is an in-memory synthetic catalog. Real source acquisition, ingestion, normalization, deduplication, persistence, and refresh scheduling are deferred.
+This is an in-memory synthetic catalog for the default local-demo app. Phase 10 adds an **offline** public-source ETL foundation (`python/institutionlens_etl`, `src/ingestion`) that emits import candidates and review-queue items from fixtures only. Live acquisition, privileged persistence into `import_runs`, and product-route wiring remain deferred.
 
 ## Authorization and tenant boundary
 

@@ -348,6 +348,34 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - Partial RPC or route coverage must continue to fail closed with `UNSUPPORTED_OPERATION` rather than mixing synthetic and live data.
 - See `docs/PHASE_9_BATCH_5_CUTOVER.md`, `src/authorization/session-context.ts`, and `scripts/phase-9-remaining-api-rpc-contract.ts`.
 
+## D-027 - Public-source legal-use and registry gate
+
+**Status:** Approved for Phase 10 offline foundation
+
+- Every ingestible source must appear in a versioned source registry before normalization. Unknown source ids fail closed.
+- Phase 10 executable sources are offline fixtures only (`live_fetch: false`, `fixture://` URIs). Live fetch, scraping, and third-party credentials are forbidden in this phase.
+- License `unknown` blocks publication eligibility; ambiguous organization matches and restricted classifications enter a human-review queue.
+- Clean-room independence remains binding; see `docs/PUBLIC_SOURCE_POLICY.md` and `docs/SOURCE_REGISTRY.md`.
+
+## D-028 - Python ETL boundary and evidence mapping
+
+**Status:** Approved for Phase 10 offline foundation
+
+- Implement approved-source ingestion, normalization, provenance construction, freshness evaluation, idempotency keys, validation, and review routing in a dedicated Python package (`python/institutionlens_etl`).
+- Emit deterministic **import candidates** compatible with existing evidence/provenance invariants. Do not recalculate Phase 4 scores in the ETL.
+- Keep server-only provenance fields (`source_reference`, internal notes) out of client wire, view models, logs, and diagnostics summaries.
+- Prefer fail-closed structured errors with safe public codes; never echo payloads, secrets, or raw UUID primary keys in operator summaries.
+- Persistence into `import_runs` / evidence tables remains a later privileged write phase; Phase 10 validates offline artifacts only.
+
+## D-029 - Offline import validation mode vs synthetic app default
+
+**Status:** Approved for Phase 10 offline foundation
+
+- Default application runtime remains `IL_APP_MODE=local-demo` with the synthetic repository bundle.
+- Offline ETL validation runs only through explicit CLI / `npm run test:phase10-etl` (and related contract tests). It must not become a silent demo↔live fallback inside product routes.
+- TypeScript ingestion contracts under `src/ingestion/` parse and validate candidate artifacts without exposing them through public API routes in this phase.
+- See `docs/PHASE_10_PLAN.md` and `docs/PHASE_10_REQUIREMENTS_TRACEABILITY.md`.
+
 ## Current phase boundary
 
-Phases 0-8 are complete for synthetic local-demo scope. Phase 9 Batches 1-2 establish fail-closed production database and repository contracts only. Runtime persistence, RLS allow policies, production authentication, external infrastructure, real data, billing, and hosting remain deferred.
+Phases 0–9 establish synthetic product surfaces plus fail-closed production read/data foundations. Phase 10 adds an offline public-source ETL and ingestion-contract foundation only. Live connectors, privileged writes, billing, and hosting cutover remain deferred.
