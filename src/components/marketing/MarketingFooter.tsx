@@ -4,6 +4,7 @@ export function MarketingFooter() {
   return (
     <footer className="il-mkt-footer">
       <div className="il-mkt-footer-inner">
+        <p className="il-mkt-footer-brand">InstitutionLens</p>
         <p>
           InstitutionLens supports institutional research and outreach preparation. It is not
           investment advice and does not recommend transactions.
