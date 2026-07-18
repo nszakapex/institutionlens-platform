@@ -2,27 +2,24 @@
 
 Configurable **institutional-fit intelligence** for specialized B2B companies.
 
-This repository is the **authenticated application foundation** only. It is a clean-room product. It is **not** the InstitutionLens marketing website, and it must not import from Coverage or any AD&Co-specific prototype.
+This repository is the InstitutionLens product application: a public marketing site plus an authenticated research workspace. It is a clean-room product and must not import from Coverage or any AD&Co-specific prototype.
 
-## Current status (Phase 9 Batch 2)
+## Current status (Phase 11)
 
-- Synthetic demo product through deterministic institutional briefs (Phase 8)
-- Versioned, fail-closed Supabase/Postgres schema contract (Phase 9 Batch 1)
-- Server-only repository/configuration boundary with synthetic parity and an offline fake-gateway adapter (Phase 9 Batch 2)
-- No real organization data
-- No connected PostgreSQL/Supabase project, authenticated database transport, live RPC, migration execution, or runtime cutover
-- Explicit **local-demo** principal and tenant context (server-side, non-production)
-- **No production deployment** while demo authentication is in place
-- Brand tokens and self-hosted fonts loaded for product surfaces
+- Public marketing site plus authenticated research workspace in one product
+- Default runtime remains synthetic **local-demo**
+- Phases 9–10 foundations (RLS/Auth staging, offline ETL) preserved locally
+- Invitation-only founding access (no self-service signup or payments)
+- **No production deployment / Vercel reconnect** in this phase
 
 See:
 
+- [`docs/PHASE_11_PLAN.md`](docs/PHASE_11_PLAN.md) — public site and founding access
 - [`docs/FOUNDATION_PLAN.md`](docs/FOUNDATION_PLAN.md) — product and architecture plan
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — approved architecture decisions
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical shape
-- [`docs/PHASE_7_PLAN.md`](docs/PHASE_7_PLAN.md) / [`docs/ORGANIZATION_COMPARISON.md`](docs/ORGANIZATION_COMPARISON.md) — comparison
-- [`docs/PHASE_8_PLAN.md`](docs/PHASE_8_PLAN.md) / [`docs/INSTITUTIONAL_BRIEFS.md`](docs/INSTITUTIONAL_BRIEFS.md) — briefs
 - [`docs/PHASE_9_PLAN.md`](docs/PHASE_9_PLAN.md) / [`docs/PRODUCTION_DATA_FOUNDATION.md`](docs/PRODUCTION_DATA_FOUNDATION.md) — production data foundation
+- [`docs/PHASE_10_PLAN.md`](docs/PHASE_10_PLAN.md) — offline public-source ETL
 - [`docs/CLEAN_ROOM_POLICY.md`](docs/CLEAN_ROOM_POLICY.md) — Coverage separation rules
 - [`SECURITY.md`](SECURITY.md) — security posture and reporting
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to work in this repo
@@ -31,18 +28,19 @@ See:
 
 **In this repository**
 
-- Application UI and server logic for fit exploration (future phases)
+- Public marketing routes and invitation-only access path
+- Authenticated research UI (organizations, evidence, compare, briefs, methodology)
 - Vertical adapters with synthetic fixtures first (`financial_institutions`)
 - Explainable scoring concepts: fit, confidence, freshness, completeness, publication eligibility — kept separate
-- Template-based research briefs (future; deterministic, evidence-linked)
+- Offline ETL foundation and staging Auth/RLS contracts
 
-**Not in this repository**
+**Not in this repository / deferred**
 
-- Public marketing site (separate repository)
+- Self-service signup, payments, billing, email delivery, or CRM
+- Production hosting cutover / Vercel reconnect
 - Coverage / AD&Co data, rules, catalogs, briefs, or Git history
-- Real organizations or copied public records
+- Real customer organizations or live-source ingestion activation
 - Telemetry / analytics SDKs
-- Production auth or database-backed tenant isolation (planned later)
 
 ## Brand assets
 

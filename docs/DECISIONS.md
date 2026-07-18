@@ -376,6 +376,17 @@ See `docs/PHASE_8_PLAN.md`, `docs/INSTITUTIONAL_BRIEFS.md`, and `docs/PHASE_8_RE
 - TypeScript ingestion contracts under `src/ingestion/` parse and validate candidate artifacts without exposing them through public API routes in this phase.
 - See `docs/PHASE_10_PLAN.md` and `docs/PHASE_10_REQUIREMENTS_TRACEABILITY.md`.
 
+## D-030 - Public marketing site with invitation-only founding access
+
+**Status:** Approved for Phase 11 local packaging (no hosting cutover)
+
+- Own public discovery at `/`, `/product`, `/how-it-works`, `/pricing`, and `/request-access` under a marketing layout. Keep authenticated research routes at their existing absolute paths; relocate overview to `/app` as the signed-in home.
+- Marketing pages may be indexable. Research workspace routes, `/login`, and `/api/**` retain `noindex, nofollow, noarchive` (metadata + path-based `X-Robots-Tag`).
+- Founding access is invitation-only. Do not implement self-service signup, payments, email delivery, CRM, or fake form submissions. Optional server-only `IL_FOUNDING_CONTACT_URL` (HTTPS) may power an external contact/booking link; if unset, show an honest non-submitting state.
+- Preserve the Phase 9 server-session model: no browser service-role, no client tenant selection, no silent demo fallback in live modes. Guard login `returnTo` against open redirects.
+- Access-denied and access-pending copy must not reveal whether a tenant, user, or workspace exists.
+- See `docs/PHASE_11_PLAN.md`, `docs/PHASE_11_REQUIREMENTS_TRACEABILITY.md`, and `docs/FOUNDING_CLIENT_ONBOARDING_CHECKLIST.md`.
+
 ## Current phase boundary
 
-Phases 0–9 establish synthetic product surfaces plus fail-closed production read/data foundations. Phase 10 adds an offline public-source ETL and ingestion-contract foundation only. Live connectors, privileged writes, billing, and hosting cutover remain deferred.
+Phases 0–10 establish the research platform (synthetic product, privacy, RLS/Auth, offline ETL). Phase 11 packages a public marketing website and invitation-only founding-client entry while keeping the authenticated workspace private. Live connectors, privileged writes, billing, Auth provisioning, and hosting cutover remain deferred.
