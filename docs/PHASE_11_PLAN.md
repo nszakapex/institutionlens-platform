@@ -49,5 +49,6 @@ Package InstitutionLens as one coherent product:
 ## Related
 
 - ADR D-030 in `docs/DECISIONS.md`
+- Phase 11.1A visual-system addendum: `docs/PHASE_11_1_VISUAL_SYSTEM.md`
 - Traceability: `docs/PHASE_11_REQUIREMENTS_TRACEABILITY.md`
 - Onboarding checklist: `docs/FOUNDING_CLIENT_ONBOARDING_CHECKLIST.md`
