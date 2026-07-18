@@ -8,3 +8,7 @@ export { InstitutionNetwork } from "./InstitutionNetwork";
 export { ConfidenceArc } from "./ConfidenceArc";
 export { FreshnessTimeline } from "./FreshnessTimeline";
 export { DataLineage } from "./DataLineage";
+export { EvidenceLens } from "./EvidenceLens";
+export { ProvenancePath } from "./ProvenancePath";
+export { SignalField } from "./SignalField";
+export { RelationshipPaths } from "./RelationshipPaths";
