@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { buildContentSecurityPolicy, buildSecurityHeaders } from "@/lib/security/headers";
 import { isLiveAppMode, loadServerEnv } from "@/lib/env";
+import { shouldApplyRobotsNoIndex } from "@/lib/public-paths";
 
 /**
  * Next.js 16 network boundary (formerly middleware).
@@ -10,9 +11,11 @@ import { isLiveAppMode, loadServerEnv } from "@/lib/env";
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildContentSecurityPolicy({ nonce });
+  const pathname = request.nextUrl.pathname;
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("x-il-pathname", `${pathname}${request.nextUrl.search}`);
 
   let response = NextResponse.next({
     request: {
@@ -61,7 +64,10 @@ export async function proxy(request: NextRequest) {
 
   response.headers.set("Content-Security-Policy", csp);
 
-  for (const header of buildSecurityHeaders({ includeContentSecurityPolicy: false })) {
+  for (const header of buildSecurityHeaders({
+    includeContentSecurityPolicy: false,
+    includeRobotsNoIndex: shouldApplyRobotsNoIndex(pathname),
+  })) {
     response.headers.set(header.key, header.value);
   }
 

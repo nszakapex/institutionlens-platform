@@ -446,7 +446,7 @@ export function ComparePage({ view }: { view: ComparePageView }) {
         <Link className="il-button il-button--secondary il-button--md" href="/organizations">
           Browse organizations
         </Link>
-        <Link className="il-button il-button--secondary il-button--md" href="/">
+        <Link className="il-button il-button--secondary il-button--md" href="/app">
           Back to overview
         </Link>
       </p>

@@ -184,7 +184,9 @@ describe("Phase 9 narrow read security contract", () => {
         /tenantPublicRef|p_tenant_public_ref|institutionlens_api/,
       );
       expect(content, relative).not.toMatch(/createAuthorizationContext\s*\(/);
-      if (/searchParams/.test(content)) {
+      // Authenticated product routes with searchParams must bind via getRequestAccess.
+      // Public routes (e.g. /login returnTo) may read searchParams without session binding.
+      if (/searchParams/.test(content) && relative.replace(/\\/g, "/").includes("src/app/(app)/")) {
         expect(content, relative).toMatch(/getRequestAccess\(\)/);
         expect(content, relative).not.toMatch(
           /getRequestAccess\([^)]*searchParams|createAuthorizationContext\([\s\S]*searchParams/,

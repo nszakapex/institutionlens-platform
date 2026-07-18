@@ -53,7 +53,9 @@ export function MobileNavigation() {
         <nav aria-label="Primary">
           <ul className="il-nav-list">
             {PRIMARY_NAV.map((item) => {
-              const active = pathname === item.href;
+              const active =
+                pathname === item.href ||
+                (item.href !== "/app" && pathname.startsWith(`${item.href}/`));
               return (
                 <li key={item.id}>
                   {item.available ? (

@@ -18,7 +18,7 @@ export default function MethodologyError({ reset }: { reset: () => void }) {
         >
           Retry
         </button>
-        <Link className="il-button il-button--secondary il-button--md" href="/">
+        <Link className="il-button il-button--secondary il-button--md" href="/app">
           Back to overview
         </Link>
       </p>

@@ -31,7 +31,7 @@ export default function AppError({ reset }: Props) {
         >
           Retry
         </button>
-        <Link className="il-button il-button--secondary il-button--md" href="/">
+        <Link className="il-button il-button--secondary il-button--md" href="/app">
           Return to overview
         </Link>
       </p>

@@ -123,7 +123,7 @@ async function main() {
   checks.sessionCookiesSet = Object.keys(jar).some((name) => /auth-token|sb-/i.test(name));
 
   const routes = [
-    ["overview", "/"],
+    ["overview", "/app"],
     ["explorer", "/organizations"],
     ["methodology", "/methodology"],
     ["evidence", "/evidence"],

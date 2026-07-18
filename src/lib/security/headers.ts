@@ -7,17 +7,23 @@ export type CspOptions = {
   nonce?: string;
 };
 
+export const ROBOTS_NOINDEX_VALUE = "noindex, nofollow, noarchive";
+
 /**
- * Static security headers. CSP with nonce is applied in middleware.
+ * Static security headers. CSP with nonce is applied in middleware/proxy.
+ * X-Robots-Tag is optional so public marketing routes can remain indexable.
  */
 export function buildSecurityHeaders(options?: {
   includeContentSecurityPolicy?: boolean;
   nonce?: string;
+  /** When false, omits X-Robots-Tag (marketing). Default true for workspace/API. */
+  includeRobotsNoIndex?: boolean;
 }): SecurityHeader[] {
+  const includeRobotsNoIndex = options?.includeRobotsNoIndex !== false;
+
   const headers: SecurityHeader[] = [
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" },
-    { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
     { key: "Referrer-Policy", value: "no-referrer" },
     {
       key: "Permissions-Policy",
@@ -32,6 +38,10 @@ export function buildSecurityHeaders(options?: {
     { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
     { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
   ];
+
+  if (includeRobotsNoIndex) {
+    headers.splice(2, 0, { key: "X-Robots-Tag", value: ROBOTS_NOINDEX_VALUE });
+  }
 
   if (options?.includeContentSecurityPolicy) {
     headers.push({

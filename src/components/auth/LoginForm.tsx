@@ -2,11 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { DEFAULT_POST_LOGIN_PATH, safeReturnPath } from "@/lib/safe-return-path";
 
-export function LoginForm() {
+type Props = {
+  returnTo?: string;
+};
+
+export function LoginForm({ returnTo }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const destination = safeReturnPath(returnTo ?? DEFAULT_POST_LOGIN_PATH);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,7 +33,7 @@ export function LoginForm() {
         setPending(false);
         return;
       }
-      router.replace("/");
+      router.replace(destination);
       router.refresh();
     } catch {
       setError("Sign-in is temporarily unavailable.");

@@ -55,7 +55,7 @@ describe("Phase 2 design-system contracts", () => {
       "src/styles/tokens.css",
       "src/styles/components.css",
       "src/app/globals.css",
-      "src/app/(app)/page.tsx",
+      "src/app/(app)/app/page.tsx",
     ];
     for (const file of files) {
       const content = read(file);

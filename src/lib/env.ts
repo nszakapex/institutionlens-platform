@@ -2,6 +2,14 @@ import { z } from "zod";
 
 const appModeSchema = z.enum(["local-demo", "development", "staging", "production"]);
 
+const optionalHttpsUrl = z
+  .string()
+  .url()
+  .refine((value) => value.startsWith("https://"), {
+    message: "must be an https URL",
+  })
+  .optional();
+
 const demoEnvSchema = z.object({
   IL_APP_MODE: z.literal("local-demo"),
   IL_DEMO_TENANT_ID: z
@@ -14,6 +22,7 @@ const demoEnvSchema = z.object({
     .min(3)
     .max(64)
     .regex(/^[a-z0-9-]+$/, "IL_DEMO_PRINCIPAL_ID must be lowercase alphanumeric with hyphens"),
+  IL_FOUNDING_CONTACT_URL: optionalHttpsUrl,
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
 });
 
@@ -24,6 +33,7 @@ const liveEnvSchema = z.object({
   IL_SUPABASE_PUBLISHABLE_KEY: z.string().min(20).max(512),
   IL_REPOSITORY_REQUEST_TIMEOUT_MS: z.string().optional(),
   IL_REPOSITORY_MAX_PAGE_SIZE: z.string().optional(),
+  IL_FOUNDING_CONTACT_URL: optionalHttpsUrl,
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
 });
 
@@ -56,6 +66,7 @@ export function loadServerEnv(source: Record<string, string | undefined> = proce
       IL_APP_MODE: source.IL_APP_MODE,
       IL_DEMO_TENANT_ID: source.IL_DEMO_TENANT_ID,
       IL_DEMO_PRINCIPAL_ID: source.IL_DEMO_PRINCIPAL_ID,
+      IL_FOUNDING_CONTACT_URL: emptyToUndefined(source.IL_FOUNDING_CONTACT_URL),
       NODE_ENV: source.NODE_ENV,
     });
     if (!parsed.success) {
@@ -82,6 +93,7 @@ export function loadServerEnv(source: Record<string, string | undefined> = proce
     IL_SUPABASE_PUBLISHABLE_KEY: source.IL_SUPABASE_PUBLISHABLE_KEY,
     IL_REPOSITORY_REQUEST_TIMEOUT_MS: source.IL_REPOSITORY_REQUEST_TIMEOUT_MS,
     IL_REPOSITORY_MAX_PAGE_SIZE: source.IL_REPOSITORY_MAX_PAGE_SIZE,
+    IL_FOUNDING_CONTACT_URL: emptyToUndefined(source.IL_FOUNDING_CONTACT_URL),
     NODE_ENV: source.NODE_ENV,
   });
   if (!parsed.success) {
@@ -93,6 +105,27 @@ export function loadServerEnv(source: Record<string, string | undefined> = proce
     );
   }
   return parsed.data;
+}
+
+function emptyToUndefined(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? undefined : trimmed;
+}
+
+/**
+ * Optional operator-controlled HTTPS contact/booking URL for founding access.
+ * Never invent a default channel when unset.
+ */
+export function getFoundingContactUrl(
+  source: Record<string, string | undefined> = process.env,
+): string | undefined {
+  try {
+    const env = loadServerEnv(source);
+    return "IL_FOUNDING_CONTACT_URL" in env ? env.IL_FOUNDING_CONTACT_URL : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function assertNoPublicSecrets(

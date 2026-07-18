@@ -14,7 +14,7 @@ export function ProductHeader({ currentPath, workspaceLabel = "Local demo worksp
     <header className="il-product-header">
       <div className="il-product-header-inner">
         <div className="il-brand-cluster">
-          <Link href="/" className="il-wordmark">
+          <Link href="/app" className="il-wordmark">
             <LensMark className="il-wordmark-mark" width={28} height={28} />
             <span>InstitutionLens</span>
           </Link>

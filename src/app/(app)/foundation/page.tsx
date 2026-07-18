@@ -321,7 +321,7 @@ export default async function DesignSystemPage() {
             title="No organizations yet"
             description="A later phase will load synthetic fixtures into this explorer."
             actionLabel="Back to overview"
-            actionHref="/"
+            actionHref="/app"
           />
           <LoadingState label="Preparing synthetic preview…" />
           <ErrorState description="The requested synthetic view could not be rendered." />

@@ -10,7 +10,9 @@ export function PrimaryNavigation({ currentPath }: Props) {
     <nav className="il-primary-nav" aria-label="Primary">
       <ul className="il-nav-list">
         {PRIMARY_NAV.map((item) => {
-          const active = currentPath === item.href;
+          const active =
+            currentPath === item.href ||
+            (item.href !== "/app" && currentPath.startsWith(`${item.href}/`));
           return (
             <li key={item.id}>
               {item.available ? (

@@ -64,6 +64,7 @@ describe("route loading and error boundaries", () => {
 
   it("keeps Phase 6–8 route metadata generic and non-indexable", () => {
     for (const route of [
+      "app",
       "organizations/[organizationRef]",
       "evidence",
       "methodology",
@@ -76,5 +77,11 @@ describe("route loading and error boundaries", () => {
       expect(content).toMatch(/index:\s*false/);
       expect(content).not.toMatch(/generateMetadata|displayName/);
     }
+  });
+
+  it("points overview recovery links at /app", () => {
+    const appError = readFileSync(path.join(ROOT, "src/app/(app)/error.tsx"), "utf8");
+    expect(appError).toMatch(/href="\/app"/);
+    expect(appError).not.toMatch(/href="\/"/);
   });
 });

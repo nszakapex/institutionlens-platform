@@ -6,6 +6,7 @@ import { OverviewPage } from "@/components/overview/OverviewPage";
 export const metadata: Metadata = {
   title: "Overview",
   description: "InstitutionLens synthetic portfolio overview and prioritization heuristics.",
+  robots: { index: false, follow: false, noarchive: true },
 };
 
 export default async function OverviewRoute() {

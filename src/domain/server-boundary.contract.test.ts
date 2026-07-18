@@ -141,7 +141,7 @@ describe("server-only domain boundary", () => {
 
   it("keeps product routes on application services without fixture imports", () => {
     const productRoutes = [
-      ["src/app/(app)/page.tsx", /buildOverviewPageView/],
+      ["src/app/(app)/app/page.tsx", /buildOverviewPageView/],
       ["src/app/(app)/organizations/page.tsx", /buildExplorerPageView/],
       ["src/app/(app)/organizations/[organizationRef]/page.tsx", /buildOrganizationDetailPageView/],
       ["src/app/(app)/evidence/page.tsx", /buildEvidenceCatalogPageView/],

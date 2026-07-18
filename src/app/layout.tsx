@@ -3,13 +3,25 @@ import { headers } from "next/headers";
 import { loadRepositoryConfig } from "@/repositories/repository-config";
 import "@/app/globals.css";
 
+/**
+ * Public marketing pages must render even when repository/live config is absent
+ * or mixed. Authenticated routes continue to fail closed via getRequestAccess().
+ */
+function resolveShellAppMode(): string {
+  try {
+    return loadRepositoryConfig().mode;
+  } catch {
+    return "unconfigured";
+  }
+}
+
 export const metadata: Metadata = {
   title: {
     default: "InstitutionLens",
     template: "%s · InstitutionLens",
   },
   description:
-    "Institutional fit, made explainable. Synthetic demo application shell — no real organization data.",
+    "Institutional fit, made explainable. Research workspace for evidence-backed outreach preparation — not investment advice.",
   robots: {
     index: false,
     follow: false,
@@ -36,7 +48,7 @@ export default async function RootLayout({
 }>) {
   const headerStore = await headers();
   const nonce = headerStore.get("x-nonce") ?? undefined;
-  const appMode = loadRepositoryConfig().mode;
+  const appMode = resolveShellAppMode();
 
   return (
     <html lang="en">

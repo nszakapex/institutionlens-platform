@@ -10,7 +10,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   {
     id: "overview",
     label: "Overview",
-    href: "/",
+    href: "/app",
     available: true,
     description: "Portfolio overview and prioritization heuristics",
   },

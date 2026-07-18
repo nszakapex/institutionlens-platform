@@ -14,6 +14,16 @@ describe("security headers", () => {
     expect(map["Content-Security-Policy"]).toBeUndefined();
   });
 
+  it("omits X-Robots-Tag for indexable marketing responses", () => {
+    const headers = buildSecurityHeaders({
+      includeContentSecurityPolicy: false,
+      includeRobotsNoIndex: false,
+    });
+    const map = Object.fromEntries(headers.map((header) => [header.key, header.value]));
+    expect(map["X-Robots-Tag"]).toBeUndefined();
+    expect(map["X-Frame-Options"]).toBe("DENY");
+  });
+
   it("builds a restrictive self-hosted CSP with nonce", () => {
     const csp = buildContentSecurityPolicy({ nonce: "test-nonce" });
 
