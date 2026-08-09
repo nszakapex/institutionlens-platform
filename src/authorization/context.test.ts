@@ -18,7 +18,7 @@ const CREATED = "2026-01-15T12:00:00.000Z";
 function tenant(overrides: Partial<Tenant> = {}): Tenant {
   return TenantSchema.parse({
     id: "tenant_demo_research",
-    displayName: "Local demo research workspace",
+    displayName: "Andrew Davidson research workspace",
     status: "active",
     allowedVerticalIds: ["financial_institutions"],
     createdAt: CREATED,

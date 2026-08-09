@@ -9,7 +9,10 @@ type Props = {
   workspaceLabel?: string;
 };
 
-export function ProductHeader({ currentPath, workspaceLabel = "Local demo workspace" }: Props) {
+export function ProductHeader({
+  currentPath,
+  workspaceLabel = "Andrew Davidson research workspace",
+}: Props) {
   return (
     <header className="il-product-header">
       <div className="il-product-header-inner">

@@ -16,38 +16,38 @@ export const metadata: Metadata = {
     absolute: "InstitutionLens — Institutional fit, made explainable",
   },
   description:
-    "InstitutionLens helps researchers prepare evidence-backed institutional outreach. Not investment advice. Invitation-only founding access.",
+    "InstitutionLens helps mortgage risk-analytics teams prepare evidence-backed institutional outreach. Not investment advice. Invitation-only founding access.",
 };
 
 const SURFACES = [
   {
     id: "organizations",
     title: "Organizations",
-    copy: "Searchable institutional records with explainable fit and quality signals — never one opaque score.",
+    copy: "Banks, credit unions, and related institutions with explainable fit for modeling, data, reporting, scenarios, and governance — never one opaque score.",
     glyph: <FocusReticle className="il-surface-card-glyph" />,
   },
   {
     id: "evidence",
     title: "Evidence",
-    copy: "Provenance-aware cataloging keeps every claim attached to its source class and limitations.",
+    copy: "Provenance-aware cataloging keeps every institutional claim attached to its source class and limitations.",
     glyph: <EvidenceTrace className="il-surface-card-glyph" animated={false} />,
   },
   {
     id: "compare",
     title: "Compare",
-    copy: "Bounded side-by-side review for a small set of institutions, so judgment stays deliberate.",
+    copy: "Bounded side-by-side review for a small prospect shortlist, so outreach judgment stays deliberate.",
     glyph: <ConfidenceArc className="il-surface-card-glyph" />,
   },
   {
     id: "briefs",
     title: "Briefs",
-    copy: "Structured research preparation artifacts, written for internal review rather than publication.",
+    copy: "Internal prep artifacts for model-licensing and analytics conversations — written for review, not outbound send.",
     glyph: <DataLineage className="il-surface-card-glyph" />,
   },
   {
     id: "methodology",
     title: "Methodology",
-    copy: "Versioned assessment rules and publication boundaries, stated in plain language.",
+    copy: "Versioned assessment rules and publication boundaries, stated in plain language for auditability.",
     glyph: <FreshnessTimeline className="il-surface-card-glyph" />,
   },
 ] as const;
@@ -58,13 +58,14 @@ export default function MarketingHomePage() {
       <section className="il-band" aria-labelledby="mkt-hero-title">
         <div className="il-band-inner il-hero">
           <div>
-            <p className="il-eyebrow">Institutional research workspace</p>
+            <p className="il-eyebrow">Mortgage analytics research workspace</p>
             <h1 id="mkt-hero-title" className="il-hero-display">
               Institutional fit, made explainable
             </h1>
             <p className="il-mkt-support">
-              A workspace for preparing outreach with evidence, provenance, and clear assessment
-              boundaries — not a recommendation engine.
+              Prepare evidence-backed outreach to banks, credit unions, insurers, and asset managers
+              before model-licensing conversations — with provenance and clear assessment
+              boundaries, not a recommendation engine.
             </p>
             <div className="il-mkt-cta-row">
               <Link href="/request-access" className="il-button il-button--primary il-button--md">
@@ -144,8 +145,8 @@ export default function MarketingHomePage() {
               Five surfaces, one reviewable line of reasoning
             </h2>
             <p className="il-mkt-support">
-              InstitutionLens organizes organization context, evidence quality, and methodology so
-              analysts can review the reasoning before outreach.
+              InstitutionLens organizes institutional context, evidence quality, and methodology so
+              research and client teams can review the reasoning before outreach.
             </p>
           </div>
           <ul className="il-surface-grid" role="list">
@@ -228,7 +229,7 @@ export default function MarketingHomePage() {
         <div className="il-band-inner">
           <p className="il-eyebrow">Founding access</p>
           <h2 id="mkt-closing-title" className="il-mkt-display">
-            Bring your institutional research into focus
+            Bring institutional outreach research into focus
           </h2>
           <div className="il-mkt-cta-row">
             <Link href="/request-access" className="il-button il-button--primary il-button--md">

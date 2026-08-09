@@ -9,42 +9,43 @@ import { DEFAULT_PUBLICATION_POLICY } from "@/domain/schemas/publication";
 const CREATED = "2026-01-15T12:00:00.000Z";
 
 /**
- * Fictional capability catalog — not products, pricing, or proprietary methodology.
+ * Fictional capability catalog for a specialized mortgage risk-analytics vendor
+ * preparing institutional outreach. Not products, pricing, or proprietary methodology.
  */
 const RAW: unknown[] = [
   {
     id: "cap_syn_fi_ops_analytics",
-    name: "Operational analytics support",
+    name: "Prepayment and credit model fit",
     description:
-      "Synthetic capability describing interest in operational analytics workflows for demo institutions.",
-    category: "operations",
+      "Synthetic capability describing institutional fit for prepayment and credit risk modeling workflows used in mortgage and related portfolios.",
+    category: "modeling",
   },
   {
     id: "cap_syn_fi_data_quality",
-    name: "Data-quality modernization",
+    name: "Loan and market data readiness",
     description:
-      "Synthetic capability describing data-quality modernization themes for interface validation.",
+      "Synthetic capability describing readiness of loan-level and market data foundations that support analytics licensing conversations.",
     category: "data",
   },
   {
     id: "cap_syn_fi_portfolio_reporting",
-    name: "Portfolio reporting workflow",
+    name: "Valuation and risk reporting fit",
     description:
-      "Synthetic capability describing portfolio reporting workflow needs without real portfolio data.",
+      "Synthetic capability describing alignment with portfolio valuation, risk measurement, and reporting workflows.",
     category: "reporting",
   },
   {
     id: "cap_syn_fi_scenario_planning",
-    name: "Scenario-planning support",
+    name: "Macro and stress scenario fit",
     description:
-      "Synthetic capability describing scenario-planning support as a fictional alignment theme.",
+      "Synthetic capability describing interest in interest-rate, home-price, and unemployment scenario planning for mortgage risk work.",
     category: "planning",
   },
   {
     id: "cap_syn_fi_governance_review",
-    name: "Governance process review",
+    name: "Model validation and governance fit",
     description:
-      "Synthetic capability describing governance process review themes for demo evidence linkage.",
+      "Synthetic capability describing model validation, documentation, and governance review themes for regulated institutional buyers.",
     category: "governance",
   },
 ];

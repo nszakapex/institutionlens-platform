@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { createAuthorizationContext } from "@/authorization/context";
 import {
   DEMO_ANALYST,
@@ -9,6 +9,12 @@ import { permissionsForRole } from "@/authorization/policy";
 import { inboundBriefActionFor } from "@/application/inbound-brief-action";
 import { briefPublicRefFor } from "@/domain/brief-public-ref";
 import { DEMO_DOMAIN_TENANT_ID } from "@/domain/demo-constants";
+
+beforeAll(() => {
+  process.env.IL_APP_MODE = "local-demo";
+  process.env.IL_DEMO_TENANT_ID = "demo-tenant-local";
+  process.env.IL_DEMO_PRINCIPAL_ID = "demo-principal-local";
+});
 
 describe("inboundBriefActionFor", () => {
   it("builds a tenant-scoped opaque bref_ href with an organization-specific accessible name", () => {
