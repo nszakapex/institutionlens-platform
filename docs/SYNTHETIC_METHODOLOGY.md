@@ -28,67 +28,67 @@ Unresolved required rules force low confidence.
 
 ## Capability rule weights
 
-### Operational analytics support (`cap_syn_fi_ops_analytics`) — 100 pts
+### Prepayment and credit model fit (`cap_syn_fi_ops_analytics`) — 100 pts
 
 | Rule                                                     | Points | Factor                     |
 | -------------------------------------------------------- | ------ | -------------------------- |
-| Institution kind fits operational analytics demo scope   | 20     | organizational_profile_fit |
-| Balance-sheet scale supports operational analytics       | 15     | organizational_profile_fit |
-| Digital service maturity aligns with analytics workflows | 20     | capability_alignment       |
-| Operating complexity warrants analytics support          | 15     | operational_compatibility  |
+| Institution kind fits prepayment and credit modeling demo scope | 20     | organizational_profile_fit |
+| Balance-sheet scale supports prepayment and credit modeling | 15     | organizational_profile_fit |
+| Digital service maturity aligns with mortgage analytics workflows | 20     | capability_alignment       |
+| Operating complexity warrants mortgage risk analytics support | 15     | operational_compatibility  |
 | Recent public change signal supports timing              | 20     | timing_change_signals      |
 | Organization profile freshness is usable                 | 10     | publicly_evidenced_need    |
 
 **Gate:** organization_profile evidence required.
 
-### Data-quality modernization (`cap_syn_fi_data_quality`) — 100 pts
+### Loan and market data readiness (`cap_syn_fi_data_quality`) — 100 pts
 
 | Rule                                                  | Points | Factor                     |
 | ----------------------------------------------------- | ------ | -------------------------- |
-| Profile evidence supports data-quality review         | 18     | organizational_profile_fit |
-| Data availability indicates modernization opportunity | 25     | publicly_evidenced_need    |
-| Ownership model aligns with data-quality workflows    | 15     | capability_alignment       |
-| Lending breadth supports data-quality themes          | 17     | capability_alignment       |
-| Larger scale benefits from data-quality modernization | 15     | operational_compatibility  |
-| Profile freshness supports data-quality scoring       | 10     | publicly_evidenced_need    |
+| Profile evidence supports loan and market data readiness review | 18     | organizational_profile_fit |
+| Data availability indicates loan and market data readiness | 25     | publicly_evidenced_need    |
+| Ownership model aligns with loan-data readiness workflows | 15     | capability_alignment       |
+| Lending breadth supports loan and market data themes  | 17     | capability_alignment       |
+| Larger scale benefits from loan and market data readiness | 15     | operational_compatibility  |
+| Profile freshness supports loan and market data scoring | 10     | publicly_evidenced_need    |
 
 **Gate:** organization_profile evidence required.
 
-### Portfolio reporting workflow (`cap_syn_fi_portfolio_reporting`) — 100 pts
+### Valuation and risk reporting fit (`cap_syn_fi_portfolio_reporting`) — 100 pts
 
 | Rule                                                 | Points | Factor                     |
 | ---------------------------------------------------- | ------ | -------------------------- |
-| Institution profile supports portfolio reporting     | 20     | organizational_profile_fit |
-| Scale band supports portfolio reporting needs        | 20     | organizational_profile_fit |
-| Multi-region footprint increases reporting relevance | 15     | operational_compatibility  |
-| Operating complexity supports reporting workflows    | 15     | operational_compatibility  |
-| Digital maturity aligns with reporting delivery      | 20     | capability_alignment       |
-| Operating context evidence is present                | 10     | publicly_evidenced_need    |
+| Institution profile supports valuation and risk reporting | 20     | organizational_profile_fit |
+| Scale band supports valuation and risk reporting needs | 20     | organizational_profile_fit |
+| Multi-region footprint increases valuation reporting relevance | 15     | operational_compatibility  |
+| Operating complexity supports valuation and risk reporting workflows | 15     | operational_compatibility  |
+| Digital maturity aligns with valuation reporting delivery | 20     | capability_alignment       |
+| Operating context evidence supports valuation reporting | 10     | publicly_evidenced_need    |
 
 **Gate:** operating_context evidence preferred (required gate).
 
-### Scenario-planning support (`cap_syn_fi_scenario_planning`) — 100 pts
+### Macro and stress scenario fit (`cap_syn_fi_scenario_planning`) — 100 pts
 
 | Rule                                                | Points | Factor                     |
 | --------------------------------------------------- | ------ | -------------------------- |
-| Institution kind fits scenario-planning scope       | 15     | organizational_profile_fit |
-| Higher complexity strengthens scenario-planning fit | 25     | operational_compatibility  |
-| Digital maturity supports scenario workflows        | 15     | capability_alignment       |
-| Change signals within planning window               | 20     | timing_change_signals      |
-| Lending breadth supports scenario themes            | 15     | capability_alignment       |
-| Profile freshness supports scenario scoring         | 10     | publicly_evidenced_need    |
+| Institution kind fits macro and stress scenario scope | 15     | organizational_profile_fit |
+| Higher complexity strengthens macro and stress scenario fit | 25     | operational_compatibility  |
+| Digital maturity supports macro scenario workflows  | 15     | capability_alignment       |
+| Change signals within scenario-planning window      | 20     | timing_change_signals      |
+| Lending breadth supports macro and stress scenario themes | 15     | capability_alignment       |
+| Profile freshness supports macro scenario scoring   | 10     | publicly_evidenced_need    |
 
 **Gate:** organization_profile evidence required.
 
-### Governance process review (`cap_syn_fi_governance_review`) — 100 pts
+### Model validation and governance fit (`cap_syn_fi_governance_review`) — 100 pts
 
 | Rule                                              | Points | Factor                     |
 | ------------------------------------------------- | ------ | -------------------------- |
-| Profile evidence supports governance review       | 20     | organizational_profile_fit |
-| Ownership model aligns with governance themes     | 20     | capability_alignment       |
-| Data availability informs governance review       | 20     | publicly_evidenced_need    |
-| Scale band supports governance review             | 15     | operational_compatibility  |
-| Digital maturity aligns with governance workflows | 15     | capability_alignment       |
+| Profile evidence supports model validation and governance review | 20     | organizational_profile_fit |
+| Ownership model aligns with model-governance themes | 20     | capability_alignment       |
+| Data availability informs model validation review | 20     | publicly_evidenced_need    |
+| Scale band supports model validation and governance review | 15     | operational_compatibility  |
+| Digital maturity aligns with model-governance workflows | 15     | capability_alignment       |
 | Supporting evidence freshness is usable           | 10     | publicly_evidenced_need    |
 
 **Gate:** organization_profile evidence required.
@@ -99,11 +99,11 @@ Priorities need not sum to 100. Disabled capabilities are excluded from normaliz
 
 | Capability                    | Priority |
 | ----------------------------- | -------- |
-| Operational analytics support | 100      |
-| Data-quality modernization    | 80       |
-| Portfolio reporting workflow  | 60       |
-| Scenario-planning support     | 40       |
-| Governance process review     | 20       |
+| Prepayment and credit model fit | 100      |
+| Loan and market data readiness | 80       |
+| Valuation and risk reporting fit | 60       |
+| Macro and stress scenario fit | 40       |
+| Model validation and governance fit | 20       |
 
 Aggregation: `weight_i = priority_i / sum(enabled priorities)` with policy version `1.0.0`.
 

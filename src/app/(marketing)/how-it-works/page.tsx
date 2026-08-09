@@ -25,7 +25,7 @@ const WORKFLOW = [
   },
   {
     title: "Prepare briefs",
-    copy: "Internal research artifacts carry methodology and limitation language alongside the content.",
+    copy: "Internal research artifacts for institutional conversations carry methodology and limitation language alongside the content.",
   },
 ] as const;
 
@@ -59,8 +59,9 @@ export default function HowItWorksPage() {
               Evidence first, then judgment
             </h1>
             <p className="il-mkt-support">
-              The workflow is designed for reviewability: gather evidence, apply a versioned
-              methodology, inspect quality signals, and prepare outreach with clear boundaries.
+              The workflow is designed for reviewability: gather institutional evidence, apply a
+              versioned methodology, inspect quality signals, and prepare model-licensing or
+              analytics outreach with clear boundaries.
             </p>
           </header>
         </div>

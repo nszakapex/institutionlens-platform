@@ -19,12 +19,12 @@ It answers: “Which synthetic capabilities does this workspace evaluate, and wi
 | Field                       | Value                            |
 | --------------------------- | -------------------------------- |
 | ID                          | `portfolio_syn_fi_demo_research` |
-| Name                        | Synthetic FI research portfolio  |
-| Status                      | active                           |
-| Capabilities                | 5 enabled                        |
-| Catalog / portfolio version | `1.0.0`                          |
+| Name                        | Mortgage analytics institutional-fit portfolio |
+| Status                      | active                                         |
+| Capabilities                | 5 enabled                                      |
+| Catalog / portfolio version | `1.0.0`                                        |
 
-Priorities are relative weights (ops analytics highest). They need not sum to 100.
+Priorities are relative weights (prepayment/credit model fit highest). They need not sum to 100.
 
 ### Aggregation (`priority_weighted_average`)
 

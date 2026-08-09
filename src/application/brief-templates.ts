@@ -22,11 +22,11 @@ export const BRIEF_SECTION_TITLES = {
 
 export const BRIEF_TEMPLATES = {
   purpose:
-    "This synthetic brief summarizes permitted research signals for outreach preparation within an authorized workspace.",
+    "This synthetic brief summarizes permitted research signals for institutional outreach preparation by a mortgage risk-analytics research workspace.",
   permittedUse:
-    "Intended for internal research and outreach preparation within this synthetic demo workspace.",
+    "Intended for internal research before model-licensing or analytics conversations within this synthetic demo workspace.",
   disclaimer:
-    "This brief is not an investment recommendation, purchase forecast, ranking of organizations, or sales-certainty statement.",
+    "This brief is not an investment recommendation, purchase forecast, ranking of organizations, sales-certainty statement, or substitute for proprietary model documentation.",
   identityAsOf: (asAssessedAt: string) =>
     `Brief content is as of the synthetic assessment timestamp ${asAssessedAt}.`,
   identityFreshness: (freshnessLabel: string) =>
