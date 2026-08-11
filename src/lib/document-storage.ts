@@ -7,6 +7,10 @@ import path from "node:path";
 function storeRoot(): string {
   const override = process.env.IL_DOCUMENT_STORE_ROOT?.trim();
   if (override) return path.resolve(override);
+  // Vercel serverless FS is ephemeral; keep demo vault off the read-only bundle root.
+  if (process.env.VERCEL === "1") {
+    return path.join("/tmp", "il-tenant-documents");
+  }
   return path.join(process.cwd(), ".data", "tenant-documents");
 }
 

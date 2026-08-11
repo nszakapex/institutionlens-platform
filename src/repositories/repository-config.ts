@@ -113,7 +113,16 @@ export function loadRepositoryConfig(
 
   if (mode === "local-demo") {
     const issues: RepositoryConfigurationIssue[] = [];
-    if (source.NODE_ENV === "production") issues.push("demo_in_production");
+    const previewDemoAllowed =
+      source.IL_ALLOW_PREVIEW_DEMO === "1" &&
+      source.VERCEL_ENV === "preview" &&
+      source.VERCEL === "1";
+    if (source.NODE_ENV === "production" && !previewDemoAllowed) {
+      issues.push("demo_in_production");
+    }
+    if (source.VERCEL_ENV === "production" && mode === "local-demo") {
+      issues.push("demo_in_production");
+    }
     if (productionKeyNames.some((key) => hasValue(source, key))) {
       issues.push("mixed_mode_configuration");
     }
