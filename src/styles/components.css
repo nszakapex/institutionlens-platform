@@ -1220,3 +1220,46 @@ select:focus-visible,
     flex-direction: column;
   }
 }
+
+/* Document vault */
+.il-document-upload,
+.il-documents-page .il-stack-section {
+  margin-block: var(--il-space-6);
+}
+
+.il-document-upload .il-field--wide {
+  max-width: none;
+  grid-column: 1 / -1;
+}
+
+.il-field-label {
+  font-size: var(--il-fs-label);
+  font-weight: 600;
+  letter-spacing: var(--il-tracking-label);
+  text-transform: uppercase;
+  color: var(--il-text-secondary);
+}
+
+.il-form-error {
+  color: var(--il-status-error);
+  font-size: var(--il-fs-body-sm, 0.9rem);
+  margin: var(--il-space-2) 0;
+}
+
+.il-document-link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--il-space-2);
+  align-items: center;
+}
+
+.il-document-link .il-select {
+  min-width: 12rem;
+  max-width: 16rem;
+}
+
+.il-text-link {
+  color: var(--il-text-link);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}

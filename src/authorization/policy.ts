@@ -1,6 +1,6 @@
 /**
  * Explicit action vocabulary — Phase 6 adds overlay:read and evidence:restricted_read.
- * Mutations remain future-facing.
+ * Document vault actions support tenant-provided research files for founding clients.
  */
 export const ACTIONS = [
   "organization:read",
@@ -9,6 +9,9 @@ export const ACTIONS = [
   "methodology:read",
   "assessment:read",
   "overlay:read",
+  "document:read",
+  "document:upload",
+  "document:link",
   "comparison:create",
   "brief:read",
   "brief:draft",
@@ -25,10 +28,13 @@ export const READ_ACTIONS = [
   "methodology:read",
   "assessment:read",
   "overlay:read",
+  "document:read",
 ] as const;
 
-/** Mutation actions are defined for future use but unused in Phase 4 schema foundations. */
+/** Mutation actions — document upload/link are active in local-demo vault. */
 export const MUTATION_ACTIONS = [
+  "document:upload",
+  "document:link",
   "comparison:create",
   "brief:draft",
   "brief:approve",
@@ -45,6 +51,9 @@ const ROLE_PERMISSIONS: Record<PrincipalRole, readonly Action[]> = {
     "methodology:read",
     "assessment:read",
     "overlay:read",
+    "document:read",
+    "document:upload",
+    "document:link",
     "brief:read",
   ],
   reviewer: [
@@ -53,6 +62,7 @@ const ROLE_PERMISSIONS: Record<PrincipalRole, readonly Action[]> = {
     "methodology:read",
     "assessment:read",
     "overlay:read",
+    "document:read",
     "brief:read",
     "brief:approve",
   ],

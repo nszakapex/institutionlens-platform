@@ -45,6 +45,9 @@ blob-report/
 # Local verification outputs
 .verification/
 
+# Local-demo tenant document vault (never commit uploads)
+.data/
+
 # Vercel (do not configure production deploy while demo auth is active)
 .vercel/
 

@@ -36,6 +36,13 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     description: "Synthetic evidence and provenance catalog",
   },
   {
+    id: "documents",
+    label: "Documents",
+    href: "/documents",
+    available: true,
+    description: "Tenant document vault for research uploads",
+  },
+  {
     id: "briefs",
     label: "Briefs",
     href: "/briefs",
@@ -53,7 +60,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     id: "settings",
     label: "Settings",
     href: "/settings",
-    available: false,
-    description: "Placeholder — vertical and tenant settings arrive later",
+    available: true,
+    description: "Workspace readiness and document vault settings",
   },
 ] as const;

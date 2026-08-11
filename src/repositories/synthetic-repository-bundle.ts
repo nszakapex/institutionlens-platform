@@ -10,6 +10,7 @@ import {
   SyntheticSavedComparisonRepository,
 } from "@/repositories/synthetic-saved-repositories";
 import { SyntheticWorkspaceRepository } from "@/repositories/synthetic-workspace-repository";
+import { SyntheticDocumentRepository } from "@/repositories/synthetic-document-repository";
 
 /** Creates a fresh bundle; no authorization decision or tenant data is cached here. */
 export function createSyntheticRepositoryBundle(): RepositoryBundle {
@@ -22,5 +23,6 @@ export function createSyntheticRepositoryBundle(): RepositoryBundle {
     overlays: new SyntheticOverlayRepository(),
     comparisons: new SyntheticSavedComparisonRepository(),
     briefSnapshots: new SyntheticBriefSnapshotRepository(),
+    documents: new SyntheticDocumentRepository(),
   });
 }

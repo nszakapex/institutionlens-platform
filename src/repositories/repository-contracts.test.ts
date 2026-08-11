@@ -46,6 +46,8 @@ describe("repository contracts", () => {
     expect(assessments.items).toHaveLength(1);
     expect((await bundle.comparisons.list(context, {})).total).toBe(0);
     expect((await bundle.briefSnapshots.list(context, {})).total).toBe(0);
+    expect(bundle.documents).toBeDefined();
+    expect((await bundle.documents.list(context, { pageSize: 1 })).total).toBeGreaterThanOrEqual(1);
   });
 
   it("resolves opaque organization references only inside the active tenant", async () => {

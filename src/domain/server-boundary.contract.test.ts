@@ -101,6 +101,9 @@ describe("server-only domain boundary", () => {
     expect(relative).toEqual([
       "src/app/api/auth/sign-in/route.ts",
       "src/app/api/auth/sign-out/route.ts",
+      "src/app/api/documents/[documentRef]/download/route.ts",
+      "src/app/api/documents/link/route.ts",
+      "src/app/api/documents/upload/route.ts",
       "src/app/api/health/route.ts",
     ]);
 
@@ -124,19 +127,29 @@ describe("server-only domain boundary", () => {
       expect(content, file).not.toMatch(/@\/repositories\//);
     }
 
+    // Document vault routes may use getRequestAccess + repositories, but not fixture loaders.
+    for (const file of [
+      "src/app/api/documents/upload/route.ts",
+      "src/app/api/documents/link/route.ts",
+      "src/app/api/documents/[documentRef]/download/route.ts",
+    ]) {
+      const content = readFileSync(path.join(ROOT, file), "utf8");
+      expect(content, file).toMatch(/getRequestAccess/);
+      expect(content, file).not.toMatch(/@\/repositories\/(supabase-postgres|synthetic)/);
+      expect(content, file).not.toMatch(/loadFinancial|buildSynthetic/);
+    }
+
     // Health may read repository-config for mode, but not repository adapters.
     const health = readFileSync(path.join(ROOT, "src/app/api/health/route.ts"), "utf8");
     expect(health).toMatch(/@\/repositories\/repository-config/);
     expect(health).not.toMatch(/@\/repositories\/(supabase-postgres|synthetic)/);
   });
 
-  it("keeps placeholder routes free of direct fixture access", () => {
-    const placeholders = ["src/app/(app)/settings/page.tsx"];
-    for (const relative of placeholders) {
-      const content = readFileSync(path.join(ROOT, relative), "utf8");
-      expect(content).toContain("PlaceholderPage");
-      expect(content).not.toMatch(/buildSynthetic|loadFinancial|OrganizationRepository/);
-    }
+  it("keeps settings free of fixture loaders after readiness cutover", () => {
+    const content = readFileSync(path.join(ROOT, "src/app/(app)/settings/page.tsx"), "utf8");
+    expect(content).toMatch(/getRequestAccess/);
+    expect(content).not.toMatch(/PlaceholderPage/);
+    expect(content).not.toMatch(/buildSynthetic|loadFinancial|OrganizationRepository/);
   });
 
   it("keeps product routes on application services without fixture imports", () => {
@@ -145,6 +158,7 @@ describe("server-only domain boundary", () => {
       ["src/app/(app)/organizations/page.tsx", /buildExplorerPageView/],
       ["src/app/(app)/organizations/[organizationRef]/page.tsx", /buildOrganizationDetailPageView/],
       ["src/app/(app)/evidence/page.tsx", /buildEvidenceCatalogPageView/],
+      ["src/app/(app)/documents/page.tsx", /buildDocumentsPageView/],
       ["src/app/(app)/methodology/page.tsx", /buildMethodologyPageView/],
       ["src/app/(app)/compare/page.tsx", /buildComparePageView/],
       ["src/app/(app)/briefs/page.tsx", /buildBriefDirectoryPageView/],

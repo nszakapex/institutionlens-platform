@@ -10,6 +10,7 @@ import type { OrganizationRepository } from "@/repositories/organization-reposit
 import type { AssessmentRepository } from "@/repositories/assessment-repository";
 import type { OverlayRepository } from "@/repositories/overlay-repository";
 import type { PortfolioRepository } from "@/repositories/portfolio-repository";
+import type { DocumentRepository } from "@/repositories/document-repository";
 
 export const REPOSITORY_MAX_PAGE = 10_000;
 export const REPOSITORY_MAX_PAGE_SIZE = 50;
@@ -134,6 +135,7 @@ export type RepositoryBundle = Readonly<{
   overlays: OverlayRepository;
   comparisons: SavedComparisonRepository;
   briefSnapshots: BriefSnapshotRepository;
+  documents: DocumentRepository;
 }>;
 
 export const SavedComparisonRecordSchema = z

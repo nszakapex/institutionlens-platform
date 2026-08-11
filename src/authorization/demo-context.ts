@@ -44,6 +44,9 @@ export function getDemoAuthorizationContext(): AuthorizationContext {
       action === "methodology:read" ||
       action === "assessment:read" ||
       action === "overlay:read" ||
+      action === "document:read" ||
+      action === "document:upload" ||
+      action === "document:link" ||
       action === "brief:read",
   );
   return createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, permissions, {

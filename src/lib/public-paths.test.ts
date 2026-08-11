@@ -21,9 +21,11 @@ describe("public path classification", () => {
       "/organizations",
       "/organizations/acme-bank",
       "/evidence",
+      "/documents",
       "/compare",
       "/briefs",
       "/methodology",
+      "/settings",
       "/login",
       "/api/health",
     ]) {
