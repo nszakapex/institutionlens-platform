@@ -14,7 +14,7 @@ export const DEMO_TENANT_PUBLIC_REF = "tref_0123456789abcdef0123";
 
 export const DEMO_TENANT: Tenant = TenantSchema.parse({
   id: DEMO_DOMAIN_TENANT_ID,
-  displayName: "Local demo research workspace",
+  displayName: "Andrew Davidson research workspace",
   status: "active",
   allowedVerticalIds: ["financial_institutions"],
   createdAt: "2026-01-15T12:00:00.000Z",
@@ -25,7 +25,7 @@ export const DEMO_TENANT: Tenant = TenantSchema.parse({
 export const DEMO_ANALYST: Principal = PrincipalSchema.parse({
   id: DEMO_DOMAIN_PRINCIPAL_ID,
   tenantId: DEMO_DOMAIN_TENANT_ID,
-  displayName: "Demo analyst",
+  displayName: "Demo research analyst",
   role: "analyst",
   status: "active",
   demo: true,
@@ -44,6 +44,9 @@ export function getDemoAuthorizationContext(): AuthorizationContext {
       action === "methodology:read" ||
       action === "assessment:read" ||
       action === "overlay:read" ||
+      action === "document:read" ||
+      action === "document:upload" ||
+      action === "document:link" ||
       action === "brief:read",
   );
   return createAuthorizationContext(DEMO_TENANT, DEMO_ANALYST, permissions, {

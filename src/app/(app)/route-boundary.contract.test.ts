@@ -20,6 +20,7 @@ describe("route loading and error boundaries", () => {
     for (const route of [
       "organizations/[organizationRef]",
       "evidence",
+      "documents",
       "methodology",
       "compare",
       "briefs",
@@ -48,6 +49,7 @@ describe("route loading and error boundaries", () => {
     for (const route of [
       "organizations/[organizationRef]",
       "evidence",
+      "documents",
       "methodology",
       "compare",
       "briefs",
@@ -67,15 +69,21 @@ describe("route loading and error boundaries", () => {
       "app",
       "organizations/[organizationRef]",
       "evidence",
+      "documents",
       "methodology",
       "compare",
       "briefs",
       "briefs/[briefRef]",
+      "settings",
     ]) {
       const content = readFileSync(path.join(ROOT, `src/app/(app)/${route}/page.tsx`), "utf8");
       expect(content).toMatch(/noarchive:\s*true/);
       expect(content).toMatch(/index:\s*false/);
-      expect(content).not.toMatch(/generateMetadata|displayName/);
+      expect(content).not.toMatch(/generateMetadata/);
+      // Settings may surface the workspace label; other research pages must not.
+      if (route !== "settings") {
+        expect(content).not.toMatch(/displayName/);
+      }
     }
   });
 

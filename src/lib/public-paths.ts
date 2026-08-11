@@ -9,6 +9,7 @@ const WORKSPACE_PREFIXES = [
   "/app",
   "/organizations",
   "/evidence",
+  "/documents",
   "/compare",
   "/briefs",
   "/methodology",

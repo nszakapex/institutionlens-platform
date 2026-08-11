@@ -28,6 +28,7 @@ export const OverlayIdSchema = prefixedId("overlay_", "overlay_syn_fi_001");
 export const RuleIdSchema = prefixedId("rule_", "rule_syn_fi_ops_profile");
 export const RuleSetIdSchema = prefixedId("ruleset_", "ruleset_syn_fi_ops_analytics");
 export const LedgerEntryIdSchema = prefixedId("ledger_", "ledger_syn_fi_001_rule_01");
+export const DocumentIdSchema = prefixedId("doc_", "doc_syn_fi_001_note");
 
 export const VerticalIdSchema = z
   .string()
@@ -53,6 +54,7 @@ export type OverlayId = z.infer<typeof OverlayIdSchema>;
 export type RuleId = z.infer<typeof RuleIdSchema>;
 export type RuleSetId = z.infer<typeof RuleSetIdSchema>;
 export type LedgerEntryId = z.infer<typeof LedgerEntryIdSchema>;
+export type DocumentId = z.infer<typeof DocumentIdSchema>;
 export type VerticalId = z.infer<typeof VerticalIdSchema>;
 export type AdapterVersion = z.infer<typeof AdapterVersionSchema>;
 

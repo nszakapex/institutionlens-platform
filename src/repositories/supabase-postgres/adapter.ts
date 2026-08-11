@@ -74,6 +74,7 @@ import {
   type RepositoryOperationMap,
   type SupabasePostgresGateway,
 } from "@/repositories/supabase-postgres/gateway";
+import { UnsupportedDocumentRepository } from "@/repositories/unsupported-document-repository";
 import {
   decodeAssessmentManifest,
   decodeBriefPage,
@@ -654,5 +655,6 @@ export function createSupabasePostgresRepositoryBundle(
     overlays: new ProductionOverlayRepository(runner),
     comparisons: new ProductionSavedComparisonRepository(runner),
     briefSnapshots: new ProductionBriefSnapshotRepository(runner),
+    documents: new UnsupportedDocumentRepository(),
   });
 }

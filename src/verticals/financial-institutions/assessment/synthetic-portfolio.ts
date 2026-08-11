@@ -17,7 +17,8 @@ const UPDATED = "2026-03-01T15:30:00.000Z";
 
 /**
  * Active demo capability portfolio for the synthetic financial-institutions vertical.
- * Priorities are relative weights (ops highest); they need not sum to 100.
+ * Priorities are relative weights (prepayment/credit modeling highest); they need not sum to 100.
+ * Shaped for a specialized mortgage risk-analytics vendor preparing institutional outreach.
  */
 export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSchema.parse({
   id: "portfolio_syn_fi_demo_research",
@@ -26,9 +27,9 @@ export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSc
   adapterVersion: FINANCIAL_INSTITUTIONS_ADAPTER_VERSION,
   schemaVersion: "1.0.0",
   catalogVersion: CATALOG_VERSION,
-  name: "Synthetic FI research portfolio",
+  name: "Mortgage analytics institutional-fit portfolio",
   description:
-    "Deterministic demo portfolio binding five synthetic capabilities for architecture validation.",
+    "Deterministic demo portfolio for a mortgage risk-analytics research workspace: model fit, data readiness, valuation reporting, scenario planning, and model governance.",
   status: "active",
   synthetic: true,
   createdAt: CREATED,
@@ -38,7 +39,7 @@ export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSc
       capabilityId: "cap_syn_fi_ops_analytics",
       status: "enabled",
       priority: 100,
-      description: "Highest-priority operational analytics theme for the demo portfolio.",
+      description: "Highest-priority prepayment and credit model fit theme.",
       ruleSetId: "ruleset_syn_fi_ops_analytics",
       ruleSetVersion: PORTFOLIO_VERSION,
     },
@@ -46,7 +47,7 @@ export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSc
       capabilityId: "cap_syn_fi_data_quality",
       status: "enabled",
       priority: 80,
-      description: "Data-quality modernization theme.",
+      description: "Loan and market data readiness theme.",
       ruleSetId: "ruleset_syn_fi_data_quality",
       ruleSetVersion: PORTFOLIO_VERSION,
     },
@@ -54,7 +55,7 @@ export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSc
       capabilityId: "cap_syn_fi_portfolio_reporting",
       status: "enabled",
       priority: 60,
-      description: "Portfolio reporting workflow theme.",
+      description: "Valuation and risk reporting fit theme.",
       ruleSetId: "ruleset_syn_fi_portfolio_reporting",
       ruleSetVersion: PORTFOLIO_VERSION,
     },
@@ -62,7 +63,7 @@ export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSc
       capabilityId: "cap_syn_fi_scenario_planning",
       status: "enabled",
       priority: 40,
-      description: "Scenario-planning support theme.",
+      description: "Macro and stress scenario fit theme.",
       ruleSetId: "ruleset_syn_fi_scenario_planning",
       ruleSetVersion: PORTFOLIO_VERSION,
     },
@@ -70,7 +71,7 @@ export const SYNTHETIC_FI_PORTFOLIO: CapabilityPortfolio = CapabilityPortfolioSc
       capabilityId: "cap_syn_fi_governance_review",
       status: "enabled",
       priority: 20,
-      description: "Governance process review theme.",
+      description: "Model validation and governance fit theme.",
       ruleSetId: "ruleset_syn_fi_governance_review",
       ruleSetVersion: PORTFOLIO_VERSION,
     },

@@ -50,7 +50,7 @@ describe("buildDomainFoundationView", () => {
     const view = buildDomainFoundationView(getDemoAuthorizationContext());
     const serialized = JSON.stringify(view);
 
-    expect(view.tenantDisplayName).toBe("Local demo research workspace");
+    expect(view.tenantDisplayName).toBe("Andrew Davidson research workspace");
     expect(serialized).not.toContain("tenant_demo_research");
     expect(serialized).not.toContain("principal_demo");
     expect(serialized).not.toContain("synthetic://");

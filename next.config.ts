@@ -16,6 +16,8 @@ const privatePathSources = [
   "/organizations/:path*",
   "/evidence",
   "/evidence/:path*",
+  "/documents",
+  "/documents/:path*",
   "/compare",
   "/compare/:path*",
   "/briefs",

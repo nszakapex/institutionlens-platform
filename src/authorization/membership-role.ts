@@ -35,6 +35,7 @@ export function mapMembershipRole(role: string): {
           "evidence:read",
           "methodology:read",
           "assessment:read",
+          "document:read",
           "brief:read",
         ] as const satisfies readonly Action[]),
       };

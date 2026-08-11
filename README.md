@@ -29,7 +29,8 @@ See:
 **In this repository**
 
 - Public marketing routes and invitation-only access path
-- Authenticated research UI (organizations, evidence, compare, briefs, methodology)
+- Authenticated research UI (organizations, evidence, documents, compare, briefs, methodology, settings)
+- Local-demo tenant document vault (upload / link / download) for founding-client research files
 - Vertical adapters with synthetic fixtures first (`financial_institutions`)
 - Explainable scoring concepts: fit, confidence, freshness, completeness, publication eligibility — kept separate
 - Offline ETL foundation and staging Auth/RLS contracts
@@ -38,6 +39,7 @@ See:
 
 - Self-service signup, payments, billing, email delivery, or CRM
 - Production hosting cutover / Vercel reconnect
+- Live Postgres document write RPCs / object-storage binding
 - Coverage / AD&Co data, rules, catalogs, briefs, or Git history
 - Real customer organizations or live-source ingestion activation
 - Telemetry / analytics SDKs

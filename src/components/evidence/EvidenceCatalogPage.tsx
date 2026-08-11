@@ -51,11 +51,11 @@ const FILTERS = {
     { value: "eligible", label: "Eligible" },
   ],
   capability: [
-    { value: "operational-analytics-support", label: "Operational analytics support" },
-    { value: "data-quality-modernization", label: "Data-quality modernization" },
-    { value: "portfolio-reporting-workflow", label: "Portfolio reporting workflow" },
-    { value: "scenario-planning-support", label: "Scenario-planning support" },
-    { value: "governance-process-review", label: "Governance process review" },
+    { value: "operational-analytics-support", label: "Prepayment and credit model fit" },
+    { value: "data-quality-modernization", label: "Loan and market data readiness" },
+    { value: "portfolio-reporting-workflow", label: "Valuation and risk reporting fit" },
+    { value: "scenario-planning-support", label: "Macro and stress scenario fit" },
+    { value: "governance-process-review", label: "Model validation and governance fit" },
   ],
   ruleOutcome: [
     { value: "awarded", label: "Awarded" },

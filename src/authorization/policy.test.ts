@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ACTIONS, permissionsForRole, roleHasPermission } from "@/authorization/policy";
 
 describe("authorization policy", () => {
-  it("grants analysts read-oriented permissions only", () => {
+  it("grants analysts research reads plus document vault mutations", () => {
     const permissions = permissionsForRole("analyst");
 
     expect(permissions).toEqual([
@@ -11,6 +11,9 @@ describe("authorization policy", () => {
       "methodology:read",
       "assessment:read",
       "overlay:read",
+      "document:read",
+      "document:upload",
+      "document:link",
       "brief:read",
     ]);
     expect(roleHasPermission("analyst", "organization:read")).toBe(true);
@@ -18,10 +21,11 @@ describe("authorization policy", () => {
     expect(roleHasPermission("analyst", "methodology:read")).toBe(true);
     expect(roleHasPermission("analyst", "assessment:read")).toBe(true);
     expect(roleHasPermission("analyst", "overlay:read")).toBe(true);
+    expect(roleHasPermission("analyst", "document:upload")).toBe(true);
     expect(roleHasPermission("analyst", "evidence:restricted_read")).toBe(false);
   });
 
-  it("does not grant mutation actions to analysts", () => {
+  it("does not grant administrative mutation actions to analysts", () => {
     expect(roleHasPermission("analyst", "comparison:create")).toBe(false);
     expect(roleHasPermission("analyst", "brief:draft")).toBe(false);
     expect(roleHasPermission("analyst", "brief:approve")).toBe(false);

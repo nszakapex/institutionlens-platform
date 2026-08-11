@@ -69,6 +69,30 @@ describe("loadRepositoryConfig", () => {
         NODE_ENV: "production",
       }),
     ).toThrow(RepositoryConfigurationError);
+
+    expect(() =>
+      loadRepositoryConfig({
+        IL_APP_MODE: "local-demo",
+        IL_DEMO_TENANT_ID: "demo-tenant-local",
+        IL_DEMO_PRINCIPAL_ID: "demo-principal-local",
+        NODE_ENV: "production",
+        VERCEL: "1",
+        VERCEL_ENV: "production",
+        IL_ALLOW_PREVIEW_DEMO: "1",
+      }),
+    ).toThrow(RepositoryConfigurationError);
+
+    expect(
+      loadRepositoryConfig({
+        IL_APP_MODE: "local-demo",
+        IL_DEMO_TENANT_ID: "demo-tenant-local",
+        IL_DEMO_PRINCIPAL_ID: "demo-principal-local",
+        NODE_ENV: "production",
+        VERCEL: "1",
+        VERCEL_ENV: "preview",
+        IL_ALLOW_PREVIEW_DEMO: "1",
+      }),
+    ).toEqual({ mode: "local-demo" });
   });
 
   it("rejects public and privileged credential paths", () => {

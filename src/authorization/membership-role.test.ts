@@ -18,6 +18,8 @@ describe("mapMembershipRole", () => {
     const mapped = mapMembershipRole("viewer");
     expect(mapped.principalRole).toBe("reviewer");
     expect(mapped.permissions).toContain("organization:read");
+    expect(mapped.permissions).toContain("document:read");
+    expect(mapped.permissions).not.toContain("document:upload");
     expect(mapped.permissions).not.toContain("overlay:read");
     expect(mapped.permissions).not.toContain("evidence:restricted_read");
   });

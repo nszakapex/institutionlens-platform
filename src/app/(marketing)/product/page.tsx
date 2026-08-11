@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   ...marketingMetadataBase,
   title: "Product",
   description:
-    "InstitutionLens product overview: evidence-backed institutional research workspace for outreach preparation.",
+    "InstitutionLens product overview: evidence-backed research workspace for mortgage analytics teams preparing institutional outreach.",
 };
 
 const SURFACE_ROWS = [
@@ -46,11 +46,12 @@ export default function ProductPage() {
           <header className="il-band-heading">
             <p className="il-eyebrow">Product</p>
             <h1 id="product-title" className="il-mkt-display il-mkt-display--page">
-              A workspace for institutional research
+              A workspace for institutional outreach research
             </h1>
             <p className="il-mkt-support">
               InstitutionLens brings organization context, evidence, comparison, and briefs into one
-              reviewable surface for researchers preparing outreach.
+              reviewable surface for mortgage risk-analytics teams preparing institutional
+              conversations.
             </p>
           </header>
         </div>
@@ -88,10 +89,10 @@ export default function ProductPage() {
               Context before contact
             </h2>
             <p className="il-mkt-prose">
-              The workspace is built for placement, investor-relations, and capital-introduction
-              work where the path to a conversation matters as much as the institution itself.
-              Evidence, relationships, and boundaries are prepared so the eventual outreach is
-              defensible.
+              The workspace is built for specialized mortgage analytics firms whose go-to-market
+              depends on institutional fit — model licensing, valuation tooling, scenario planning,
+              and governance conversations — where the path to a meeting matters as much as the
+              institution itself. Evidence, relationships, and boundaries stay reviewable.
             </p>
           </div>
           <div className="il-split-panel">
