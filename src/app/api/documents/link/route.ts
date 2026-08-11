@@ -18,7 +18,10 @@ export async function POST(request: Request) {
     const organizationRefRaw = String(form.get("organizationRef") ?? "").trim();
 
     if (!documentRefParsed.success) {
-      return NextResponse.json({ ok: false, error: "Invalid document reference." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Invalid document reference." },
+        { status: 400 },
+      );
     }
 
     let organizationId: string | null = null;

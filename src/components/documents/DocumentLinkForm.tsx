@@ -48,7 +48,12 @@ export function DocumentLinkForm({
 
   return (
     <form className="il-document-link" onSubmit={onSubmit}>
-      <select className="il-select" name="organizationRef" defaultValue="" aria-label="Link organization">
+      <select
+        className="il-select"
+        name="organizationRef"
+        defaultValue=""
+        aria-label="Link organization"
+      >
         <option value="">Unlinked</option>
         {organizationOptions.map((option) => (
           <option key={option.organizationPublicRef} value={option.organizationPublicRef}>

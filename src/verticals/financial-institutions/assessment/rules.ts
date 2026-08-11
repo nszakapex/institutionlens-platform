@@ -113,7 +113,8 @@ const opsAnalyticsRuleSet = parseRuleSet({
   requiredGates: [
     {
       gateId: "gate_ops_organization_profile",
-      description: "Prepayment and credit model fit requires a usable organization profile observation.",
+      description:
+        "Prepayment and credit model fit requires a usable organization profile observation.",
       requiredEvidenceTypes: ["organization_profile"],
     },
   ],
@@ -128,7 +129,8 @@ const opsAnalyticsRuleSet = parseRuleSet({
         "Synthetic banks and credit unions are in-scope shapes for prepayment and credit model licensing conversations.",
       maximumPoints: 20,
       evidenceRequirements: profileEvidence(),
-      methodologyNotes: "Independent synthetic profile-kind gate for prepayment and credit model fit.",
+      methodologyNotes:
+        "Independent synthetic profile-kind gate for prepayment and credit model fit.",
       predicate: {
         type: "all",
         predicates: [
@@ -186,7 +188,8 @@ const opsAnalyticsRuleSet = parseRuleSet({
       capabilityId: OPS_ID,
       factorCategory: "operational_compatibility",
       title: "Operating complexity warrants mortgage risk analytics support",
-      rationale: "Moderate or high operating complexity is a stronger synthetic fit for mortgage risk analytics.",
+      rationale:
+        "Moderate or high operating complexity is a stronger synthetic fit for mortgage risk analytics.",
       maximumPoints: 15,
       evidenceRequirements: defaultEvidence(),
       methodologyNotes: "Complexity band compatibility for prepayment and credit model fit.",
@@ -378,7 +381,8 @@ const portfolioReportingRuleSet = parseRuleSet({
   requiredGates: [
     {
       gateId: "gate_pr_operating_context",
-      description: "Valuation and risk reporting prefers operating-context evidence when available.",
+      description:
+        "Valuation and risk reporting prefers operating-context evidence when available.",
       requiredEvidenceTypes: ["operating_context"],
     },
   ],

@@ -16,9 +16,9 @@ It answers: “Which synthetic capabilities does this workspace evaluate, and wi
 
 ## Synthetic demo portfolio
 
-| Field                       | Value                            |
-| --------------------------- | -------------------------------- |
-| ID                          | `portfolio_syn_fi_demo_research` |
+| Field                       | Value                                          |
+| --------------------------- | ---------------------------------------------- |
+| ID                          | `portfolio_syn_fi_demo_research`               |
 | Name                        | Mortgage analytics institutional-fit portfolio |
 | Status                      | active                                         |
 | Capabilities                | 5 enabled                                      |

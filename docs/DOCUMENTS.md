@@ -17,13 +17,13 @@ Let founding-client research teams upload private materials (research notes, pro
 
 ## Allowlist
 
-| Extension | Content type |
-| --------- | ------------ |
+| Extension | Content type      |
+| --------- | ----------------- |
 | `.pdf`    | `application/pdf` |
-| `.txt`    | `text/plain` |
-| `.csv`    | `text/csv` |
-| `.docx`   | OOXML word |
-| `.xlsx`   | OOXML sheet |
+| `.txt`    | `text/plain`      |
+| `.csv`    | `text/csv`        |
+| `.docx`   | OOXML word        |
+| `.xlsx`   | OOXML sheet       |
 
 Max size: 8 MiB.
 

@@ -36,7 +36,11 @@ export const TenantDocumentSchema = z
     classification: DocumentClassificationSchema,
     status: DocumentStatusSchema,
     contentType: DocumentContentTypeSchema,
-    byteSize: z.number().int().min(1).max(10 * 1024 * 1024),
+    byteSize: z
+      .number()
+      .int()
+      .min(1)
+      .max(10 * 1024 * 1024),
     organizationId: OrganizationIdSchema.nullable(),
     storageKey: z.string().min(1).max(240),
     checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),

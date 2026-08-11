@@ -14,7 +14,10 @@ export async function GET(_request: Request, { params }: Params) {
     const { documentRef: raw } = await params;
     const documentRefParsed = DocumentPublicRefSchema.safeParse(raw);
     if (!documentRefParsed.success) {
-      return NextResponse.json({ ok: false, error: "Invalid document reference." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Invalid document reference." },
+        { status: 400 },
+      );
     }
 
     const { context, repositories } = await getRequestAccess();

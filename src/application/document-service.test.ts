@@ -38,12 +38,9 @@ describe("document service", () => {
       ...DEMO_ANALYST,
       tenantId: tenant.id,
     });
-    const context = createAuthorizationContext(
-      tenant,
-      principal,
-      permissionsForRole("analyst"),
-      { tenantPublicRef: DEMO_TENANT_PUBLIC_REF },
-    );
+    const context = createAuthorizationContext(tenant, principal, permissionsForRole("analyst"), {
+      tenantPublicRef: DEMO_TENANT_PUBLIC_REF,
+    });
     const bundle = createSyntheticRepositoryBundle();
     const view = await buildDocumentsPageView(context, bundle);
 
@@ -68,12 +65,9 @@ describe("document service", () => {
       ...DEMO_ANALYST,
       tenantId: tenant.id,
     });
-    const context = createAuthorizationContext(
-      tenant,
-      principal,
-      permissionsForRole("analyst"),
-      { tenantPublicRef: DEMO_TENANT_PUBLIC_REF },
-    );
+    const context = createAuthorizationContext(tenant, principal, permissionsForRole("analyst"), {
+      tenantPublicRef: DEMO_TENANT_PUBLIC_REF,
+    });
     const bundle = createSyntheticRepositoryBundle();
     const bytes = new TextEncoder().encode("Northeast prospect shortlist for model licensing.");
     const uploaded = await bundle.documents.upload(context, {

@@ -47,14 +47,20 @@ export async function POST(request: Request) {
     const ext = extensionOf(filename);
     const expected = DOCUMENT_UPLOAD_ALLOWLIST[ext as keyof typeof DOCUMENT_UPLOAD_ALLOWLIST];
     if (!expected) {
-      return NextResponse.json({ ok: false, error: "Document type is not allowed." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Document type is not allowed." },
+        { status: 400 },
+      );
     }
 
     let organizationId: string | null = null;
     if (organizationRefRaw) {
       const orgRef = OrganizationPublicRefSchema.safeParse(organizationRefRaw);
       if (!orgRef.success) {
-        return NextResponse.json({ ok: false, error: "Invalid organization reference." }, { status: 400 });
+        return NextResponse.json(
+          { ok: false, error: "Invalid organization reference." },
+          { status: 400 },
+        );
       }
       const org = await repositories.organizations.getByPublicRef(context, orgRef.data);
       organizationId = org.id;

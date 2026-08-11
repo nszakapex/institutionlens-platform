@@ -128,19 +128,14 @@ export class SyntheticDocumentRepository implements DocumentRepository {
     seedIfEmpty(context.tenant.id, context.principal.id);
     const ref = DocumentPublicRefSchema.parse(documentRef);
     const rows = readDocumentIndex<TenantDocument>(context.tenant.id);
-    const match = rows.find(
-      (row) => documentPublicRefFor(context.tenant.id, row.id) === ref,
-    );
+    const match = rows.find((row) => documentPublicRefFor(context.tenant.id, row.id) === ref);
     if (!match) throw new NotFoundError("Document not found.");
     const parsed = TenantDocumentSchema.parse(match);
     assertTenant(context, parsed);
     return parsed;
   }
 
-  async upload(
-    context: AuthorizationContext,
-    input: DocumentUploadInput,
-  ): Promise<TenantDocument> {
+  async upload(context: AuthorizationContext, input: DocumentUploadInput): Promise<TenantDocument> {
     assertPermission(context, "document:upload");
     seedIfEmpty(context.tenant.id, context.principal.id);
 
